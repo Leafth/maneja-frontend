@@ -9,3 +9,11 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export const refreshApi = axios.create({
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
