@@ -1,4 +1,4 @@
-import { api } from "@/infrastructure/api"
+import { api, refreshApi } from "@/infrastructure/api";
 
 import type {
   AuthSession,
@@ -47,7 +47,7 @@ export const authService = {
   },
 
   async me(): Promise<User> {
-    const response = await api.get<UserResponseDTO>("/auth/me");
+    const response = await refreshApi.get<UserResponseDTO>("/auth/me");
 
     return mapUserResponseToUser(response.data);
   },
