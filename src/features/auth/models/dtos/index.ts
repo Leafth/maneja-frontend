@@ -1,16 +1,10 @@
 export type { ForgotPasswordRequestDTO } from "./forgot-password-request.dto";
 
-export type { LoginRequestDTO } from "./login-request.dto";
+export type { LoginRequestDTO, LoginResponseDTO } from "./login.dto";
 
-export type { LoginResponseDTO } from "./login-response.dto";
+export type { RefreshTokenRequestDTO, RefreshTokenResponseDTO } from "./refresh-token.dto";
 
-export type { RefreshTokenRequestDTO } from "./refresh-token-request.dto";
-
-export type { RefreshTokenResponseDTO } from "./refresh-token-response.dto";
-
-export type { RegisterRequestDTO } from "./register-request.dto";
-
-export type { RegisterResponseDTO } from "./register-response.dto";
+export type { RegisterRequestDTO, RegisterResponseDTO } from "./register.dto";
 
 export type { ResetPasswordRequestDTO } from "./reset-password-request.dto";
 
