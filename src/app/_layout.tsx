@@ -1,18 +1,20 @@
-import "../styles/global.css";
+import '../styles/global.css';
 
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    "HostGrotesk-Light": require("../../assets/fonts/HostGrotesk-Light.ttf"),
-    "HostGrotesk-Regular": require("../../assets/fonts/HostGrotesk-Regular.ttf"),
-    "HostGrotesk-Medium": require("../../assets/fonts/HostGrotesk-Medium.ttf"),
-    "HostGrotesk-SemiBold": require("../../assets/fonts/HostGrotesk-SemiBold.ttf"),
-    "HostGrotesk-Bold": require("../../assets/fonts/HostGrotesk-Bold.ttf"),
+    'HostGrotesk-Light': require('../../assets/fonts/HostGrotesk-Light.ttf'),
+    'HostGrotesk-Regular': require('../../assets/fonts/HostGrotesk-Regular.ttf'),
+    'HostGrotesk-Medium': require('../../assets/fonts/HostGrotesk-Medium.ttf'),
+    'HostGrotesk-SemiBold': require('../../assets/fonts/HostGrotesk-SemiBold.ttf'),
+    'HostGrotesk-Bold': require('../../assets/fonts/HostGrotesk-Bold.ttf'),
   });
 
   useEffect(() => {
@@ -26,9 +28,11 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }} />
-    </>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false }} />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
