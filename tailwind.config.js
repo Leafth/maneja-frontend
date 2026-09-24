@@ -1,31 +1,27 @@
-const colors = require("tailwindcss/colors");
+const colors = require('./src/styles/colors');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  presets: [require("nativewind/preset")],
+  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  presets: [require('nativewind/preset')],
   theme: {
+    colors,
     extend: {
-      colors: {
-        primary: {
-          DEFAULT: colors.lime[300], 
-          strong: colors.lime[600], 
-        },
-        ink: {
-          DEFAULT: colors.zinc[900], 
-          muted: colors.zinc[500], 
-          faint: colors.zinc[400], 
-        },
-        line: colors.zinc[200],
-        track: colors.zinc[100], 
-        danger: colors.red[600],
-      },
       fontFamily: {
-        host: ["HostGrotesk-Regular"],
-        "host-light": ["HostGrotesk-Light"],
-        "host-medium": ["HostGrotesk-Medium"],
-        "host-semibold": ["HostGrotesk-SemiBold"],
-        "host-bold": ["HostGrotesk-Bold"],
+        'sans-light': ['HostGrotesk-Light'],
+        'sans-regular': ['HostGrotesk-Regular'],
+        'sans-medium': ['HostGrotesk-Medium'],
+        'sans-semiBold': ['HostGrotesk-SemiBold'],
+        'sans-bold': ['HostGrotesk-Bold'],
+      },
+      fontSize: {
+        xs: '12px',
+        sm: '14px',
+        base: '16px',
+        lg: '20px',
+        xl: '24px',
+        '2xl': '28px',
+        '3xl': '32px',
       },
     },
   },
