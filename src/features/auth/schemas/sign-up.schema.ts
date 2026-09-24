@@ -18,10 +18,10 @@ export const signUpSchema = z
       .string()
       .min(1, "Crie uma senha")
       .min(PASSWORD_MIN_LENGTH, `A senha deve ter no mínimo ${PASSWORD_MIN_LENGTH} caracteres`),
-    confirmPassword: z.string().min(1, "Confirme sua senha"),
+    passwordConfirmation: z.string().min(1, "Confirme sua senha"),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
+  .refine((data) => data.password === data.passwordConfirmation, {
+    path: ["passwordConfirmation"],
     error: "As senhas não coincidem",
   });
 
