@@ -8,4 +8,4 @@ export {
   mapRegisterToDTO,
   mapResetPasswordToDTO,
   mapUserResponseToUser,
-} from "./auth.mapper";
+} from './auth.mapper';

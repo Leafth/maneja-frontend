@@ -1,15 +1,15 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
-import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { useForm } from 'react-hook-form';
 
-import { useLogin } from "@/features/auth/hooks";
+import { useLogin } from '@/features/auth/hooks';
 import {
   loginSchema,
   type LoginFormData,
-} from "@/features/auth/schemas/login.schema";
-import { authService } from "@/features/auth/services";
-import { useAuthStore } from "@/features/auth/stores";
-import { authTokenStorage } from "@/infrastructure/storage";
+} from '@/features/auth/schemas/login.schema';
+import { authService } from '@/features/auth/services';
+import { useAuthStore } from '@/features/auth/stores';
+import { authTokenStorage } from '@/infrastructure/storage';
 
 export function useLoginViewModel() {
   const router = useRouter();
@@ -26,11 +26,11 @@ export function useLoginViewModel() {
     formState: { isValid, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: "onTouched",
+    mode: 'onTouched',
 
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -46,7 +46,7 @@ export function useLoginViewModel() {
 
     authenticate(user);
 
-    router.replace("/home");
+    router.replace('/home');
   });
 
   return {

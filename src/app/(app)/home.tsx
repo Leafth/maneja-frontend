@@ -1,5 +1,5 @@
-import HomeView from "@/features/home/home-view";
-import { Stack } from "expo-router";
+import HomeView from '@/features/home/home-view';
+import { Stack } from 'expo-router';
 
 export default function HomeRoute() {
   return (

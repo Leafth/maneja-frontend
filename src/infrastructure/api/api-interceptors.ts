@@ -2,13 +2,13 @@ import {
   AxiosError,
   AxiosHeaders,
   type InternalAxiosRequestConfig,
-} from "axios";
+} from 'axios';
 
-import type { AuthSession } from "@/features/auth/models";
-import { authService } from "@/features/auth/services";
-import { authTokenStorage } from "@/infrastructure/storage";
+import type { AuthSession } from '@/features/auth/models';
+import { authService } from '@/features/auth/services';
+import { authTokenStorage } from '@/infrastructure/storage';
 
-import { api } from "./api-client";
+import { api } from './api-client';
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -22,7 +22,7 @@ async function refreshSession(): Promise<AuthSession> {
   if (!refreshToken) {
     await authTokenStorage.clear();
 
-    throw new Error("Refresh token não encontrado.");
+    throw new Error('Refresh token não encontrado.');
   }
 
   if (!refreshPromise) {
@@ -71,7 +71,7 @@ api.interceptors.response.use(
     if (!isUnauthorized) {
       return Promise.reject(error);
     }
-    
+
     if (originalRequest._retry) {
       return Promise.reject(error);
     }
@@ -84,7 +84,7 @@ api.interceptors.response.use(
       originalRequest.headers = AxiosHeaders.from(originalRequest.headers);
 
       originalRequest.headers.set(
-        "Authorization",
+        'Authorization',
         `Bearer ${session.accessToken}`,
       );
 

@@ -6,7 +6,7 @@ import type {
   RegisteredUser,
   ResetPassword,
   User,
-} from "../models";
+} from '../models';
 
 import type {
   ForgotPasswordRequestDTO,
@@ -18,7 +18,7 @@ import type {
   RegisterResponseDTO,
   ResetPasswordRequestDTO,
   UserResponseDTO,
-} from "../models/dtos";
+} from '../models/dtos';
 
 export function mapLoginToDTO(login: Login): LoginRequestDTO {
   return {

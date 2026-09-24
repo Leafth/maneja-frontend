@@ -1,4 +1,4 @@
-import { api, refreshApi } from "@/infrastructure/api";
+import { api, refreshApi } from '@/infrastructure/api';
 
 import type {
   AuthSession,
@@ -8,14 +8,14 @@ import type {
   RegisteredUser,
   ResetPassword,
   User,
-} from "../models";
+} from '../models';
 
 import type {
   LoginResponseDTO,
   RefreshTokenResponseDTO,
   RegisterResponseDTO,
   UserResponseDTO,
-} from "../models/dtos";
+} from '../models/dtos';
 
 import {
   mapForgotPasswordToDTO,
@@ -27,13 +27,13 @@ import {
   mapRegisterToDTO,
   mapResetPasswordToDTO,
   mapUserResponseToUser,
-} from "../mapper";
+} from '../mapper';
 
 export const authService = {
   async login(data: Login): Promise<AuthSession> {
     const dto = mapLoginToDTO(data);
 
-    const response = await api.post<LoginResponseDTO>("/auth/login", dto);
+    const response = await api.post<LoginResponseDTO>('/auth/login', dto);
 
     return mapLoginResponseToAuthSession(response.data);
   },
@@ -41,13 +41,13 @@ export const authService = {
   async register(data: Register): Promise<RegisteredUser> {
     const dto = mapRegisterToDTO(data);
 
-    const response = await api.post<RegisterResponseDTO>("/auth/register", dto);
+    const response = await api.post<RegisterResponseDTO>('/auth/register', dto);
 
     return mapRegisterResponseToRegisteredUser(response.data);
   },
 
   async me(): Promise<User> {
-    const response = await refreshApi.get<UserResponseDTO>("/auth/me");
+    const response = await refreshApi.get<UserResponseDTO>('/auth/me');
 
     return mapUserResponseToUser(response.data);
   },
@@ -56,7 +56,7 @@ export const authService = {
     const dto = mapRefreshTokenToDTO(refreshToken);
 
     const response = await api.post<RefreshTokenResponseDTO>(
-      "/auth/refresh",
+      '/auth/refresh',
       dto,
     );
 
@@ -64,18 +64,18 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    await api.delete("/auth/logout");
+    await api.delete('/auth/logout');
   },
 
   async forgotPassword(data: ForgotPassword): Promise<void> {
     const dto = mapForgotPasswordToDTO(data);
 
-    await api.post("/password/forgot", dto);
+    await api.post('/password/forgot', dto);
   },
 
   async resetPassword(data: ResetPassword): Promise<void> {
     const dto = mapResetPasswordToDTO(data);
 
-    await api.patch("/password/reset", dto);
+    await api.patch('/password/reset', dto);
   },
 };

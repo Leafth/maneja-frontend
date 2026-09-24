@@ -1,15 +1,15 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
-import { useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 
-import { useRegister } from "@/features/auth/hooks";
+import { useRegister } from '@/features/auth/hooks';
 import {
   signUpSchema,
   type SignUpFormData,
-} from "@/features/auth/schemas/sign-up.schema";
-import { useAuthStore } from "@/features/auth/stores";
-import { authTokenStorage } from "@/infrastructure/storage";
+} from '@/features/auth/schemas/sign-up.schema';
+import { useAuthStore } from '@/features/auth/stores';
+import { authTokenStorage } from '@/infrastructure/storage';
 
 export function useSignUpViewModel() {
   const router = useRouter();
@@ -26,24 +26,24 @@ export function useSignUpViewModel() {
     formState: { isValid, isSubmitting, touchedFields },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    mode: "onTouched",
+    mode: 'onTouched',
 
     defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      passwordConfirmation: "",
+      name: '',
+      email: '',
+      password: '',
+      passwordConfirmation: '',
     },
   });
 
   const password = useWatch({
     control,
-    name: "password",
+    name: 'password',
   });
 
   useEffect(() => {
     if (touchedFields.passwordConfirmation) {
-      trigger("passwordConfirmation");
+      trigger('passwordConfirmation');
     }
   }, [password, touchedFields.passwordConfirmation, trigger]);
 
@@ -59,7 +59,7 @@ export function useSignUpViewModel() {
 
     authenticate(result.user);
 
-    router.replace("/preparing");
+    router.replace('/preparing');
   });
 
   const goBack = () => {

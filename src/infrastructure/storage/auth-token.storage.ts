@@ -1,8 +1,8 @@
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from 'expo-secure-store';
 
-import type { AuthSession } from "@/features/auth/models";
+import type { AuthSession } from '@/features/auth/models';
 
-import { STORAGE_KEYS } from "./storage.keys";
+import { STORAGE_KEYS } from './storage.keys';
 
 let accessToken: string | null = null;
 
