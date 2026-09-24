@@ -3,13 +3,10 @@ import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 
 import { useLogin } from '@/features/auth/hooks';
-import {
-  loginSchema,
-  type LoginFormData,
-} from '@/features/auth/schemas/login.schema';
 import { authService } from '@/features/auth/services';
 import { useAuthStore } from '@/features/auth/stores';
 import { authTokenStorage } from '@/infrastructure/storage';
+import { loginSchema, type LoginFormData } from '../schemas/login.schema';
 
 export function useLoginViewModel() {
   const router = useRouter();
