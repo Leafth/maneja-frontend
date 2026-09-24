@@ -48,12 +48,7 @@ export function useSignUpViewModel() {
   }, [password, touchedFields.passwordConfirmation, trigger]);
 
   const onSubmit = handleSubmit(async (data) => {
-    const result = await registerMutation.mutateAsync({
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      passwordConfirmation: data.passwordConfirmation,
-    });
+    const result = await registerMutation.mutateAsync(data);
 
     await authTokenStorage.saveSession(result.session);
 
