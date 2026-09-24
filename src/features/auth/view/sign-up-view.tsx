@@ -1,6 +1,6 @@
 import { View } from "react-native";
 
-import { useSignUpViewModel } from "@/features/auth/viewmodels/use-sign-up.viewmodel";
+import { useSignUpViewModel } from "@/features/auth/viewmodels/use-sign-up.view-model";
 import { FormInput } from "@/shared/components/form/form-input";
 import { ProgressHeader } from "@/shared/components/layout/progress-header";
 import { Screen } from "@/shared/components/layout/screen";
@@ -49,11 +49,11 @@ export function SignUpView() {
           secureTextEntry
           textContentType="newPassword"
           returnKeyType="next"
-          onSubmitEditing={() => setFocus("confirmPassword")}
+          onSubmitEditing={() => setFocus("passwordConfirmation")}
         />
         <FormInput
           control={control}
-          name="confirmPassword"
+          name="passwordConfirmation"
           label="Confirmar Senha"
           placeholder="Mínimo 8 caracteres"
           secureTextEntry

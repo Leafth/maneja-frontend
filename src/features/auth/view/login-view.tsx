@@ -1,7 +1,7 @@
 import { KeyboardAvoidingView, View } from "react-native";
 
 import { LoginHero } from "@/features/auth/components/login-hero";
-import { useLoginViewModel } from "@/features/auth/viewmodels/use-login-viewmodel";
+import { useLoginViewModel } from "@/features/auth/viewmodels/use-login-view-model";
 import { FormInput } from "@/shared/components/form/form-input";
 import { Sheet } from "@/shared/components/layout/sheet";
 import { Button } from "@/shared/components/button";
