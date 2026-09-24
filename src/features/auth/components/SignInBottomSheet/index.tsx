@@ -4,58 +4,98 @@ import {
   BottomSheetTextInput,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
+import { Controller } from 'react-hook-form';
+import { View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
+import { Button } from '@/shared/components/Button';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { Input } from '@/shared/components/Input';
-import { View } from 'react-native';
+
+import { useLoginViewModel } from '../../viewmodels/use-login-view-model';
 import { ISignInBottomSheet } from './ISignInBottomSheet';
 import { useSignInBottomSheetController } from './useSignInBottomSheetController';
-import { Button } from '@/shared/components/Button';
 
 interface ISignInBottomSheetProps {
   ref: React.Ref<ISignInBottomSheet>;
 }
 
 export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
-  const { bottom, bottomSheetModalRef, passwordInputRef, handleSubmit } =
+  const { bottom, bottomSheetModalRef, passwordInputRef } =
     useSignInBottomSheetController(ref);
+
+  const { control, onSubmit, isError, isSubmitting, isValid } =
+    useLoginViewModel();
 
   return (
     <BottomSheetModalProvider>
       <BottomSheetModal ref={bottomSheetModalRef}>
-        <BottomSheetView style={{ paddingBottom: bottom }} className="px-6">
-          <AppText weight="semiBold" size="3xl" className="tracking-[-0.32px]">
+        <BottomSheetView style={{ paddingBottom: bottom }} className='px-6'>
+          <AppText weight='semiBold' size='3xl' className='tracking-[-0.32px]'>
             Acesse a sua conta
           </AppText>
 
-          <View className="gap-8 mt-6">
-            <FormGroup label="E-mail">
-              <Input
-                InputComponent={BottomSheetTextInput}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
-              />
-            </FormGroup>
+          <View className='mt-6 gap-8'>
+            <Controller
+              control={control}
+              name='email'
+              render={({ field, fieldState }) => (
+                <FormGroup label='E-mail' error={fieldState.error?.message}>
+                  <Input
+                    InputComponent={BottomSheetTextInput}
+                    keyboardType='email-address'
+                    autoCapitalize='none'
+                    autoCorrect={false}
+                    autoComplete='email'
+                    returnKeyType='next'
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    error={!!fieldState.error}
+                    disabled={isSubmitting}
+                    onSubmitEditing={() => passwordInputRef.current?.focus()}
+                  />
+                </FormGroup>
+              )}
+            />
 
-            <FormGroup label="Senha">
-              <Input
-                ref={passwordInputRef}
-                InputComponent={BottomSheetTextInput}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="current-password"
-                returnKeyType="done"
-                onSubmitEditing={handleSubmit}
-              />
-            </FormGroup>
+            <Controller
+              control={control}
+              name='password'
+              render={({ field, fieldState }) => (
+                <FormGroup label='Senha' error={fieldState.error?.message}>
+                  <Input
+                    ref={passwordInputRef}
+                    InputComponent={BottomSheetTextInput}
+                    secureTextEntry
+                    autoCapitalize='none'
+                    autoCorrect={false}
+                    autoComplete='current-password'
+                    returnKeyType='done'
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    error={!!fieldState.error}
+                    disabled={isSubmitting}
+                    onSubmitEditing={onSubmit}
+                  />
+                </FormGroup>
+              )}
+            />
 
-            <Button onPress={handleSubmit}>Entrar</Button>
+            {isError && (
+              <AppText align='center' className='text-red-500'>
+                E-mail ou senha inválidos.
+              </AppText>
+            )}
+
+            <Button
+              onPress={onSubmit}
+              isLoading={isSubmitting}
+              disabled={!isValid || isSubmitting}
+            >
+              Entrar
+            </Button>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
