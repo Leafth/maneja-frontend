@@ -1,0 +1,78 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+
+import { useResetPassword } from '../hooks';
+import {
+  resetPasswordSchema,
+  type ResetPasswordFormData,
+} from '../schemas/reset-password.schema';
+import { usePasswordResetStore } from '../stores';
+
+export function useResetPasswordViewModel() {
+  const router = useRouter();
+
+  const resetPasswordMutation = useResetPassword();
+
+  const resetToken = usePasswordResetStore((state) => state.resetToken);
+
+  const clearResetToken = usePasswordResetStore(
+    (state) => state.clearResetToken,
+  );
+
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    formState: { isValid, isSubmitting, touchedFields },
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+
+    mode: 'onTouched',
+
+    defaultValues: {
+      password: '',
+      passwordConfirmation: '',
+    },
+  });
+
+  const password = useWatch({
+    control,
+    name: 'password',
+  });
+
+  useEffect(() => {
+    if (touchedFields.passwordConfirmation) {
+      trigger('passwordConfirmation');
+    }
+  }, [password, touchedFields.passwordConfirmation, trigger]);
+
+  const onSubmit = handleSubmit(async (data) => {
+    if (!resetToken) {
+      throw new Error('Token de redefinição de senha não encontrado.');
+    }
+
+    await resetPasswordMutation.mutateAsync({
+      resetToken,
+      password: data.password,
+      passwordConfirmation: data.passwordConfirmation,
+    });
+
+    clearResetToken();
+
+    router.replace('/');
+  });
+
+  return {
+    control,
+    onSubmit,
+
+    isValid,
+
+    isSubmitting: isSubmitting || resetPasswordMutation.isPending,
+
+    isError: resetPasswordMutation.isError,
+    error: resetPasswordMutation.error,
+  };
+}
