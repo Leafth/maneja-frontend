@@ -47,7 +47,7 @@ export const authService = {
   },
 
   async me(): Promise<User> {
-    const response = await refreshApi.get<UserResponseDTO>('/auth/me');
+    const response = await api.get<UserResponseDTO>('/auth/me');
 
     return mapUserResponseToUser(response.data);
   },
@@ -55,7 +55,7 @@ export const authService = {
   async refresh(refreshToken: string): Promise<AuthSession> {
     const dto = mapRefreshTokenToDTO(refreshToken);
 
-    const response = await api.post<RefreshTokenResponseDTO>(
+    const response = await refreshApi.post<RefreshTokenResponseDTO>(
       '/auth/refresh',
       dto,
     );
