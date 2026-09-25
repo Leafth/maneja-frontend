@@ -4,10 +4,12 @@ import type {
   AuthSession,
   ForgotPassword,
   Login,
+  PasswordResetToken,
   Register,
   RegisteredUser,
   ResetPassword,
   User,
+  VerifyPasswordResetCode,
 } from '../models';
 
 import type {
@@ -15,6 +17,7 @@ import type {
   RefreshTokenResponseDTO,
   RegisterResponseDTO,
   UserResponseDTO,
+  VerifyPasswordResetCodeResponseDTO,
 } from '../models/dtos';
 
 import {
@@ -28,6 +31,10 @@ import {
   mapResetPasswordToDTO,
   mapUserResponseToUser,
 } from '../mapper';
+import {
+  mapVerifyPasswordResetCodeResponseToPasswordResetToken,
+  mapVerifyPasswordResetCodeToDTO,
+} from '../mapper/auth.mapper';
 
 export const authService = {
   async login(data: Login): Promise<AuthSession> {
@@ -71,6 +78,21 @@ export const authService = {
     const dto = mapForgotPasswordToDTO(data);
 
     await api.post('/password/forgot', dto);
+  },
+
+  async verifyPasswordResetCode(
+    data: VerifyPasswordResetCode,
+  ): Promise<PasswordResetToken> {
+    const dto = mapVerifyPasswordResetCodeToDTO(data);
+
+    const response = await api.post<VerifyPasswordResetCodeResponseDTO>(
+      '/password/verify',
+      dto,
+    );
+
+    return mapVerifyPasswordResetCodeResponseToPasswordResetToken(
+      response.data,
+    );
   },
 
   async resetPassword(data: ResetPassword): Promise<void> {
