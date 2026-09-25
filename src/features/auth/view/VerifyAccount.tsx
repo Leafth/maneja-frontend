@@ -1,6 +1,12 @@
 import { ChevronLeftIcon } from 'lucide-react-native';
 import { Controller } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
@@ -10,11 +16,16 @@ import colors from '@/styles/colors';
 
 import { useVerifyPasswordResetCodeViewModel } from '../viewmodels/use-verify-code.view-model';
 
-const MASKED_EMAIL = 'email@coisa.com';
-
 export function VerifyAccount() {
-  const { control, onSubmit, resendCode, goBack, isValid, isSubmitting } =
-    useVerifyPasswordResetCodeViewModel();
+  const {
+    control,
+    maskedEmail,
+    onSubmit,
+    resendCode,
+    goBack,
+    isValid,
+    isSubmitting,
+  } = useVerifyPasswordResetCodeViewModel();
 
   return (
     <KeyboardAvoidingView
@@ -48,7 +59,8 @@ export function VerifyAccount() {
             </AppText>
 
             <AppText color='muted'>
-              Digite o código de segurança de 6 dígitos que enviamos para o e-mail: {MASKED_EMAIL}
+              Digite o código de segurança de 6 dígitos que enviamos para o
+              e-mail: {maskedEmail}
             </AppText>
           </View>
 
@@ -71,7 +83,11 @@ export function VerifyAccount() {
             <View className='flex-row justify-center gap-1'>
               <AppText color='muted'>Não recebeu o código?</AppText>
               <TouchableOpacity onPress={resendCode}>
-                <AppText color='primary' weight='semiBold' className='underline'>
+                <AppText
+                  color='primary'
+                  weight='semiBold'
+                  className='underline'
+                >
                   Reenviar
                 </AppText>
               </TouchableOpacity>

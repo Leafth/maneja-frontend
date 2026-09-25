@@ -10,6 +10,7 @@ import {
 } from '../schemas/verify-password-reset-code.schema';
 
 import { usePasswordResetStore } from '../stores';
+import { maskEmail } from '../utils/mask-email';
 
 export function useVerifyPasswordResetCodeViewModel() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export function useVerifyPasswordResetCodeViewModel() {
   const resendCodeMutation = useForgotPassword();
 
   const email = usePasswordResetStore((state) => state.email);
+
+  const maskedEmail = maskEmail(email);
 
   const setResetToken = usePasswordResetStore((state) => state.setResetToken);
 
@@ -62,19 +65,14 @@ export function useVerifyPasswordResetCodeViewModel() {
 
   return {
     control,
-
     onSubmit,
     resendCode,
     goBack,
-
+    maskedEmail,
     isValid,
-
     isSubmitting: isSubmitting || verifyMutation.isPending,
-
     isResending: resendCodeMutation.isPending,
-
     isError: verifyMutation.isError || resendCodeMutation.isError,
-
     error: verifyMutation.error || resendCodeMutation.error,
   };
 }
