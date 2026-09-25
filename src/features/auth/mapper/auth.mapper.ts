@@ -2,10 +2,12 @@ import type {
   AuthSession,
   ForgotPassword,
   Login,
+  PasswordResetToken,
   Register,
   RegisteredUser,
   ResetPassword,
   User,
+  VerifyPasswordResetCode,
 } from '../models';
 
 import type {
@@ -18,6 +20,8 @@ import type {
   RegisterResponseDTO,
   ResetPasswordRequestDTO,
   UserResponseDTO,
+  VerifyPasswordResetCodeRequestDTO,
+  VerifyPasswordResetCodeResponseDTO,
 } from '../models/dtos';
 
 export function mapLoginToDTO(login: Login): LoginRequestDTO {
@@ -99,11 +103,27 @@ export function mapForgotPasswordToDTO(
   };
 }
 
+export function mapVerifyPasswordResetCodeToDTO(
+  data: VerifyPasswordResetCode,
+): VerifyPasswordResetCodeRequestDTO {
+  return {
+    code: data.code,
+  };
+}
+
+export function mapVerifyPasswordResetCodeResponseToPasswordResetToken(
+  dto: VerifyPasswordResetCodeResponseDTO,
+): PasswordResetToken {
+  return {
+    resetToken: dto.reset_token,
+  };
+}
+
 export function mapResetPasswordToDTO(
   data: ResetPassword,
 ): ResetPasswordRequestDTO {
   return {
-    token: data.token,
+    reset_token: data.resetToken,
     password: data.password,
     password_confirmation: data.passwordConfirmation,
   };
