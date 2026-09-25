@@ -54,7 +54,7 @@ export function useSignUpViewModel() {
 
     authenticate(result.user);
 
-    router.replace('/preparing');
+    router.replace('/home');
   });
 
   const goBack = () => {
