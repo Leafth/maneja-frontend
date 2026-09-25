@@ -7,11 +7,14 @@ import {
   forgotPasswordSchema,
   type ForgotPasswordFormData,
 } from '../schemas/forgot-password.schema';
+import { usePasswordResetStore } from '../stores';
 
 export function useForgotPasswordViewModel() {
   const router = useRouter();
 
   const forgotPasswordMutation = useForgotPassword();
+
+  const setEmail = usePasswordResetStore((state) => state.setEmail);
 
   const {
     control,
@@ -29,13 +32,21 @@ export function useForgotPasswordViewModel() {
   const onSubmit = handleSubmit(async (data) => {
     await forgotPasswordMutation.mutateAsync(data);
 
-    router.push('/');
+    setEmail(data.email);
+
+    router.push('/verify-account');
   });
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  };
 
   return {
     control,
     onSubmit,
-
+    goBack,
     isValid,
 
     isSubmitting: isSubmitting || forgotPasswordMutation.isPending,

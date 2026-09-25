@@ -5,7 +5,7 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { Controller } from 'react-hook-form';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
@@ -21,17 +21,33 @@ interface ISignInBottomSheetProps {
 }
 
 export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
-  const { bottom, bottomSheetModalRef, passwordInputRef } =
-    useSignInBottomSheetController(ref);
+  const {
+    bottom,
+    bottomSheetModalRef,
+    passwordInputRef,
+    handleForgotPassword,
+  } = useSignInBottomSheetController(ref);
 
-  const { control, onSubmit, isError, isSubmitting, isValid } =
-    useLoginViewModel();
+  const {
+    control,
+    onSubmit,
+    isError,
+    isSubmitting,
+    isValid,
+  } = useLoginViewModel();
 
   return (
     <BottomSheetModalProvider>
       <BottomSheetModal ref={bottomSheetModalRef}>
-        <BottomSheetView style={{ paddingBottom: bottom }} className='px-6'>
-          <AppText weight='semiBold' size='3xl' className='tracking-[-0.32px]'>
+        <BottomSheetView
+          style={{ paddingBottom: bottom }}
+          className='px-6'
+        >
+          <AppText
+            weight='semiBold'
+            size='3xl'
+            className='tracking-[-0.32px]'
+          >
             Acesse a sua conta
           </AppText>
 
@@ -40,7 +56,10 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
               control={control}
               name='email'
               render={({ field, fieldState }) => (
-                <FormGroup label='E-mail' error={fieldState.error?.message}>
+                <FormGroup
+                  label='E-mail'
+                  error={fieldState.error?.message}
+                >
                   <Input
                     InputComponent={BottomSheetTextInput}
                     keyboardType='email-address'
@@ -53,7 +72,9 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
                     onBlur={field.onBlur}
                     error={!!fieldState.error}
                     disabled={isSubmitting}
-                    onSubmitEditing={() => passwordInputRef.current?.focus()}
+                    onSubmitEditing={() =>
+                      passwordInputRef.current?.focus()
+                    }
                   />
                 </FormGroup>
               )}
@@ -63,7 +84,10 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
               control={control}
               name='password'
               render={({ field, fieldState }) => (
-                <FormGroup label='Senha' error={fieldState.error?.message}>
+                <FormGroup
+                  label='Senha'
+                  error={fieldState.error?.message}
+                >
                   <Input
                     ref={passwordInputRef}
                     InputComponent={BottomSheetTextInput}
@@ -84,7 +108,7 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
             />
 
             {isError && (
-              <AppText align='center' className='text-red-500'>
+              <AppText align='center' color='error'>
                 E-mail ou senha inválidos.
               </AppText>
             )}
@@ -96,6 +120,25 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
             >
               Entrar
             </Button>
+
+            <View className='flex-row justify-center gap-1'>
+              <AppText>
+                Esqueceu a senha?
+              </AppText>
+
+              <TouchableOpacity
+                onPress={handleForgotPassword}
+                disabled={isSubmitting}
+              >
+                <AppText
+                  color='primary'
+                  weight='semiBold'
+                  className='underline'
+                >
+                  Recuperar senha
+                </AppText>
+              </TouchableOpacity>
+            </View>
           </View>
         </BottomSheetView>
       </BottomSheetModal>

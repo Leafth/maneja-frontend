@@ -17,8 +17,8 @@ export function useResetPasswordViewModel() {
 
   const resetToken = usePasswordResetStore((state) => state.resetToken);
 
-  const clearResetToken = usePasswordResetStore(
-    (state) => state.clearResetToken,
+  const clearPasswordReset = usePasswordResetStore(
+    (state) => state.clearPasswordReset,
   );
 
   const {
@@ -59,19 +59,23 @@ export function useResetPasswordViewModel() {
       passwordConfirmation: data.passwordConfirmation,
     });
 
-    clearResetToken();
+    clearPasswordReset();
 
     router.replace('/');
   });
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  };
+
   return {
     control,
     onSubmit,
-
+    goBack,
     isValid,
-
     isSubmitting: isSubmitting || resetPasswordMutation.isPending,
-
     isError: resetPasswordMutation.isError,
     error: resetPasswordMutation.error,
   };
