@@ -14,6 +14,22 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+const PUBLIC_ROUTES = [
+  '/auth/login',
+  '/auth/register',
+  '/password/forgot',
+  '/password/verify',
+  '/password/reset',
+];
+
+function isPublicRoute(url?: string): boolean {
+  if (!url) {
+    return false;
+  }
+
+  return PUBLIC_ROUTES.some((route) => url.includes(route));
+}
+
 let refreshPromise: Promise<AuthSession> | null = null;
 
 async function refreshSession(): Promise<AuthSession> {
@@ -42,18 +58,21 @@ async function refreshSession(): Promise<AuthSession> {
 
 api.interceptors.request.use(
   (config) => {
+    if (isPublicRoute(config.url)) {
+      return config;
+    }
+
     const accessToken = authTokenStorage.getAccessToken();
 
     if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+      config.headers = AxiosHeaders.from(config.headers);
+
+      config.headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
     return config;
   },
-
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -69,6 +88,10 @@ api.interceptors.response.use(
     const isUnauthorized = error.response?.status === 401;
 
     if (!isUnauthorized) {
+      return Promise.reject(error);
+    }
+
+    if (isPublicRoute(originalRequest.url)) {
       return Promise.reject(error);
     }
 
