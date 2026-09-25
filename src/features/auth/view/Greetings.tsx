@@ -8,19 +8,13 @@ import { ImageBackground, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SignInBottomSheet } from '../components/SignInBottomSheet';
 import type { ISignInBottomSheet } from '../components/SignInBottomSheet/ISignInBottomSheet';
-import { useLoginViewModel } from '../viewmodels/use-login-view-model';
 
 export function Greetings() {
   const signInBottomSheetRef = useRef<ISignInBottomSheet>(null);
   const router = useRouter();
 
-  const { control, setFocus, onSubmit, isError, isSubmitting, error, isValid } =
-    useLoginViewModel();
-
   return (
     <>
-      {' '}
-      ;
       <ImageBackground
         source={greetingsBg}
         resizeMode='cover'
