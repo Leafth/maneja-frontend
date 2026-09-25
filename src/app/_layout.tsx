@@ -1,4 +1,5 @@
 import '../styles/global.css';
+import '@/infrastructure/api/api-interceptors';
 
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
