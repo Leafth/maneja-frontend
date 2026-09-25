@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 
@@ -12,11 +13,16 @@ import {
 import { usePasswordResetStore } from '../stores';
 import { maskEmail } from '../utils/mask-email';
 
+interface ApiErrorResponse {
+  errors?: {
+    base?: string[];
+  };
+}
+
 export function useVerifyPasswordResetCodeViewModel() {
   const router = useRouter();
 
   const verifyMutation = useVerifyPasswordResetCode();
-
   const resendCodeMutation = useForgotPassword();
 
   const email = usePasswordResetStore((state) => state.email);
@@ -28,11 +34,12 @@ export function useVerifyPasswordResetCodeViewModel() {
   const {
     control,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { isValid, isSubmitting },
   } = useForm<VerifyPasswordResetCodeFormData>({
     resolver: zodResolver(verifyPasswordResetCodeSchema),
-
-    mode: 'onTouched',
+    mode: 'onChange',
 
     defaultValues: {
       code: '',
@@ -40,21 +47,43 @@ export function useVerifyPasswordResetCodeViewModel() {
   });
 
   const onSubmit = handleSubmit(async (data) => {
-    const result = await verifyMutation.mutateAsync(data);
+    try {
+      const result = await verifyMutation.mutateAsync(data);
 
-    setResetToken(result.resetToken);
+      setResetToken(result.resetToken);
 
-    router.push('/create-new-password');
+      router.push('/create-new-password');
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+
+      const message =
+        axiosError.response?.data?.errors?.base?.[0] ??
+        'Código inválido ou expirado.';
+
+      setError('code', {
+        type: 'server',
+        message,
+      });
+    }
   });
 
+  const clearCodeError = () => {
+    clearErrors('code');
+    verifyMutation.reset();
+  };
+
   const resendCode = async () => {
-    if (!email) {
-      throw new Error('E-mail de recuperação não encontrado.');
+    if (!email || resendCodeMutation.isPending) {
+      return;
     }
 
-    await resendCodeMutation.mutateAsync({
-      email,
-    });
+    try {
+      await resendCodeMutation.mutateAsync({
+        email,
+      });
+    } catch {
+      // O erro fica disponível pela mutation.
+    }
   };
 
   const goBack = () => {
@@ -65,14 +94,22 @@ export function useVerifyPasswordResetCodeViewModel() {
 
   return {
     control,
+
+    maskedEmail,
+
     onSubmit,
     resendCode,
     goBack,
-    maskedEmail,
+    clearCodeError,
+
     isValid,
+
     isSubmitting: isSubmitting || verifyMutation.isPending,
+
     isResending: resendCodeMutation.isPending,
+
     isError: verifyMutation.isError || resendCodeMutation.isError,
+
     error: verifyMutation.error || resendCodeMutation.error,
   };
 }

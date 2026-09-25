@@ -23,8 +23,10 @@ export function VerifyAccount() {
     onSubmit,
     resendCode,
     goBack,
+    clearCodeError,
     isValid,
     isSubmitting,
+    isResending,
   } = useVerifyPasswordResetCodeViewModel();
 
   return (
@@ -69,26 +71,37 @@ export function VerifyAccount() {
               control={control}
               name='code'
               render={({ field, fieldState }) => (
-                <OtpInput
-                  autoFocus
-                  value={field.value}
-                  onChange={field.onChange}
-                  onComplete={() => onSubmit()}
-                  error={!!fieldState.error}
-                  disabled={isSubmitting}
-                />
+                <View className='gap-2'>
+                  <OtpInput
+                    autoFocus
+                    value={field.value}
+                    onChange={(value) => {
+                      clearCodeError();
+                      field.onChange(value);
+                    }}
+                    onComplete={() => onSubmit()}
+                    error={!!fieldState.error}
+                    disabled={isSubmitting}
+                  />
+
+                  {fieldState.error && (
+                    <AppText size='xs' color='error' align='center'>
+                      {fieldState.error.message}
+                    </AppText>
+                  )}
+                </View>
               )}
             />
 
             <View className='flex-row justify-center gap-1'>
               <AppText color='muted'>Não recebeu o código?</AppText>
-              <TouchableOpacity onPress={resendCode}>
+              <TouchableOpacity onPress={resendCode} disabled={isResending}>
                 <AppText
                   color='primary'
                   weight='semiBold'
                   className='underline'
                 >
-                  Reenviar
+                  {isResending ? 'Reenviando...' : 'Reenviar'}
                 </AppText>
               </TouchableOpacity>
             </View>
