@@ -1,11 +1,16 @@
-import { ChevronLeftIcon } from 'lucide-react-native';
-import { useRef } from 'react';
+import {
+  ChevronLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+} from 'lucide-react-native';
+import { useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,8 +28,20 @@ export function SignUp() {
   const passwordInputRef = useRef<TextInput>(null);
   const confirmPasswordInputRef = useRef<TextInput>(null);
 
-  const { control, onSubmit, goBack, isValid, isSubmitting, isError } =
-    useSignUpViewModel();
+  const [showPassword, setShowPassword] = useState(false);
+  const [
+    showPasswordConfirmation,
+    setShowPasswordConfirmation,
+  ] = useState(false);
+
+  const {
+    control,
+    onSubmit,
+    goBack,
+    isValid,
+    isSubmitting,
+    isError,
+  } = useSignUpViewModel();
 
   return (
     <KeyboardAvoidingView
@@ -39,7 +56,10 @@ export function SignUp() {
             accessibilityLabel='Voltar'
             onPress={goBack}
           >
-            <ChevronLeftIcon size={20} color={colors.black[700]} />
+            <ChevronLeftIcon
+              size={20}
+              color={colors.black[700]}
+            />
           </Button>
         </View>
 
@@ -58,7 +78,10 @@ export function SignUp() {
               Crie sua conta
             </AppText>
 
-            <AppText color='muted' align='center'>
+            <AppText
+              color='muted'
+              align='center'
+            >
               Para poder visualizar seu progresso
             </AppText>
           </View>
@@ -68,7 +91,10 @@ export function SignUp() {
               control={control}
               name='name'
               render={({ field, fieldState }) => (
-                <FormGroup label='Nome' error={fieldState.error?.message}>
+                <FormGroup
+                  label='Nome'
+                  error={fieldState.error?.message}
+                >
                   <Input
                     autoFocus
                     placeholder='João Silva'
@@ -81,7 +107,9 @@ export function SignUp() {
                     onBlur={field.onBlur}
                     error={!!fieldState.error}
                     disabled={isSubmitting}
-                    onSubmitEditing={() => emailInputRef.current?.focus()}
+                    onSubmitEditing={() =>
+                      emailInputRef.current?.focus()
+                    }
                   />
                 </FormGroup>
               )}
@@ -91,7 +119,10 @@ export function SignUp() {
               control={control}
               name='email'
               render={({ field, fieldState }) => (
-                <FormGroup label='E-mail' error={fieldState.error?.message}>
+                <FormGroup
+                  label='E-mail'
+                  error={fieldState.error?.message}
+                >
                   <Input
                     ref={emailInputRef}
                     placeholder='joaosilva@gmail.com'
@@ -105,7 +136,9 @@ export function SignUp() {
                     onBlur={field.onBlur}
                     error={!!fieldState.error}
                     disabled={isSubmitting}
-                    onSubmitEditing={() => passwordInputRef.current?.focus()}
+                    onSubmitEditing={() =>
+                      passwordInputRef.current?.focus()
+                    }
                   />
                 </FormGroup>
               )}
@@ -115,24 +148,57 @@ export function SignUp() {
               control={control}
               name='password'
               render={({ field, fieldState }) => (
-                <FormGroup label='Senha' error={fieldState.error?.message}>
-                  <Input
-                    ref={passwordInputRef}
-                    placeholder='Mínimo 8 caracteres'
-                    secureTextEntry
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    autoComplete='new-password'
-                    returnKeyType='next'
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={!!fieldState.error}
-                    disabled={isSubmitting}
-                    onSubmitEditing={() =>
-                      confirmPasswordInputRef.current?.focus()
-                    }
-                  />
+                <FormGroup
+                  label='Senha'
+                  error={fieldState.error?.message}
+                >
+                  <View className='relative'>
+                    <Input
+                      ref={passwordInputRef}
+                      placeholder='Mínimo 8 caracteres'
+                      secureTextEntry={!showPassword}
+                      autoCapitalize='none'
+                      autoCorrect={false}
+                      autoComplete='new-password'
+                      returnKeyType='next'
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={!!fieldState.error}
+                      disabled={isSubmitting}
+                      className='pr-12'
+                      onSubmitEditing={() =>
+                        confirmPasswordInputRef.current?.focus()
+                      }
+                    />
+
+                    <TouchableOpacity
+                      className='absolute right-4 top-4'
+                      onPress={() =>
+                        setShowPassword(
+                          (previous) => !previous,
+                        )
+                      }
+                      accessibilityRole='button'
+                      accessibilityLabel={
+                        showPassword
+                          ? 'Ocultar senha'
+                          : 'Mostrar senha'
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon
+                          size={20}
+                          color={colors.black[700]}
+                        />
+                      ) : (
+                        <EyeIcon
+                          size={20}
+                          color={colors.black[700]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </FormGroup>
               )}
             />
@@ -145,27 +211,62 @@ export function SignUp() {
                   label='Confirmar senha'
                   error={fieldState.error?.message}
                 >
-                  <Input
-                    ref={confirmPasswordInputRef}
-                    placeholder='Mínimo 8 caracteres'
-                    secureTextEntry
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    autoComplete='new-password'
-                    returnKeyType='done'
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={!!fieldState.error}
-                    disabled={isSubmitting}
-                    onSubmitEditing={onSubmit}
-                  />
+                  <View className='relative'>
+                    <Input
+                      ref={confirmPasswordInputRef}
+                      placeholder='Mínimo 8 caracteres'
+                      secureTextEntry={
+                        !showPasswordConfirmation
+                      }
+                      autoCapitalize='none'
+                      autoCorrect={false}
+                      autoComplete='new-password'
+                      returnKeyType='done'
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={!!fieldState.error}
+                      disabled={isSubmitting}
+                      className='pr-12'
+                      onSubmitEditing={onSubmit}
+                    />
+
+                    <TouchableOpacity
+                      className='absolute right-4 top-4'
+                      onPress={() =>
+                        setShowPasswordConfirmation(
+                          (previous) => !previous,
+                        )
+                      }
+                      accessibilityRole='button'
+                      accessibilityLabel={
+                        showPasswordConfirmation
+                          ? 'Ocultar confirmação de senha'
+                          : 'Mostrar confirmação de senha'
+                      }
+                    >
+                      {showPasswordConfirmation ? (
+                        <EyeOffIcon
+                          size={20}
+                          color={colors.black[700]}
+                        />
+                      ) : (
+                        <EyeIcon
+                          size={20}
+                          color={colors.black[700]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </FormGroup>
               )}
             />
 
             {isError && (
-              <AppText align='center' className='text-red-500'>
+              <AppText
+                align='center'
+                className='text-red-500'
+              >
                 Não foi possível criar sua conta.
               </AppText>
             )}

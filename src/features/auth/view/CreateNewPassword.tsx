@@ -1,9 +1,9 @@
-import { ChevronLeftIcon } from 'lucide-react-native';
-import { Controller } from 'react-hook-form';
+import { ChevronLeftIcon, EyeIcon, EyeOffIcon } from 'lucide-react-native';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,16 +13,17 @@ import { Button } from '@/shared/components/Button';
 import { Input } from '@/shared/components/Input';
 import colors from '@/styles/colors';
 
+import { useState } from 'react';
+import { Controller } from 'react-hook-form';
 import { useResetPasswordViewModel } from '../viewmodels/use-reset-password.view-model';
 
 export function CreateNewPassword() {
-  const {
-    control,
-    onSubmit,
-    goBack,
-    isValid,
-    isSubmitting,
-  } = useResetPasswordViewModel();
+  const { control, onSubmit, goBack, isValid, isSubmitting } =
+    useResetPasswordViewModel();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] =
+    useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -37,10 +38,7 @@ export function CreateNewPassword() {
             accessibilityLabel='Voltar'
             onPress={goBack}
           >
-            <ChevronLeftIcon
-              size={20}
-              color={colors.black[700]}
-            />
+            <ChevronLeftIcon size={20} color={colors.black[700]} />
           </Button>
         </View>
 
@@ -70,27 +68,39 @@ export function CreateNewPassword() {
               name='password'
               render={({ field, fieldState }) => (
                 <View className='gap-1'>
-                  <AppText
-                    size='sm'
-                    weight='medium'
-                  >
+                  <AppText size='sm' weight='medium'>
                     Nova Senha
                   </AppText>
 
-                  <Input
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    placeholder='Digite sua senha'
-                    secureTextEntry
-                    disabled={isSubmitting}
-                    error={!!fieldState.error}
-                  />
+                  <View className='relative'>
+                    <Input
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder='Digite sua senha'
+                      secureTextEntry={!showPassword}
+                      disabled={isSubmitting}
+                      error={!!fieldState.error}
+                      className='pr-12'
+                    />
+
+                    <TouchableOpacity
+                      className='absolute right-4 top-4'
+                      onPress={() => setShowPassword((previous) => !previous)}
+                      accessibilityLabel={
+                        showPassword ? 'Ocultar senha' : 'Mostrar senha'
+                      }
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon size={20} color={colors.gray[700]} />
+                      ) : (
+                        <EyeIcon size={20} color={colors.gray[700]} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
 
                   {fieldState.error && (
-                    <AppText
-                      size='xs'
-                      color='error'
-                    >
+                    <AppText size='xs' color='error'>
                       {fieldState.error.message}
                     </AppText>
                   )}
@@ -103,27 +113,43 @@ export function CreateNewPassword() {
               name='passwordConfirmation'
               render={({ field, fieldState }) => (
                 <View className='gap-1'>
-                  <AppText
-                    size='sm'
-                    weight='medium'
-                  >
+                  <AppText size='sm' weight='medium'>
                     Confirmar Nova Senha
                   </AppText>
 
-                  <Input
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    placeholder='Digite sua senha novamente'
-                    secureTextEntry
-                    disabled={isSubmitting}
-                    error={!!fieldState.error}
-                  />
+                  <View className='relative'>
+                    <Input
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder='Digite sua senha novamente'
+                      secureTextEntry={!showPasswordConfirmation}
+                      disabled={isSubmitting}
+                      error={!!fieldState.error}
+                      className='pr-12'
+                    />
+
+                    <TouchableOpacity
+                      className='absolute right-4 top-4'
+                      onPress={() =>
+                        setShowPasswordConfirmation((previous) => !previous)
+                      }
+                      accessibilityLabel={
+                        showPasswordConfirmation
+                          ? 'Ocultar senha'
+                          : 'Mostrar senha'
+                      }
+                    >
+                      {showPasswordConfirmation ? (
+                        <EyeOffIcon size={20} color={colors.gray[700]} />
+                      ) : (
+                        <EyeIcon size={20} color={colors.gray[700]} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
 
                   {fieldState.error && (
-                    <AppText
-                      size='xs'
-                      color='error'
-                    >
+                    <AppText size='xs' color='error'>
                       {fieldState.error.message}
                     </AppText>
                   )}

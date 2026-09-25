@@ -4,13 +4,18 @@ import {
   BottomSheetTextInput,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
+import { EyeIcon, EyeOffIcon } from 'lucide-react-native';
+import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
+
+import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { Input } from '@/shared/components/Input';
+import colors from '@/styles/colors';
 
 import { useLoginViewModel } from '../../viewmodels/use-login-view-model';
 import { ISignInBottomSheet } from './ISignInBottomSheet';
@@ -21,6 +26,8 @@ interface ISignInBottomSheetProps {
 }
 
 export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   const {
     bottom,
     bottomSheetModalRef,
@@ -28,26 +35,14 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
     handleForgotPassword,
   } = useSignInBottomSheetController(ref);
 
-  const {
-    control,
-    onSubmit,
-    isError,
-    isSubmitting,
-    isValid,
-  } = useLoginViewModel();
+  const { control, onSubmit, isError, isSubmitting, isValid } =
+    useLoginViewModel();
 
   return (
     <BottomSheetModalProvider>
       <BottomSheetModal ref={bottomSheetModalRef}>
-        <BottomSheetView
-          style={{ paddingBottom: bottom }}
-          className='px-6'
-        >
-          <AppText
-            weight='semiBold'
-            size='3xl'
-            className='tracking-[-0.32px]'
-          >
+        <BottomSheetView style={{ paddingBottom: bottom }} className='px-6'>
+          <AppText weight='semiBold' size='3xl' className='tracking-[-0.32px]'>
             Acesse a sua conta
           </AppText>
 
@@ -56,10 +51,7 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
               control={control}
               name='email'
               render={({ field, fieldState }) => (
-                <FormGroup
-                  label='E-mail'
-                  error={fieldState.error?.message}
-                >
+                <FormGroup label='E-mail' error={fieldState.error?.message}>
                   <Input
                     InputComponent={BottomSheetTextInput}
                     keyboardType='email-address'
@@ -72,9 +64,7 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
                     onBlur={field.onBlur}
                     error={!!fieldState.error}
                     disabled={isSubmitting}
-                    onSubmitEditing={() =>
-                      passwordInputRef.current?.focus()
-                    }
+                    onSubmitEditing={() => passwordInputRef.current?.focus()}
                   />
                 </FormGroup>
               )}
@@ -84,25 +74,50 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
               control={control}
               name='password'
               render={({ field, fieldState }) => (
-                <FormGroup
-                  label='Senha'
-                  error={fieldState.error?.message}
-                >
-                  <Input
-                    ref={passwordInputRef}
-                    InputComponent={BottomSheetTextInput}
-                    secureTextEntry
-                    autoCapitalize='none'
-                    autoCorrect={false}
-                    autoComplete='current-password'
-                    returnKeyType='done'
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={!!fieldState.error}
-                    disabled={isSubmitting}
-                    onSubmitEditing={onSubmit}
-                  />
+                <FormGroup label='Senha' error={fieldState.error?.message}>
+                  <View className='relative'>
+                    <Input
+                      key={
+                        showPassword ? 'password-visible' : 'password-hidden'
+                      }
+                      ref={passwordInputRef}
+                      InputComponent={BottomSheetTextInput}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize='none'
+                      autoCorrect={false}
+                      autoComplete='current-password'
+                      returnKeyType='done'
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={!!fieldState.error}
+                      disabled={isSubmitting}
+                      className='pr-14'
+                      onSubmitEditing={onSubmit}
+                    />
+
+                    <Pressable
+                      onPress={() => {
+                        setShowPassword((previous) => !previous);
+                      }}
+                      hitSlop={12}
+                      style={{
+                        position: 'absolute',
+                        right: 16,
+                        top: 0,
+                        bottom: 0,
+                        justifyContent: 'center',
+                        zIndex: 999,
+                        elevation: 999,
+                      }}
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon size={20} color={colors.black[700]} />
+                      ) : (
+                        <EyeIcon size={20} color={colors.black[700]} />
+                      )}
+                    </Pressable>
+                  </View>
                 </FormGroup>
               )}
             />
@@ -122,9 +137,7 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
             </Button>
 
             <View className='flex-row justify-center gap-1'>
-              <AppText>
-                Esqueceu a senha?
-              </AppText>
+              <AppText>Esqueceu a senha?</AppText>
 
               <TouchableOpacity
                 onPress={handleForgotPassword}
