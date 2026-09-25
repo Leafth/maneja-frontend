@@ -1,11 +1,15 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useRouter } from 'expo-router';
 import { useImperativeHandle, useRef } from 'react';
-import { Alert } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { ISignInBottomSheet } from './ISignInBottomSheet';
 
-export function useSignInBottomSheetController(ref: React.Ref<ISignInBottomSheet>) {
+export function useSignInBottomSheetController(
+  ref: React.Ref<ISignInBottomSheet>,
+) {
+  const router = useRouter();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { bottom } = useSafeAreaInsets();
   const passwordInputRef = useRef<TextInput>(null);
@@ -14,14 +18,15 @@ export function useSignInBottomSheetController(ref: React.Ref<ISignInBottomSheet
     open: () => bottomSheetModalRef.current?.present(),
   }));
 
-  function handleSubmit() {
-    Alert.alert('Enviando form');
+  function handleForgotPassword() {
+    bottomSheetModalRef.current?.dismiss();
+    router.push('/forgot-password');
   }
 
   return {
     bottom,
     bottomSheetModalRef,
     passwordInputRef,
-    handleSubmit,
+    handleForgotPassword,
   };
 }
