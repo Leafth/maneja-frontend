@@ -1,5 +1,5 @@
 export interface ResetPasswordRequestDTO {
-  token: string;
+  reset_token: string;
   password: string;
   password_confirmation: string;
 }
