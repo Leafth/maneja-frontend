@@ -1,8 +1,8 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-import type { User } from "../models";
+import type { User } from '../models';
 
-type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthState {
   user: User | null;
@@ -17,7 +17,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  status: "loading",
+  status: 'loading',
 
   setUser: (user) => {
     set({ user });
@@ -30,14 +30,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   authenticate: (user) => {
     set({
       user,
-      status: "authenticated",
+      status: 'authenticated',
     });
   },
 
   logout: () => {
     set({
       user: null,
-      status: "unauthenticated",
+      status: 'unauthenticated',
     });
   },
 }));
