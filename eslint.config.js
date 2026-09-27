@@ -26,7 +26,6 @@ module.exports = defineConfig([
         {
           selector: 'interface',
           format: ['PascalCase'],
-          custom: { regex: '^I[A-Z]', match: true },
         },
       ],
     },

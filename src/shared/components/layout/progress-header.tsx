@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, View } from 'react-native';
 
 type ProgressHeaderProps = {
   progress?: number;
