@@ -23,53 +23,6 @@ O **MANEJA** é uma aplicação voltada ao apoio do gerenciamento de propriedade
 Este repositório contém o **frontend mobile** da aplicação, responsável pela experiência do usuário, navegação entre os fluxos da aplicação e integração com a API do projeto.
 
 
-## Funcionalidades
-
-Atualmente, o frontend possui suporte para:
-
-- cadastro de usuários;
-- autenticação;
-- gerenciamento de sessão;
-- renovação de sessão com refresh token;
-- recuperação de senha por código enviado por e-mail;
-- redefinição de senha;
-- navegação entre fluxos públicos e autenticados;
-- integração com a MANEJA API.
-
-Novas funcionalidades relacionadas à gestão da propriedade e do rebanho serão adicionadas conforme a evolução do projeto.
-
-
-## Principais fluxos
-
-### Autenticação
-
-```text
-Cadastro / Login
-      ↓
-Autenticação na API
-      ↓
-Armazenamento da sessão
-      ↓
-Identificação do usuário
-      ↓
-Acesso à aplicação
-```
-
-### Recuperação de senha
-
-```text
-Informar e-mail
-      ↓
-Receber código de verificação
-      ↓
-Validar código
-      ↓
-Criar nova senha
-      ↓
-Retornar ao login
-```
-
-
 ## Pré-requisitos
 
 Antes de executar o projeto, tenha instalado:
