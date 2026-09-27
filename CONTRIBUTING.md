@@ -8,8 +8,6 @@ O objetivo é manter o código consistente entre os membros da equipe, facilitar
 
 > Instruções de instalação e execução devem ficar no `README.md`. Explicações e decisões arquiteturais devem ficar no `ARCHITECTURE.md`.
 
----
-
 ## Desenvolvimento de uma feature
 
 O desenvolvimento de uma nova feature deve seguir, preferencialmente, a ordem abaixo:
@@ -28,8 +26,6 @@ O desenvolvimento de uma nova feature deve seguir, preferencialmente, a ordem ab
 Essa ordem parte das camadas mais próximas da API e avança até a interface.
 
 As regras específicas de cada uma dessas camadas serão documentadas e refinadas conforme o projeto evoluir. Quando houver dúvida sobre dependências entre camadas ou responsabilidades arquiteturais, consulte o `ARCHITECTURE.md`.
-
----
 
 ## Padrões de nomenclatura
 
@@ -84,6 +80,8 @@ export function CreateNewPasswordView() {
   // ...
 }
 ```
+
+> Observação: componentes que representam uma View devem terminar com o sufixo View no nome da função exportada.
 
 ### Funções e variáveis
 
@@ -193,8 +191,6 @@ export { useMe } from './use-me';
 
 Evite criar um único barrel global que concentre exports de todo o projeto.
 
----
-
 ## Requisições e acesso à API
 
 Toda integração com a API deve respeitar o fluxo definido na arquitetura do projeto.
@@ -204,8 +200,6 @@ Antes de implementar uma nova integração, consulte o `ARCHITECTURE.md` para ve
 Como regra geral, não crie chamadas HTTP diretamente dentro de Views ou Components.
 
 A implementação deve seguir os padrões já estabelecidos no projeto e evitar atalhos entre camadas sem alinhamento prévio com a equipe.
-
----
 
 ## Fluxo Git
 
@@ -242,36 +236,6 @@ git pull origin develop
 ```
 
 Depois crie uma branch específica para a alteração.
-
-Nova funcionalidade:
-
-```bash
-git switch -c feature/password-reset
-```
-
-Correção:
-
-```bash
-git switch -c fix/auth-interceptor
-```
-
-Refatoração:
-
-```bash
-git switch -c refactor/auth-hooks
-```
-
-Documentação:
-
-```bash
-git switch -c docs/contributing
-```
-
-Manutenção:
-
-```bash
-git switch -c chore/update-dependencies
-```
 
 ### Nomenclatura das branches
 
@@ -310,19 +274,13 @@ feature/password-reset -> develop
 
 Um bom Pull Request deve:
 
-- tratar de uma alteração ou objetivo bem definido;
-- possuir título claro e objetivo;
-- explicar resumidamente o que foi alterado;
-- informar como a alteração foi validada;
-- incluir screenshots quando houver mudanças relevantes de interface;
+- possuir título claro e objetivo, com título seguindo esse padrão: tipo(modulo): titulo do pull request;
+- explicar resumidamente o que foi alterado, ou fazer uma listagem;
 - evitar arquivos ou alterações que não façam parte do objetivo da branch;
 - estar atualizado com a `develop` antes do merge;
 - estar livre de conflitos;
-- permitir que outro desenvolvedor entenda a mudança sem precisar interpretar todo o diff.
 
 Quando uma mudança exigir alteração dos padrões existentes do projeto, isso deve ser destacado no Pull Request e alinhado com a equipe antes do merge.
-
----
 
 ## Checklist antes de subir uma alteração
 
