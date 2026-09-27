@@ -144,7 +144,7 @@ npm run lint
 
 ## Estrutura do projeto
 
-A aplicação utiliza `src/app` como raiz do Expo Router e organiza as funcionalidades por feature. As responsabilidades e regras entre essas camadas estão descritas em **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
+A aplicação utiliza `src/app` como raiz do Expo Router e organiza as funcionalidades por feature. As responsabilidades e regras entre essas camadas estão descritas em **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 
 
 ## Integração com a API
@@ -172,4 +172,4 @@ A documentação do projeto está dividida da seguinte forma:
 | `ARCHITECTURE.md` | Arquitetura, camadas e responsabilidades estruturais |
 
 - **[Guia de desenvolvimento](./CONTRIBUTING.md)**
-- **[Arquitetura do projeto](./ARCHITECTURE.md)**
+- **[Arquitetura do projeto](./docs/ARCHITECTURE.md)**
