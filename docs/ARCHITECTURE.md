@@ -62,9 +62,10 @@ Essa separação evita que responsabilidades de interface, requisição HTTP e t
 
 A arquitetura do projeto segue os seguintes princípios:
 
-- organização por domínio;
-- separação de responsabilidades;
-- dependências direcionadas entre camadas;
+- **MVVM (Model-View-ViewModel)** como padrão para organização da camada de apresentação;
+- **organização feature-based**, agrupando o código por domínio ou funcionalidade;
+- separação de responsabilidades entre as camadas;
+- dependências direcionadas entre as camadas;
 - isolamento do contrato da API;
 - distinção entre estado local, remoto e global;
 - reutilização de componentes compartilhados apenas quando forem realmente genéricos;
@@ -182,7 +183,7 @@ A View é responsável pela apresentação da interface.
 
 Ela pode conter:
 
-- JSX;
+- TSX;
 - componentes visuais;
 - estados puramente visuais;
 - interação direta do usuário.
@@ -496,59 +497,7 @@ export default function SignUpRoute() {
 
 A implementação da tela deve permanecer dentro da feature correspondente.
 
-## 9. Autenticação e sessão
-
-A autenticação utiliza dois tipos principais de token:
-
-```text
-access token
-refresh token
-```
-
-O fluxo geral é:
-
-```text
-Login
- ↓
-access token + refresh token
- ↓
-salvamento da sessão
- ↓
-consulta do usuário autenticado
- ↓
-estado global
- ↓
-área autenticada
-```
-
-### Access token
-
-O access token é utilizado para autenticar requisições protegidas.
-
-Ele permanece em memória durante a execução da aplicação.
-
-### Refresh token
-
-O refresh token possui duração maior e é utilizado para renovar a sessão.
-
-Ele é armazenado utilizando SecureStore.
-
-### Renovação da sessão
-
-Quando uma rota protegida retorna `401`, o interceptor pode tentar renovar a sessão utilizando o refresh token.
-
-Após uma renovação bem-sucedida:
-
-```text
-novo access token
-novo refresh token
-```
-
-são armazenados e a requisição original pode ser executada novamente.
-
-Rotas públicas não devem iniciar automaticamente esse fluxo.
-
-## 10. Componentes compartilhados
+## 9. Componentes compartilhados
 
 Componentes reutilizáveis por diferentes partes da aplicação ficam em:
 
@@ -585,7 +534,7 @@ Componente que conhece um domínio específico
 → features/<feature>/components
 ```
 
-## 11. Regras de dependência
+## 10. Regras de dependência
 
 As dependências entre camadas devem seguir um fluxo previsível.
 
@@ -627,7 +576,7 @@ Essas regras ajudam a manter as responsabilidades separadas e reduzem o acoplame
 
 Para outras informações, consulte:
 
-- [README.md](./README.md) — visão geral, configuração e execução;
-- [CONTRIBUTING.md](./CONTRIBUTING.md) — padrões que devem ser seguidos durante o desenvolvimento.
+- [README.md](../README.md) — visão geral, configuração e execução;
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — padrões que devem ser seguidos durante o desenvolvimento.
 
 Este documento deve evoluir conforme a arquitetura do projeto for refinada.
