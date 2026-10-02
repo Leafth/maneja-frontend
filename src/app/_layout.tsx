@@ -1,5 +1,5 @@
-import '../styles/global.css';
 import '@/infrastructure/api/api-interceptors';
+import '../styles/global.css';
 
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -10,6 +10,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+import { startSyncListener } from '@/infrastructure/sync/sync-listener';
+import { SyncProvider } from '@/shared/provider/sync-provider';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +29,10 @@ export default function RootLayout() {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
+
+    const unsubscribe = startSyncListener();
+
+    return unsubscribe;
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
@@ -34,16 +41,18 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style='dark' />
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <StatusBar style='dark' />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='(auth)' />
-            <Stack.Screen name='(app)' />
-          </Stack>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <SyncProvider>
+        <StatusBar style='dark' />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider>
+            <StatusBar style='dark' />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name='(auth)' />
+              <Stack.Screen name='(app)' />
+            </Stack>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </SyncProvider>
     </QueryClientProvider>
   );
 }
