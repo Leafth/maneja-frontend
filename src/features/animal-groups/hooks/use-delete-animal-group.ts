@@ -7,6 +7,7 @@ export function useDeleteAnimalGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: (localId: string) => animalGroupRepository.remove(localId),
 
     onSuccess: async (_, localId) => {

@@ -13,6 +13,7 @@ export function useCreateAnimalGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: (data: CreateAnimalGroupData) =>
       animalGroupRepository.create(data),
 

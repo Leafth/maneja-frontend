@@ -18,6 +18,7 @@ export function useUpdateAnimalGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: ({ localId, data }: UpdateAnimalGroupVariables) =>
       animalGroupRepository.update(localId, data),
 
