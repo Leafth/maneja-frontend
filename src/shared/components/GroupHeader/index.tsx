@@ -10,6 +10,7 @@ interface IGroupHeaderProps {
   onBack: () => void;
   onUpdate: () => void;
   onDelete: () => void;
+  actionsDisabled?: boolean;
 }
 
 export function GroupHeader({
@@ -17,6 +18,7 @@ export function GroupHeader({
   onBack,
   onUpdate,
   onDelete,
+  actionsDisabled = false,
 }: IGroupHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -56,6 +58,7 @@ export function GroupHeader({
           onPress={() => setIsMenuOpen((value) => !value)}
           className='h-10 w-10 items-center justify-center'
           accessibilityLabel='Opções do grupo'
+          disabled={actionsDisabled}
         >
           <MoreVertical
             size={22}
@@ -64,7 +67,7 @@ export function GroupHeader({
         </Pressable>
       </View>
 
-      {isMenuOpen && (
+      {isMenuOpen && !actionsDisabled && (
         <View className='absolute right-3 top-[52px] w-[180px] overflow-hidden rounded-[10px] border border-gray-400 bg-white'>
           <Pressable
             onPress={handleUpdate}
