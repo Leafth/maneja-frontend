@@ -3,30 +3,53 @@ import { animalGroupSyncService } from '@/features/animal-groups/services/animal
 import { networkService } from '../network/network.service';
 import { syncEvents } from './sync-events';
 
+interface SyncState {
+  inFlight: Promise<void> | null;
+  rerunRequested: boolean;
+}
+
+// Keep the single-flight guard when this module is re-evaluated by Fast Refresh.
+const runtime = globalThis as typeof globalThis & {
+  __manejaSyncState?: SyncState;
+};
+
+const state = (runtime.__manejaSyncState ??= {
+  inFlight: null,
+  rerunRequested: false,
+});
+
 class SyncOrchestrator {
-  private isSyncing = false;
+  sync(): Promise<void> {
+    state.rerunRequested = true;
 
-  async sync(): Promise<void> {
-    if (this.isSyncing) {
-      return;
+    if (!state.inFlight) {
+      // Publish the promise before starting any async work, including NetInfo.
+      state.inFlight = Promise.resolve().then(() => this.drain());
     }
 
-    const connected = await networkService.isConnected();
+    return state.inFlight;
+  }
 
-    if (!connected) {
-      return;
-    }
-
-    this.isSyncing = true;
-
+  private async drain(): Promise<void> {
     try {
-      await animalGroupSyncService.sync();
+      do {
+        state.rerunRequested = false;
 
-      syncEvents.emit('animal-groups');
-    } catch (error) {
-      console.error('Erro durante a sincronização:', error);
+        try {
+          const connected = await networkService.isConnected();
+
+          if (connected) {
+            await animalGroupSyncService.sync();
+            syncEvents.emit('animal-groups');
+          }
+        } catch (error) {
+          console.error('Erro durante a sincronização:', error);
+        }
+        // Only a new request triggers another round; errors do not retry forever.
+      } while (state.rerunRequested);
     } finally {
-      this.isSyncing = false;
+      // No await between checking rerunRequested and releasing the guard.
+      state.inFlight = null;
     }
   }
 }
