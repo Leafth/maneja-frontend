@@ -1,6 +1,11 @@
 import { ChevronLeftIcon } from 'lucide-react-native';
 import { Controller } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
@@ -14,8 +19,20 @@ import colors from '@/styles/colors';
 import { useCreateGroupViewModel } from '../viewmodels/use-create-group-view-model';
 
 export default function CreateGroupView() {
-  const { control, onSubmit, goBack, isValid, isSubmitting } =
-    useCreateGroupViewModel();
+  const {
+    control,
+    onSubmit,
+    goBack,
+    isValid,
+    isSubmitting,
+    isEditing,
+    isOnline,
+    isLoading,
+    isUnavailable,
+    loadError,
+    error,
+    retry,
+  } = useCreateGroupViewModel();
 
   return (
     <View className='flex-1 bg-white'>
@@ -44,7 +61,7 @@ export default function CreateGroupView() {
                 </View>
               </View>
 
-              <OnlineStatus isOnline />
+              <OnlineStatus isOnline={isOnline} />
             </View>
           </View>
         </SafeAreaView>
@@ -53,13 +70,23 @@ export default function CreateGroupView() {
         <View className='flex-1'>
           <View className='px-4 pt-4'>
             <AppText size='sm' weight='medium' className='uppercase'>
-              NOVO GRUPO
+              {isEditing ? 'ATUALIZAR GRUPO' : 'NOVO GRUPO'}
             </AppText>
 
             <AppText size='sm' color='muted' className='mt-3'>
-              Cadastre um novo grupo
+              {isEditing ? 'Atualize seu grupo' : 'Cadastre um novo grupo'}
             </AppText>
 
+            {isLoading ? (
+              <ActivityIndicator className='mt-5' />
+            ) : loadError ? (
+              <View className='mt-5 gap-4'>
+                <AppText color='error'>Não foi possível carregar o grupo.</AppText>
+                <Button onPress={retry}>Tentar novamente</Button>
+              </View>
+            ) : isUnavailable ? (
+              <AppText className='mt-5'>Grupo de animais não encontrado.</AppText>
+            ) : (
             <View className='mt-5 gap-4'>
               <Controller
                 control={control}
@@ -87,7 +114,7 @@ export default function CreateGroupView() {
 
               <Controller
                 control={control}
-                name='quantity'
+                name='animalCount'
                 render={({ field, fieldState }) => (
                   <FormGroup
                     label='Quantidade de animais'
@@ -109,15 +136,20 @@ export default function CreateGroupView() {
                 )}
               />
 
+              {error && (
+                <AppText size='sm' color='error'>Não foi possível salvar o grupo. Tente novamente.</AppText>
+              )}
+
               <Button
                 onPress={onSubmit}
                 isLoading={isSubmitting}
                 disabled={!isValid || isSubmitting}
                 className='mt-1'
               >
-                Cadastrar
+                {isEditing ? 'Salvar' : 'Cadastrar'}
               </Button>
             </View>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>

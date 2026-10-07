@@ -6,11 +6,14 @@ export const createGroupSchema = z.object({
     .trim()
     .min(1, 'Informe o nome do grupo'),
 
-  quantity: z
+  animalCount: z
     .string()
     .trim()
     .min(1, 'Informe a quantidade de animais')
     .refine((value) => /^\d+$/.test(value), {
+      message: 'Informe uma quantidade válida',
+    })
+    .refine((value) => Number.isSafeInteger(Number(value)), {
       message: 'Informe uma quantidade válida',
     })
     .refine((value) => Number(value) > 0, {
