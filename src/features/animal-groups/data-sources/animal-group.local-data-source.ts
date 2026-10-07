@@ -1,7 +1,7 @@
 import { withDatabase } from '@/infrastructure/database/database';
 
-import type { AnimalGroup, SyncStatus } from '../models';
-
+import type { AnimalGroup } from '../models';
+import { SyncStatus } from '@/shared/models';
 interface AnimalGroupRow {
   local_id: string;
   remote_id: string | null;

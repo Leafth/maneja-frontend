@@ -1,4 +1,4 @@
-export type SyncScope = 'animal-groups';
+export type SyncScope = 'animal-groups' | 'terrains';
 
 type SyncListener = (scope: SyncScope) => void;
 

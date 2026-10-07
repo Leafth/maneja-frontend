@@ -1,8 +1,9 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { createAnimalGroupsTable } from './001-create-animal-groups';
+import { createTerrainsTable } from './002-create-terrains';
 
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -18,6 +19,10 @@ export async function migrateDatabase(database: SQLiteDatabase) {
   await database.withTransactionAsync(async () => {
     if (currentVersion < 1) {
       await createAnimalGroupsTable(database);
+    }
+
+    if (currentVersion < 2) {
+      await createTerrainsTable(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

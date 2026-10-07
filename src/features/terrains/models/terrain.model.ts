@@ -1,11 +1,14 @@
-import type { SyncStatus } from '@/shared/models';
+import { SyncStatus } from '@/shared/models';
 
-export interface AnimalGroup {
+import type { TerrainStatus } from './terrain-status.model';
+
+export interface Terrain {
   localId: string;
   remoteId: string | null;
 
   name: string;
-  animalCount: number;
+  restDays: number;
+  status: TerrainStatus;
 
   syncStatus: SyncStatus;
 

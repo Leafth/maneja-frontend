@@ -1,4 +1,5 @@
 import { animalGroupSyncService } from '@/features/animal-groups/services/animal-group-sync.service';
+import { terrainSyncService } from '@/features/terrains/services/terrain-sync.service';
 
 import { networkService } from '../network/network.service';
 import { syncEvents } from './sync-events';
@@ -41,10 +42,14 @@ class SyncOrchestrator {
           if (connected) {
             await animalGroupSyncService.sync();
             syncEvents.emit('animal-groups');
+
+            await terrainSyncService.sync();
+            syncEvents.emit('terrains');
           }
         } catch (error) {
           console.error('Erro durante a sincronização:', error);
         }
+
         // Only a new request triggers another round; errors do not retry forever.
       } while (state.rerunRequested);
     } finally {
