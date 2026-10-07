@@ -1,4 +1,4 @@
-import type { SyncStatus } from './sync-status.model';
+import type { SyncStatus } from '@/shared/models';
 
 export interface AnimalGroup {
   localId: string;
