@@ -1,41 +1,34 @@
 import { Plus } from 'lucide-react-native';
-import { Image, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import imageGroup from '@/assets/images/group-terreno-bg/image.png';
 
 import { AppText } from '@/shared/components/AppText';
 import { BottomNavigation } from '@/shared/components/BottomNavigation';
+import { Button } from '@/shared/components/Button';
 import { HerdCard } from '@/shared/components/HerdCard';
 import { OnlineStatus } from '@/shared/components/OnlineStatus';
 import colors from '@/styles/colors';
-import { useRouter } from 'expo-router';
-
-const herds = [
-  {
-    id: '1',
-    name: 'Grupo A',
-    location: 'Curral Sul',
-  },
-  {
-    id: '2',
-    name: 'Grupo B',
-    location: 'Fazenda Nova',
-  },
-  {
-    id: '3',
-    name: 'Grupo C',
-    location: 'Sítio Verde',
-  },
-];
+import { useHerdViewModel } from '../viewmodels/use-herd-view-model';
 
 export default function HerdView() {
-  const router = useRouter();
+  const {
+    herds,
+    isLoading,
+    error,
+    retry,
+    isOnline,
+    handleAddHerd,
+    handleOpenGroup,
+  } = useHerdViewModel();
   const hasHerds = herds.length > 0;
-
-  function handleAddHerd() {
-    router.push('/create-group');
-  }
 
   function handleRegisterFeeding(herdId: string) {
     console.log('Registrar alimentação:', herdId);
@@ -61,7 +54,7 @@ export default function HerdView() {
               </AppText>
             </View>
 
-            <OnlineStatus isOnline />
+            <OnlineStatus isOnline={isOnline} />
           </View>
         </View>
       </SafeAreaView>
@@ -77,7 +70,14 @@ export default function HerdView() {
             REBANHO
           </AppText>
 
-          {!hasHerds ? (
+          {isLoading ? (
+            <ActivityIndicator className='mt-2' />
+          ) : error ? (
+            <View className='mt-2'>
+              <AppText size='sm' color='error'>Não foi possível carregar os grupos.</AppText>
+              <Button onPress={retry}>Tentar novamente</Button>
+            </View>
+          ) : !hasHerds ? (
             <View className='mt-2'>
               <AppText size='sm' color='muted'>
                 Nada por aqui!
@@ -95,23 +95,26 @@ export default function HerdView() {
         </View>
 
         {hasHerds ? (
-          <View className='mt-5 flex-1 px-5'>
+          <ScrollView
+            className='mt-5 flex-1 px-5'
+            contentContainerStyle={{ paddingBottom: 80 }}
+          >
             <View className='gap-3'>
               {herds.map((herd) => (
                 <HerdCard
-                  key={herd.id}
+                  key={herd.localId}
                   name={herd.name}
-                  location={herd.location}
-                  onPress={() => router.push('/group')}
+                  location='—'
+                  onPress={() => handleOpenGroup(herd.localId)}
                   onRegisterFeeding={() =>
-                    handleRegisterFeeding(herd.id)
+                    handleRegisterFeeding(herd.localId)
                   }
-                  onMove={() => handleMove(herd.id)}
+                  onMove={() => handleMove(herd.localId)}
                 />
               ))}
             </View>
-          </View>
-        ) : (
+          </ScrollView>
+        ) : !isLoading && !error ? (
           <View className='flex-1 items-center justify-center'>
             <Image
               source={imageGroup}
@@ -119,7 +122,7 @@ export default function HerdView() {
               className='h-[270px] w-[270px]'
             />
           </View>
-        )}
+        ) : null}
 
         {/* Botão adicionar */}
         <TouchableOpacity
