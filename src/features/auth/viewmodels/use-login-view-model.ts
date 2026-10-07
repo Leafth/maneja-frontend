@@ -7,6 +7,7 @@ import { authService } from '@/features/auth/services';
 import { useAuthStore } from '@/features/auth/stores';
 import { authTokenStorage } from '@/infrastructure/storage';
 import { loginSchema, type LoginFormData } from '../schemas/login.schema';
+import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
 export function useLoginViewModel() {
   const router = useRouter();
@@ -42,6 +43,8 @@ export function useLoginViewModel() {
     const user = await authService.me();
 
     authenticate(user);
+
+    void syncOrchestrator.sync();
 
     router.replace('/home');
   });
