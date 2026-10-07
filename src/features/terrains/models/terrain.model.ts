@@ -1,4 +1,4 @@
-import type { SyncStatus } from '@/features/animal-groups/models';
+import { SyncStatus } from '@/shared/models';
 
 import type { TerrainStatus } from './terrain-status.model';
 
