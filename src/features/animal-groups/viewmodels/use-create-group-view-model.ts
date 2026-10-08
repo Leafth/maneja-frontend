@@ -52,6 +52,14 @@ export function useCreateGroupViewModel() {
     }
   }, [group, reset]);
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/herd');
+    }
+  };
+
   const onSubmit = handleSubmit((data) => {
     if (mutation.isPending || (isEditing && (!canEdit || groupQuery.isError))) {
       return;
@@ -68,14 +76,6 @@ export function useCreateGroupViewModel() {
       createMutation.mutate(values, { onSuccess: goBack });
     }
   });
-
-  const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/herd');
-    }
-  };
 
   return {
     control,
