@@ -1,5 +1,5 @@
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Beef, House, Mountain, Wheat } from 'lucide-react-native';
-import { useRouter, type Href } from 'expo-router';
 import { TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,58 +7,47 @@ import { AppText } from '@/shared/components/AppText';
 
 import { bottomNavigationStyles } from './styles';
 
-interface IBottomNavigationProps {
-  activeItem?: 'home' | 'herd' | 'lands' | 'feeding';
-}
+const ITEMS = {
+  home: { label: 'Início', icon: House },
+  herd: { label: 'Rebanho', icon: Beef },
+  terrains: { label: 'Terrenos', icon: Mountain },
+  feeding: { label: 'Alimentação', icon: Wheat },
+} as const;
 
-const items = [
-  {
-    key: 'home',
-    label: 'Início',
-    icon: House,
-    route: '/home',
-  },
-  {
-    key: 'herd',
-    label: 'Rebanho',
-    icon: Beef,
-    route: '/herd',
-  },
-  {
-    key: 'lands',
-    label: 'Terrenos',
-    icon: Mountain,
-    route: '/lands',
-  },
-  {
-    key: 'feeding',
-    label: 'Alimentação',
-    icon: Wheat,
-    route: '/feeding',
-  },
-] as const;
+type ItemKey = keyof typeof ITEMS;
 
-export function BottomNavigation({
-  activeItem = 'home',
-}: IBottomNavigationProps) {
-  const router = useRouter();
+export function BottomNavigation({ state, navigation }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
-
   const styles = bottomNavigationStyles();
 
   return (
     <View className={styles.container()} style={{ paddingBottom: bottom }}>
       <View className={styles.items()}>
-        {items.map((item) => {
+        {state.routes.map((route, index) => {
+          const item = ITEMS[route.name as ItemKey];
+          if (!item) {return null;}
+
           const Icon = item.icon;
-          const isActive = activeItem === item.key;
+          const isActive = state.index === index;
+
+          const handlePress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isActive && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
 
           return (
             <TouchableOpacity
-              key={item.key}
+              key={route.key}
               activeOpacity={0.7}
               className={styles.item()}
-              onPress={() => router.replace(item.route as Href)}
+              onPress={handlePress}
             >
               <Icon
                 size={24}
