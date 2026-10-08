@@ -2,7 +2,6 @@ import { View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
-import { BottomNavigation } from '@/shared/components/BottomNavigation';
 
 import { useLogoutViewModel } from '../../features/auth/viewmodels/use-logout.view-model';
 import { useMeViewModel } from '../../features/auth/viewmodels/use-me.view-model';
@@ -35,8 +34,6 @@ export default function HomeView() {
           </Button>
         </View>
       </View>
-
-      <BottomNavigation activeItem='home' />
     </View>
   );
 }
