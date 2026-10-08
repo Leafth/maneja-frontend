@@ -1,4 +1,3 @@
-import { ChevronLeftIcon } from 'lucide-react-native';
 import { Controller } from 'react-hook-form';
 import {
   ActivityIndicator,
@@ -9,12 +8,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
-import { BottomNavigation } from '@/shared/components/BottomNavigation';
 import { Button } from '@/shared/components/Button';
 import { FormGroup } from '@/shared/components/FormGroup';
+import { HeaderPrimary, HeaderSecondary } from '@/shared/components/Header';
 import { Input } from '@/shared/components/Input';
-import { OnlineStatus } from '@/shared/components/OnlineStatus';
-import colors from '@/styles/colors';
 
 import { useCreateGroupViewModel } from '../viewmodels/use-create-group-view-model';
 
@@ -40,34 +37,13 @@ export default function CreateGroupView() {
         className='flex-1'
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Cabeçalho */}
-        <SafeAreaView edges={['top']} className='bg-lime-400'>
-          <View className='h-[64px] px-4'>
-            <View className='flex-1 flex-row items-center justify-between'>
-              <View className='flex-row items-center gap-2'>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  accessibilityLabel='Voltar'
-                  onPress={goBack}
-                >
-                  <ChevronLeftIcon size={20} color={colors.black[700]} />
-                </Button>
+        {isEditing ? (
+          <HeaderSecondary title='Atualizar grupo' onBackPress={goBack} />
+        ) : (
+          <HeaderPrimary isOnline={isOnline} />
+        )}
 
-                <View className='h-10 w-10 items-center justify-center rounded-full bg-lime-600'>
-                  <AppText size='sm' weight='medium' color='white'>
-                    TA
-                  </AppText>
-                </View>
-              </View>
-
-              <OnlineStatus isOnline={isOnline} />
-            </View>
-          </View>
-        </SafeAreaView>
-
-        {/* Conteúdo */}
-        <View className='flex-1'>
+        <SafeAreaView edges={isEditing ? ['bottom'] : []} className='flex-1'>
           <View className='px-4 pt-4'>
             <AppText size='sm' weight='medium' className='uppercase'>
               {isEditing ? 'ATUALIZAR GRUPO' : 'NOVO GRUPO'}
@@ -87,17 +63,17 @@ export default function CreateGroupView() {
             ) : isUnavailable ? (
               <AppText className='mt-5'>Grupo de animais não encontrado.</AppText>
             ) : (
-            <View className='mt-5 gap-4'>
-              <Controller
-                control={control}
-                name='name'
-                render={({ field, fieldState }) => (
-                  <FormGroup
-                    label='Nome do grupo'
-                    required
-                    error={fieldState.error?.message}
+              <View className='mt-5 gap-4'>
+                <Controller
+                  control={control}
+                  name='name'
+                  render={({ field, fieldState }) => (
+                    <FormGroup
+                      label='Nome do grupo'
+                      required
+                      error={fieldState.error?.message}
                     >
-                    <Input
+                      <Input
                         placeholder='Vacas em lactação'
                         value={field.value}
                         onChangeText={field.onChange}
@@ -107,21 +83,21 @@ export default function CreateGroupView() {
                         autoCapitalize='sentences'
                         autoCorrect={false}
                         returnKeyType='next'
-                    />
-                  </FormGroup>
-                )}
-              />
+                      />
+                    </FormGroup>
+                  )}
+                />
 
-              <Controller
-                control={control}
-                name='animalCount'
-                render={({ field, fieldState }) => (
-                  <FormGroup
-                    label='Quantidade de animais'
-                    required
-                    error={fieldState.error?.message}
+                <Controller
+                  control={control}
+                  name='animalCount'
+                  render={({ field, fieldState }) => (
+                    <FormGroup
+                      label='Quantidade de animais'
+                      required
+                      error={fieldState.error?.message}
                     >
-                    <Input
+                      <Input
                         placeholder='50'
                         value={field.value}
                         onChangeText={field.onChange}
@@ -131,30 +107,30 @@ export default function CreateGroupView() {
                         keyboardType='number-pad'
                         returnKeyType='done'
                         onSubmitEditing={onSubmit}
-                    />
-                 </FormGroup>
+                      />
+                    </FormGroup>
+                  )}
+                />
+
+                {error && (
+                  <AppText size='sm' color='error'>
+                    Não foi possível salvar o grupo. Tente novamente.
+                  </AppText>
                 )}
-              />
 
-              {error && (
-                <AppText size='sm' color='error'>Não foi possível salvar o grupo. Tente novamente.</AppText>
-              )}
-
-              <Button
-                onPress={onSubmit}
-                isLoading={isSubmitting}
-                disabled={!isValid || isSubmitting}
-                className='mt-1'
-              >
-                {isEditing ? 'Salvar' : 'Cadastrar'}
-              </Button>
-            </View>
+                <Button
+                  onPress={onSubmit}
+                  isLoading={isSubmitting}
+                  disabled={!isValid || isSubmitting}
+                  className='mt-1'
+                >
+                  {isEditing ? 'Salvar' : 'Cadastrar'}
+                </Button>
+              </View>
             )}
           </View>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
-
-      <BottomNavigation activeItem='herd' />
     </View>
   );
 }
