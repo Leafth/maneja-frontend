@@ -18,13 +18,13 @@ export function useGroupViewModel() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/herd');
+      router.dismissTo('/herd');
     }
   }
 
   function handleUpdate() {
     if (canAct) {
-      router.push({ pathname: '/create-group', params: { localId } });
+      router.push({ pathname: '/group/[localId]/edit', params: { localId } });
     }
   }
 
@@ -40,7 +40,7 @@ export function useGroupViewModel() {
         style: 'destructive',
         onPress: () =>
           deleteMutation.mutate(localId, {
-            onSuccess: () => router.replace('/herd'),
+            onSuccess: () => router.dismissTo('/herd'),
           }),
       },
     ]);

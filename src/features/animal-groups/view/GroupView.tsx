@@ -1,9 +1,10 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityIndicator, View } from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
-import { GroupHeader } from '@/shared/components/GroupHeader';
+import { HeaderSecondary } from '@/shared/components/Header';
 import { useGroupViewModel } from '../viewmodels/use-group-view-model';
 
 export default function GroupView() {
@@ -21,18 +22,18 @@ export default function GroupView() {
   } = useGroupViewModel();
 
   return (
-    <SafeAreaView
-      edges={['top']}
-      className='flex-1 bg-black-700'
-    >
-      <View className='flex-1 bg-white'>
-        <GroupHeader
-          groupName={group?.name ?? ''}
-          onBack={handleBack}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          actionsDisabled={actionsDisabled}
-        />
+    <View className='flex-1 bg-white'>
+      <HeaderSecondary
+        title={group?.name ?? ''}
+        onBackPress={handleBack}
+        menuDisabled={actionsDisabled}
+        menuItems={[
+          { label: 'Atualizar grupo', onPress: handleUpdate },
+          { label: 'Excluir grupo', onPress: handleDelete, destructive: true },
+        ]}
+      />
+
+      <SafeAreaView edges={['bottom']} className='flex-1'>
         <View className='px-4 pt-4'>
           {isLoading ? (
             <ActivityIndicator />
@@ -51,7 +52,7 @@ export default function GroupView() {
             <AppText color='error'>Não foi possível excluir o grupo. Tente novamente.</AppText>
           )}
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
