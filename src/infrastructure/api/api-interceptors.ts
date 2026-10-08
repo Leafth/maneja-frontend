@@ -1,6 +1,7 @@
 import {
   AxiosError,
   AxiosHeaders,
+  isAxiosError,
   type InternalAxiosRequestConfig,
 } from 'axios';
 
@@ -113,7 +114,14 @@ api.interceptors.response.use(
 
       return api(originalRequest);
     } catch (refreshError) {
-      await authTokenStorage.clear();
+      const status = isAxiosError(refreshError)
+        ? refreshError.response?.status
+        : undefined;
+
+      // Só descarta a sessão se o servidor rejeitou o refresh token.
+      if (status === 400 || status === 401 || status === 403) {
+        await authTokenStorage.clear();
+      }
 
       return Promise.reject(refreshError);
     }
