@@ -3,12 +3,12 @@ import '../styles/global.css';
 
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useRestoreSession } from '@/features/auth/hooks/use-restore-session';
+import { useAuthStore } from '@/features/auth/stores';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
@@ -22,25 +22,28 @@ export default function RootLayout() {
     'HostGrotesk-Bold': require('../../assets/fonts/HostGrotesk-Bold.ttf'),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  useRestoreSession();
 
-  if (!fontsLoaded) {
+  const authStatus = useAuthStore((s) => s.status);
+  const isAuthenticated = authStatus === 'authenticated';
+  const isReady = fontsLoaded && authStatus !== 'loading';
+
+  if (!isReady) {
     return null;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style='dark' />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <StatusBar style='dark' />
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='(auth)' />
-            <Stack.Screen name='(app)' />
+            <Stack.Protected guard={!isAuthenticated}>
+              <Stack.Screen name='(auth)' />
+            </Stack.Protected>
+            <Stack.Protected guard={isAuthenticated}>
+              <Stack.Screen name='(app)' />
+            </Stack.Protected>
           </Stack>
         </SafeAreaProvider>
       </GestureHandlerRootView>
