@@ -15,9 +15,16 @@ export function useHerdViewModel() {
     retry: () => {
       void query.refetch();
     },
-    isOnline: network.isConnected === true && network.isInternetReachable !== false,
-    handleAddHerd: () => router.push('/create-group'),
+    isOnline:
+      network.isConnected === true && network.isInternetReachable !== false,
+
+    handleAddHerd: () => router.push('/herd/create'),
     handleOpenGroup: (localId: string) =>
-      router.push({ pathname: '/group', params: { localId } }),
+      router.push({ pathname: '/group/[localId]', params: { localId } }),
+    handleMove: (localId: string) =>
+      router.push({ pathname: '/group/[localId]/move', params: { localId } }),
+    handleRegisterFeeding: (localId: string) => {
+      // TODO: definir o destino (bottom sheet, modal ou tela)
+    },
   };
 }
