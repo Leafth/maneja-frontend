@@ -1,11 +1,12 @@
-// HeaderPrimary.tsx
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuthStore } from '@/features/auth/stores';
 import { AppText } from '@/shared/components/AppText';
 import { OnlineStatus } from '@/shared/components/OnlineStatus';
+import { getInitials } from '@/shared/utils/git-initials';
 
 interface IHeaderPrimaryProps {
   isOnline: boolean;
@@ -16,10 +17,13 @@ interface IHeaderPrimaryProps {
 
 export function HeaderPrimary({
   isOnline,
-  initials = 'TA',
+  initials,
   left,
   center,
 }: IHeaderPrimaryProps) {
+  const userName = useAuthStore((state) => state.user?.name);
+  const avatarInitials = initials ?? getInitials(userName);
+
   return (
     <SafeAreaView edges={['top']} className='bg-forestGreen-300'>
       <StatusBar style='light' />
@@ -27,7 +31,7 @@ export function HeaderPrimary({
         {left ?? (
           <View className='h-10 w-10 items-center justify-center rounded-full bg-[#013000]'>
             <AppText size='sm' weight='medium' color='white'>
-              {initials}
+              {avatarInitials}
             </AppText>
           </View>
         )}
