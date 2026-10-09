@@ -1,7 +1,8 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Modal,
+  Platform,
   Pressable,
   View,
 } from 'react-native';
@@ -32,55 +33,56 @@ export function ActionMenu({
 }: ActionMenuProps) {
   const { top } = useSafeAreaInsets();
 
-  const [isClosing, setIsClosing] = useState(false);
-  const closingRef = useRef(false);
-  const pendingAction = useRef<(() => void) | null>(null);
+const closingRef = useRef(false);
+const pendingAction = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    if (visible) {
-      closingRef.current = false;
-      pendingAction.current = null;
-    }
-  }, [visible]);
+function flushPendingAction() {
+  closingRef.current = false;
 
-  function handleClose() {
-    if (closingRef.current) {return;}
+  const action = pendingAction.current;
+  pendingAction.current = null;
 
-    closingRef.current = true;
-    setIsClosing(true);
-    pendingAction.current = null;
-    onClose();
-  }
+  action?.();
+}
 
-  function handleItemPress(item: ActionMenuItem) {
-    if (closingRef.current) {return;}
-
-    closingRef.current = true;
-    setIsClosing(true);
-
-    pendingAction.current = item.onPress;
-
-    onClose();
-  }
-
-  function handleDismiss() {
-    setIsClosing(false);
+useEffect(() => {
+  if (visible) {
     closingRef.current = false;
-
-    const action = pendingAction.current;
     pendingAction.current = null;
-
-    action?.();
+    return;
   }
+
+  // iOS executa a ação em onDismiss; Android não tem esse callback.
+  if (Platform.OS === 'android') {
+    flushPendingAction();
+  }
+
+}, [visible]);
+
+function handleClose() {
+  if (closingRef.current) {return;}
+
+  closingRef.current = true;
+  pendingAction.current = null;
+  onClose();
+}
+
+function handleItemPress(item: ActionMenuItem) {
+  if (closingRef.current) {return;}
+
+  closingRef.current = true;
+  pendingAction.current = item.onPress;
+  onClose();
+}
 
   return (
     <Modal
       transparent
       visible={visible}
-      animationType="fade"
+      animationType='fade'
       statusBarTranslucent
       onRequestClose={handleClose}
-      onDismiss={handleDismiss}
+      onDismiss={flushPendingAction}
     >
       <Pressable
         className="flex-1"
@@ -99,29 +101,19 @@ export function ActionMenu({
             const Icon = item.icon;
 
             return (
-              <Pressable
-                key={item.label}
-                onPress={() => handleItemPress(item)}
-                disabled={isClosing}
-                android_ripple={{
-                  color: colors.gray[400],
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={item.label}
-                accessibilityState={{
-                  disabled: isClosing,
-                }}
-                accessibilityHint={
-                  item.destructive
-                    ? 'Abre uma confirmação de exclusão'
-                    : undefined
-                }
-                style={({ pressed }) => ({
-                  backgroundColor: pressed
-                    ? colors.gray[200]
-                    : colors.white,
-                })}
-              >
+                <Pressable
+                  key={item.label}
+                  onPress={() => handleItemPress(item)}
+                  android_ripple={{ color: colors.gray[400] }}
+                  accessibilityRole='button'
+                  accessibilityLabel={item.label}
+                  accessibilityHint={
+                    item.destructive ? 'Abre uma confirmação de exclusão' : undefined
+                  }
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? colors.gray[200] : colors.white,
+                  })}
+                >
                 <View className="min-h-12 flex-row items-center gap-3 px-4 py-3">
                   {Icon && (
                     <Icon
