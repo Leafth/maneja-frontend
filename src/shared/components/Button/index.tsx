@@ -2,15 +2,26 @@ import { LucideIcon } from 'lucide-react-native';
 import React from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
+import colors from '@/styles/colors';
+
 import { buttonStyles, type ButtonVariants } from './styles';
 
-const CONTENT_COLOR = '#18181B'; // black-700
+type Variant = NonNullable<ButtonVariants['variant']>;
+
+// Cor de ícones e do loading, alinhada com a cor do texto de cada variante.
+const ICON_COLORS: Record<Variant, string> = {
+  primary: colors.white,
+  secondary: colors.black[700],
+  ghost: colors.black[700],
+  neutral: colors.black[700],
+};
 
 interface IButtonProps
   extends React.ComponentProps<typeof Pressable>,
     Omit<ButtonVariants, 'disabled'> {
   isLoading?: boolean;
   leftIcon?: LucideIcon;
+  /** Padrão: 'light' no primary (fundo escuro) e 'dark' nas demais. */
   rippleStyle?: 'light' | 'dark';
 }
 
@@ -22,16 +33,23 @@ export function Button({
   className,
   isLoading,
   leftIcon: LeftIcon,
-  rippleStyle = 'dark',
+  rippleStyle,
   ...props
 }: IButtonProps) {
   const disabled = !!disabledProp || !!isLoading;
+  const resolvedVariant: Variant = variant ?? 'primary';
+  const iconColor = ICON_COLORS[resolvedVariant];
+  const ripple = rippleStyle ?? (resolvedVariant === 'primary' ? 'light' : 'dark');
 
-  const { wrapper, button, content } = buttonStyles({ variant, size, disabled });
+  const { wrapper, button, content, label } = buttonStyles({
+    variant: resolvedVariant,
+    size,
+    disabled,
+  });
 
   const childEl =
     typeof children === 'string' ? (
-      <Text className="font-sans-medium text-base text-black-700">{children}</Text>
+      <Text className={label()}>{children}</Text>
     ) : (
       children
     );
@@ -42,11 +60,11 @@ export function Button({
         android_ripple={{
           foreground: true,
           color:
-            rippleStyle === 'dark'
+            ripple === 'dark'
               ? 'rgba(0, 0, 0, 0.1)'
               : 'rgba(255, 255, 255, 0.1)',
         }}
-        accessibilityRole="button"
+        accessibilityRole='button'
         accessibilityState={{ disabled, busy: !!isLoading }}
         className={button({ className })}
         disabled={disabled}
@@ -54,11 +72,11 @@ export function Button({
       >
         {!isLoading ? (
           <View className={content()}>
-            {LeftIcon && <LeftIcon color={CONTENT_COLOR} size={20} />}
+            {LeftIcon && <LeftIcon color={iconColor} size={20} />}
             {childEl as React.ReactElement}
           </View>
         ) : (
-          <ActivityIndicator color={CONTENT_COLOR} />
+          <ActivityIndicator color={iconColor} />
         )}
       </Pressable>
     </View>

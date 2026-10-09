@@ -52,13 +52,13 @@ export function BottomNavigation({ state, navigation }: BottomTabBarProps) {
               <Icon
                 size={24}
                 strokeWidth={isActive ? 2.2 : 1.5}
-                color={isActive ? '#65A30D' : '#737373'}
+                color={isActive ? '#1B4332' : '#737373'}
               />
 
               <AppText
                 size='xs'
                 weight={isActive ? 'medium' : 'regular'}
-                color={isActive ? 'primary' : 'muted'}
+                color={isActive ? 'bottomNavigation' : 'muted'}
                 align='center'
               >
                 {item.label}

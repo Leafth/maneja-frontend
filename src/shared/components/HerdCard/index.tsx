@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from 'lucide-react-native';
+import { ArrowLeftRight, ChevronRight, Plus } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
@@ -24,9 +24,22 @@ export function HerdCard({
       onPress={onPress}
       className='rounded-[14px] border border-gray-400 bg-white px-5 py-4'
     >
-      <AppText size='lg' weight='medium'>
-        {name}
-      </AppText>
+      <View className="flex-row items-center justify-between gap-3">
+        <AppText
+          size="lg"
+          weight="medium"
+          className="flex-1"
+          numberOfLines={1}
+        >
+          {name}
+        </AppText>
+
+        <ChevronRight
+          size={22}
+          strokeWidth={2}
+          color={colors.black[700]}
+        />
+      </View>
 
       <AppText color='muted' className='mt-1'>
         Em: {location}
@@ -38,13 +51,13 @@ export function HerdCard({
             event.stopPropagation();
             onRegisterFeeding();
           }}
-          className='flex-row items-center rounded-[10px] bg-lime-500 px-3.5 py-2.5'
+          className='flex-row items-center rounded-[10px] bg-forestGreen-400 px-3.5 py-2.5 h-12 gap-2'
         >
-          <AppText size='sm' weight='medium'>
+          <AppText color='white' size='sm' weight='medium'>
             Registrar Alimentação
           </AppText>
 
-          <Plus size={18} strokeWidth={2} color={colors.black[700]} />
+          <Plus size={18} strokeWidth={2} color={colors.white} />
         </Pressable>
 
         <Pressable
@@ -52,17 +65,17 @@ export function HerdCard({
             event.stopPropagation();
             onMove();
           }}
-          className='ml-3 flex-row items-center rounded-[10px] bg-[#5B87E5] px-4 py-2.5'
+          className='ml-3 flex-row items-center rounded-[10px] bg-[#648FF2] px-4 py-2.5 h-12 gap-2'
         >
           <AppText
             size='sm'
             weight='medium'
-            style={{ color: colors.black[700] }}
+            style={{ color: colors.white }}
           >
             Mover
           </AppText>
 
-          <ChevronRight size={18} strokeWidth={2} color={colors.black[700]} />
+          <ArrowLeftRight size={18} strokeWidth={2} color={colors.white} />
         </Pressable>
       </View>
     </Pressable>

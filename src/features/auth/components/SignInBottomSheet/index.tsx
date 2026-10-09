@@ -144,7 +144,7 @@ export function SignInBottomSheet({ ref }: ISignInBottomSheetProps) {
                 disabled={isSubmitting}
               >
                 <AppText
-                  color='primary'
+                  color='forest'
                   weight='semiBold'
                   className='underline'
                 >

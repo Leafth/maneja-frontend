@@ -21,11 +21,11 @@ export function HeaderPrimary({
   center,
 }: IHeaderPrimaryProps) {
   return (
-    <SafeAreaView edges={['top']} className='bg-lime-500'>
+    <SafeAreaView edges={['top']} className='bg-forestGreen-300'>
       <StatusBar style='light' />
       <View className='h-[80px] flex-row items-center justify-between px-4'>
         {left ?? (
-          <View className='h-10 w-10 items-center justify-center rounded-full bg-lime-700'>
+          <View className='h-10 w-10 items-center justify-center rounded-full bg-[#013000]'>
             <AppText size='sm' weight='medium' color='white'>
               {initials}
             </AppText>

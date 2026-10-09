@@ -38,7 +38,7 @@ export default function TerrainsView() {
         {/* Cabeçalho */}
         <View className="px-5 pt-3">
           <AppText
-            size="sm"
+            size="lg"
             weight="medium"
             className="uppercase"
           >
@@ -49,7 +49,7 @@ export default function TerrainsView() {
             <ActivityIndicator className="mt-2" />
           ) : error ? (
             <View className="mt-2">
-              <AppText size="sm" color="error">
+              <AppText size="xl" color="error">
                 Não foi possível carregar os terrenos.
               </AppText>
 
@@ -109,12 +109,12 @@ export default function TerrainsView() {
           onPress={handleAddTerrain}
           accessibilityRole="button"
           accessibilityLabel="Criar terreno"
-          className="absolute bottom-5 right-5 h-[52px] w-[52px] items-center justify-center rounded-[12px] bg-lime-500"
+          className="absolute bottom-5 right-5 h-[52px] w-[52px] items-center justify-center rounded-[12px] bg-forestGreen-400"
         >
           <Plus
             size={28}
             strokeWidth={2}
-            color={colors.lime[800]}
+            color={colors.white}
           />
         </TouchableOpacity>
       </View>

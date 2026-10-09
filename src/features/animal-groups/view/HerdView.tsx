@@ -1,10 +1,10 @@
 import { Plus } from 'lucide-react-native';
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import imageGroup from '@/assets/images/group-terreno-bg/image.png';
@@ -39,7 +39,7 @@ export default function HerdView() {
       <View className='flex-1'>
         <View className='px-5 pt-3'>
           <AppText
-            size='sm'
+            size='lg'
             weight='medium'
             className='uppercase'
           >
@@ -104,12 +104,12 @@ export default function HerdView() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleAddHerd}
-          className='absolute bottom-5 right-5 h-[52px] w-[52px] items-center justify-center rounded-[12px] bg-lime-500'
+          className='absolute bottom-5 right-5 h-[52px] w-[52px] items-center justify-center rounded-[12px] bg-forestGreen-400'
         >
           <Plus
             size={28}
             strokeWidth={2}
-            color={colors.lime[800]}
+            color={colors.white}
           />
         </TouchableOpacity>
       </View>
