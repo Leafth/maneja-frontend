@@ -1,5 +1,5 @@
-import { ScreenPlaceholder } from '@/shared/components/ScreenPlaceholder';
+import TerrainDetailsView from '@/features/terrains/view/TerrainDetailsView';
 
-export default function Route() {
-  return <ScreenPlaceholder name='Terreno especifico' />;
+export default function TerrainDetailsScreen() {
+  return <TerrainDetailsView />;
 }

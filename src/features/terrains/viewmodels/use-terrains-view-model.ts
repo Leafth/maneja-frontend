@@ -26,10 +26,10 @@ export function useTerrainsViewModel() {
       router.push('/terrains/create');
     },
 
-    handleOpenTerrain: (terrainId: string) => {
+    handleOpenTerrain: (localId: string) => {
       router.push({
         pathname: '/terrain/[terrainId]',
-        params: { terrainId },
+        params: { terrainId: localId },
       });
     },
   };
