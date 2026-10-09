@@ -1,5 +1,5 @@
 import { ScreenPlaceholder } from '@/shared/components/ScreenPlaceholder';
 
 export default function Route() {
-  return <ScreenPlaceholder name='Criar necessidade alimentar' />;
+  return <ScreenPlaceholder name='Registrar Alimentação' />;
 }

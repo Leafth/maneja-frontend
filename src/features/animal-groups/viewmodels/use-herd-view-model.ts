@@ -23,8 +23,7 @@ export function useHerdViewModel() {
       router.push({ pathname: '/group/[localId]', params: { localId } }),
     handleMove: (localId: string) =>
       router.push({ pathname: '/group/[localId]/move', params: { localId } }),
-    handleRegisterFeeding: (localId: string) => {
-      // TODO: definir o destino (bottom sheet, modal ou tela)
-    },
+    handleRegisterFeeding: (localId: string) =>
+      router.push({ pathname: '/group/[localId]/feeding-need', params: { localId } }),
   };
 }
