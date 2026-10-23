@@ -97,7 +97,7 @@ export function VerifyAccount() {
               <AppText color='muted'>Não recebeu o código?</AppText>
               <TouchableOpacity onPress={resendCode} disabled={isResending}>
                 <AppText
-                  color='primary'
+                  color='forest'
                   weight='semiBold'
                   className='underline'
                 >

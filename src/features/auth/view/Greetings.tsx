@@ -35,7 +35,7 @@ export function Greetings() {
             </AppText>
 
             <View className='mt-6 w-full p-5'>
-              <Button onPress={() => router.push('/sign-up')}>
+              <Button className='bg-forestGreen-400' onPress={() => router.push('/sign-up')}>
                 Criar conta
               </Button>
 
@@ -44,7 +44,7 @@ export function Greetings() {
                 <TouchableOpacity
                   onPress={() => signInBottomSheetRef.current?.open()}
                 >
-                  <AppText color='lime' weight='medium'>
+                  <AppText color='forest' weight='medium'>
                     Acessar conta
                   </AppText>
                 </TouchableOpacity>

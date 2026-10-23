@@ -4,4 +4,6 @@ export { useLogout } from './use-logout';
 export { useMe } from './use-me';
 export { useRegister } from './use-register';
 export { useResetPassword } from './use-reset-password';
+export { useRestoreSession } from './use-restore-session';
 export { useVerifyPasswordResetCode } from './use-verify-password-reset-code';
+

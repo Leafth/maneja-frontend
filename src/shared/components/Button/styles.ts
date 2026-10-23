@@ -5,13 +5,14 @@ export const buttonStyles = tv({
     wrapper: 'overflow-hidden rounded-xl',
     button: 'items-center justify-center ios:active:opacity-70',
     content: 'flex-row items-center gap-[10px]',
+    label: 'font-sans-medium text-base',
   },
   variants: {
     variant: {
-      primary: { button: 'bg-lime-500' },
-      secondary: { button: 'bg-gray-300' },
-      ghost: { button: 'bg-transparent' },
-      neutral: { button: 'bg-lime-700/5' },
+      primary: { button: 'bg-forestGreen-400', label: 'text-white' },
+      secondary: { button: 'bg-gray-300', label: 'text-black-700' },
+      ghost: { button: 'bg-transparent', label: 'text-black-700' },
+      neutral: { button: 'bg-lime-700/5', label: 'text-black-700' },
     },
     size: {
       md: { button: 'h-12 px-6' },
