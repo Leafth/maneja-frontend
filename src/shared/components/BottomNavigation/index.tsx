@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 
+import { useRouter } from 'expo-router';
 import { bottomNavigationStyles } from './styles';
 
 const ITEMS = {
@@ -16,9 +17,10 @@ const ITEMS = {
 
 type ItemKey = keyof typeof ITEMS;
 
-export function BottomNavigation({ state, navigation }: BottomTabBarProps) {
+export function BottomNavigation({ state }: BottomTabBarProps) {
   const { bottom } = useSafeAreaInsets();
   const styles = bottomNavigationStyles();
+  const router = useRouter();
 
   return (
     <View className={styles.container()} style={{ paddingBottom: bottom }}>
@@ -31,14 +33,8 @@ export function BottomNavigation({ state, navigation }: BottomTabBarProps) {
           const isActive = state.index === index;
 
           const handlePress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isActive && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+            if (!isActive) {
+              router.navigate(`/${route.name}` as never);
             }
           };
 
