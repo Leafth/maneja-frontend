@@ -19,6 +19,7 @@ import { useHerdViewModel } from '../viewmodels/use-herd-view-model';
 export default function HerdView() {
   const {
     herds,
+    getCurrentTerrainName,
     isLoading,
     error,
     retry,
@@ -80,7 +81,7 @@ export default function HerdView() {
                 <HerdCard
                   key={herd.localId}
                   name={herd.name}
-                  location='—'
+                  location={getCurrentTerrainName(herd.localId)}
                   onPress={() => handleOpenGroup(herd.localId)}
                   onRegisterFeeding={() =>
                     handleRegisterFeeding(herd.localId)

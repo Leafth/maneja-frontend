@@ -1,5 +1,9 @@
 import type {
+  AnimalGroupOccupation,
+  AnimalGroupOccupationDTO,
   AnimalGroupResponseDTO,
+  AnimalGroupTerrainRef,
+  AnimalGroupTerrainRefDTO,
   CreateAnimalGroupRequestDTO,
   RemoteAnimalGroup,
   UpdateAnimalGroupRequestDTO,
@@ -41,6 +45,22 @@ export const animalGroupMapper = {
 
       remoteCreatedAt: dto.created_at,
       remoteUpdatedAt: dto.updated_at,
+    };
+  },
+
+  fromTerrainRefDTO(dto: AnimalGroupTerrainRefDTO): AnimalGroupTerrainRef {
+    return {
+      remoteId: dto.id,
+      name: dto.name,
+    };
+  },
+
+  fromOccupationDTO(dto: AnimalGroupOccupationDTO): AnimalGroupOccupation {
+    return {
+      remoteId: dto.id,
+      startedAt: dto.started_at,
+      endedAt: dto.ended_at,
+      terrain: animalGroupMapper.fromTerrainRefDTO(dto.terrain),
     };
   },
 };
