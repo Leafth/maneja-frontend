@@ -4,3 +4,6 @@ export { useAnimalGroup } from './use-animal-group';
 export { useCreateAnimalGroup } from './use-create-animal-group';
 export { useUpdateAnimalGroup } from './use-update-animal-group';
 export { useDeleteAnimalGroup } from './use-delete-animal-group';
+export { useAnimalGroupCurrentTerrains } from './use-animal-group-current-terrains';
+export { useAnimalGroupHistory } from './use-animal-group-history';
+export { useAnimalGroupOccupations } from './use-animal-group-occupations';

@@ -1,24 +1,69 @@
 import { Pencil, Trash2 } from 'lucide-react-native';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
 import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
+import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { HeaderSecondary } from '@/shared/components/Header';
+import { HistoryList } from '@/shared/components/HistoryList';
+import { formatDate } from '@/shared/utils/format-date';
 
+import { terrainStatusLabels } from '../components/TerrainStatusBadge';
+import { TerrainSummaryCard } from '../components/TerrainSummaryCard';
+import type { TerrainStateDetails } from '../models/terrain-details.model';
 import { useTerrainDetailsViewModel } from '../viewmodels/use-terrain-details-view-model';
+
+function getSummaryText(stateDetails: TerrainStateDetails) {
+  switch (stateDetails.status) {
+    case 'available':
+      return { title: 'Sem grupo alocado' };
+
+    case 'occupied':
+      return {
+        label: 'Grupo atual',
+        title: stateDetails.currentGroup.name,
+        caption: `Entrada: ${formatDate(stateDetails.enteredAt)}`,
+      };
+
+    case 'resting': {
+      const days = stateDetails.remainingRestDays;
+
+      return {
+        label: 'Disponível em',
+        title: `${days} ${days === 1 ? 'Dia' : 'Dias'}`,
+        caption: `Último grupo: ${stateDetails.lastGroup.name}`,
+      };
+    }
+  }
+}
 
 export default function TerrainDetailsView() {
   const {
     terrain,
+    stateDetails,
+    showAllocateGroup,
+    showForceRestRemoval,
+    history,
+    isHistoryLoading,
+    hasHistoryError,
+    retryHistory,
     isLoading,
     loadError,
     isUnavailable,
+    remainingRestDays,
+    isForceRestModalOpen,
+    isForcingRest,
+    forceRestError,
     isDeleteModalOpen,
     isDeleting,
     deleteError,
     goBack,
     retry,
+    handleAllocateGroup,
+    handleForceRestRemoval,
+    handleCancelForceRest,
+    handleConfirmForceRest,
     handleEdit,
     handleDelete,
     handleCancelDelete,
@@ -66,35 +111,64 @@ export default function TerrainDetailsView() {
             Terreno não encontrado.
           </AppText>
         </View>
-      ) : terrain ? (
-        <View className="flex-1 items-center justify-center px-5">
-          <AppText
-            size="base"
-            weight="medium"
-            align="center"
-            className="uppercase"
-          >
-            TERRENO ESPECÍFICO
-          </AppText>
+      ) : terrain && stateDetails ? (
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 32,
+            gap: 20,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <TerrainSummaryCard
+            status={stateDetails.status}
+            statusLabel={terrainStatusLabels[stateDetails.status]}
+            restDays={terrain.restDays}
+            {...getSummaryText(stateDetails)}
+          />
 
-          <AppText
-            size="base"
-            weight="medium"
-            align="center"
-          >
-            (EM CONSTRUÇÃO)
-          </AppText>
+          {showAllocateGroup && (
+            <Button size="md" onPress={handleAllocateGroup}>
+              Alocar Grupo
+            </Button>
+          )}
 
-          <AppText
-            size="sm"
-            color="muted"
-            align="center"
-            className="mt-2"
-          >
-            Período de descanso: {terrain.restDays} dias
-          </AppText>
-        </View>
+          {showForceRestRemoval && (
+            <Button variant="dark" size="md" onPress={handleForceRestRemoval}>
+              Forçar retirada de descanso
+            </Button>
+          )}
+
+          <HistoryList
+            title={
+              stateDetails.status === 'occupied'
+                ? 'Histórico de ocupações'
+                : 'Histórico'
+            }
+            items={history}
+            emptyMessage="Nenhuma ocupação registrada neste terreno."
+            isLoading={isHistoryLoading}
+            hasError={hasHistoryError}
+            onRetry={retryHistory}
+          />
+        </ScrollView>
       ) : null}
+
+      <ConfirmModal
+        visible={isForceRestModalOpen}
+        title="Forçar retirada de descanso?"
+        description={
+          forceRestError
+            ? 'Não foi possível retirar o terreno do descanso. Tente novamente.'
+            : `Este terreno ainda precisa de ${remainingRestDays ?? 0} ${remainingRestDays === 1 ? 'dia' : 'dias'} de descanso. Retirar antes disso é uma exceção.`
+        }
+        confirmLabel="Forçar retirada"
+        isConfirming={isForcingRest}
+        onConfirm={handleConfirmForceRest}
+        onCancel={handleCancelForceRest}
+      />
 
       <ConfirmDeleteModal
         visible={isDeleteModalOpen}

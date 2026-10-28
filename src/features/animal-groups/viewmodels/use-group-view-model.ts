@@ -1,7 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { useAnimalGroup, useDeleteAnimalGroup } from '../hooks';
+import {
+  useAnimalGroup,
+  useAnimalGroupHistory,
+  useAnimalGroupOccupations,
+  useDeleteAnimalGroup,
+} from '../hooks';
+import type { AnimalGroupHistoryKind } from '../models';
 
 export function useGroupViewModel() {
   const router = useRouter();
@@ -15,8 +21,16 @@ export function useGroupViewModel() {
 
   const query = useAnimalGroup(localId);
   const deleteMutation = useDeleteAnimalGroup();
+  const occupationsQuery = useAnimalGroupOccupations(localId);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [historyKind, setHistoryKind] =
+    useState<AnimalGroupHistoryKind>('movements');
+
+  const historyQuery = useAnimalGroupHistory(localId, historyKind);
+
+  const currentOccupation =
+    occupationsQuery.data?.find((occupation) => !occupation.endedAt) ?? null;
 
   const group =
     query.data?.syncStatus === 'pending_delete'
@@ -72,6 +86,24 @@ export function useGroupViewModel() {
 
   return {
     group,
+
+    currentTerrain: currentOccupation
+      ? {
+          name: currentOccupation.terrain.name,
+          enteredAt: currentOccupation.startedAt,
+        }
+      : null,
+    isCurrentTerrainLoading: occupationsQuery.isPending && Boolean(localId),
+    hasCurrentTerrainError: occupationsQuery.isError,
+
+    historyKind,
+    setHistoryKind,
+    history: historyQuery.data ?? [],
+    isHistoryLoading: historyQuery.isPending && Boolean(localId),
+    hasHistoryError: historyQuery.isError,
+    retryHistory: () => {
+      void historyQuery.refetch();
+    },
 
     isLoading: query.isLoading,
     error: query.error,
