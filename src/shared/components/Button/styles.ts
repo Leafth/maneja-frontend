@@ -10,6 +10,15 @@ export const buttonStyles = tv({
   variants: {
     variant: {
       primary: { button: 'bg-forestGreen-400', label: 'text-white' },
+      dark: { button: 'bg-forestGreen-600', label: 'text-white' },
+      success: {
+        button: 'bg-support-success-bg',
+        label: 'text-support-success-text',
+      },
+      danger: {
+        button: 'bg-support-danger-bg',
+        label: 'text-support-danger-text',
+      },
       secondary: { button: 'bg-gray-300', label: 'text-black-700' },
       ghost: { button: 'bg-transparent', label: 'text-black-700' },
       neutral: { button: 'bg-lime-700/5', label: 'text-black-700' },

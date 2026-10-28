@@ -11,6 +11,9 @@ type Variant = NonNullable<ButtonVariants['variant']>;
 // Cor de ícones e do loading, alinhada com a cor do texto de cada variante.
 const ICON_COLORS: Record<Variant, string> = {
   primary: colors.white,
+  dark: colors.white,
+  success: colors.support.success.text,
+  danger: colors.support.danger.text,
   secondary: colors.black[700],
   ghost: colors.black[700],
   neutral: colors.black[700],
@@ -21,7 +24,7 @@ interface IButtonProps
     Omit<ButtonVariants, 'disabled'> {
   isLoading?: boolean;
   leftIcon?: LucideIcon;
-  /** Padrão: 'light' no primary (fundo escuro) e 'dark' nas demais. */
+  /** Padrão: 'light' no primary e no dark (fundo escuro) e 'dark' nas demais. */
   rippleStyle?: 'light' | 'dark';
 }
 
@@ -39,7 +42,9 @@ export function Button({
   const disabled = !!disabledProp || !!isLoading;
   const resolvedVariant: Variant = variant ?? 'primary';
   const iconColor = ICON_COLORS[resolvedVariant];
-  const ripple = rippleStyle ?? (resolvedVariant === 'primary' ? 'light' : 'dark');
+  const ripple =
+    rippleStyle ??
+    (resolvedVariant === 'primary' || resolvedVariant === 'dark' ? 'light' : 'dark');
 
   const { wrapper, button, content, label } = buttonStyles({
     variant: resolvedVariant,
