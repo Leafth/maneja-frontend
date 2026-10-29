@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { animalGroupQueryKeys } from '@/features/animal-groups/hooks';
+import { feedQueryKeys } from '@/features/feeding/hooks/feed-query-keys';
 import { terrainQueryKeys } from '@/features/terrains/hooks';
 
 import { syncEvents, type SyncScope } from './sync-events';
@@ -17,9 +18,17 @@ export function useSyncQueryInvalidation() {
           void queryClient.invalidateQueries({
             queryKey: animalGroupQueryKeys.all,
           });
+          break;
+
         case 'terrains':
           void queryClient.invalidateQueries({
             queryKey: terrainQueryKeys.all,
+          });
+          break;
+
+        case 'feeds':
+          void queryClient.invalidateQueries({
+            queryKey: feedQueryKeys.all,
           });
           break;
       }
