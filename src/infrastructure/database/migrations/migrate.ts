@@ -2,8 +2,10 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { createAnimalGroupsTable } from './001-create-animal-groups';
 import { createTerrainsTable } from './002-create-terrains';
+import { createFeedTable } from './003-create-feed';
+import { createFeedMovimentsTable } from './004-create-feed-moviments';
 
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 4;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -23,6 +25,14 @@ export async function migrateDatabase(database: SQLiteDatabase) {
 
     if (currentVersion < 2) {
       await createTerrainsTable(database);
+    }
+
+    if (currentVersion < 3) {
+      await createFeedTable(database);
+    }
+
+    if (currentVersion < 4) {
+      await createFeedMovimentsTable(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
