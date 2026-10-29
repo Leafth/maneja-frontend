@@ -60,24 +60,55 @@ function toStateDetails(dto: TerrainDetailsResponseDTO): TerrainStateDetails {
     case 'occupied':
       return {
         status: 'occupied',
-        currentGroup: toGroupRef(dto.state_details.current_group),
+
+        currentGroup: dto.state_details.current_group
+          ? toGroupRef(dto.state_details.current_group)
+          : null,
+
         enteredAt: dto.state_details.entered_at,
       };
 
     case 'resting':
       return {
         status: 'resting',
+
         remainingRestDays: dto.state_details.remaining_rest_days,
-        lastGroup: toGroupRef(dto.state_details.last_group),
-        lastOccupation: {
-          remoteId: dto.state_details.last_occupation.id,
-          startedAt: dto.state_details.last_occupation.started_at,
-          endedAt: dto.state_details.last_occupation.ended_at,
-        },
+
+        lastGroup: dto.state_details.last_group
+          ? toGroupRef(dto.state_details.last_group)
+          : null,
+
+        lastOccupation: dto.state_details.last_occupation
+          ? {
+              remoteId: dto.state_details.last_occupation.id,
+
+              startedAt: dto.state_details.last_occupation.started_at,
+
+              endedAt: dto.state_details.last_occupation.ended_at,
+            }
+          : null,
       };
 
     case 'available':
-      return { status: 'available' };
+      return {
+        status: 'available',
+
+        daysFree: dto.state_details.days_free,
+
+        lastGroup: dto.state_details.last_group
+          ? toGroupRef(dto.state_details.last_group)
+          : null,
+
+        lastOccupation: dto.state_details.last_occupation
+          ? {
+              remoteId: dto.state_details.last_occupation.id,
+
+              startedAt: dto.state_details.last_occupation.started_at,
+
+              endedAt: dto.state_details.last_occupation.ended_at,
+            }
+          : null,
+      };
   }
 }
 

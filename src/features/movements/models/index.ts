@@ -1,1 +1,5 @@
-export type { MovementOrigin } from './movement-origin.model';
+export type {
+  CreateOccupationRequestDTO,
+  OccupationRefDTO,
+  OccupationResponseDTO,
+} from './occupation.dto';

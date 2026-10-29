@@ -3,24 +3,29 @@ export interface TerrainGroupRef {
   name: string;
 }
 
+export interface FinishedTerrainOccupation {
+  remoteId: string;
+  startedAt: string;
+  endedAt: string;
+}
+
 export type TerrainStateDetails =
   | {
       status: 'available';
+      daysFree: number;
+      lastGroup: TerrainGroupRef | null;
+      lastOccupation: FinishedTerrainOccupation | null;
     }
   | {
       status: 'occupied';
-      currentGroup: TerrainGroupRef;
-      enteredAt: string;
+      currentGroup: TerrainGroupRef | null;
+      enteredAt: string | null;
     }
   | {
       status: 'resting';
       remainingRestDays: number;
-      lastGroup: TerrainGroupRef;
-      lastOccupation: {
-        remoteId: string;
-        startedAt: string;
-        endedAt: string;
-      };
+      lastGroup: TerrainGroupRef | null;
+      lastOccupation: FinishedTerrainOccupation | null;
     };
 
 export interface TerrainOccupation {
