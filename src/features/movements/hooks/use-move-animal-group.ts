@@ -4,11 +4,12 @@ import { animalGroupQueryKeys } from '@/features/animal-groups/hooks';
 import type { AnimalGroup } from '@/features/animal-groups/models';
 import { terrainQueryKeys } from '@/features/terrains/hooks';
 import type { Terrain } from '@/features/terrains/models';
-import { terrainSyncService } from '@/features/terrains/services/terrain-sync.service';
+import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
-import { occupationService } from '../services/occupation.service';
+import { movementCommandRepository } from '../repositories/movement-command.repository';
 
 interface MoveAnimalGroupData {
+  accountId: string;
   group: AnimalGroup;
   terrain: Terrain;
 }
@@ -17,25 +18,21 @@ export function useMoveAnimalGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ group, terrain }: MoveAnimalGroupData) => {
-      if (!group.remoteId) {
-        throw new Error('O grupo ainda não foi sincronizado com o servidor.');
-      }
+    mutationFn: async ({ accountId, group, terrain }: MoveAnimalGroupData) => {
+      const command = await movementCommandRepository.create({
+        accountId,
+        groupLocalId: group.localId,
+        destinationTerrainLocalId: terrain.localId,
+      });
 
-      if (!terrain.remoteId) {
-        throw new Error('O terreno ainda não foi sincronizado com o servidor.');
-      }
+      void syncOrchestrator.sync(accountId).catch((error) => {
+        console.error('Erro ao iniciar sincronização da movimentação:', error);
+      });
 
-      return occupationService.move(group.remoteId, terrain.remoteId);
+      return command;
     },
 
     onSuccess: async () => {
-      try {
-        await terrainSyncService.pull();
-      } catch (error) {
-        console.error('Erro ao atualizar terrenos após movimentação:', error);
-      }
-
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: terrainQueryKeys.all,
