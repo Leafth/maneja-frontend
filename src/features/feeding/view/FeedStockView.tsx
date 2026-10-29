@@ -31,7 +31,7 @@ function FeedStockCard({ type, onOpen, onEntry, onExit }: CardProps) {
         <AppText weight='semiBold'>{type.name}</AppText>
 
         <AppText size='sm' weight='semiBold' color='muted'>
-          {type.availableKg} disponíveis
+          {type.availableKg}kg disponíveis
         </AppText>
       </Pressable>
 
