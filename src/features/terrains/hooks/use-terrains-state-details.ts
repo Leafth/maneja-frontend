@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { integrationPending } from '@/shared/utils/integration-pending';
-
+import { terrainMapper } from '../mapper/terrain.mapper';
 import type { TerrainStateDetails } from '../models';
+import { terrainRepository } from '../repositories/terrain.repository';
+import { terrainService } from '../services/terrain.service';
+
 import { terrainQueryKeys } from './terrain.query-keys';
 
 /** Estado de todos os terrenos, indexado pelo localId. */
@@ -11,12 +13,24 @@ export function useTerrainsStateDetails() {
     queryKey: terrainQueryKeys.stateList(),
 
     queryFn: async (): Promise<Record<string, TerrainStateDetails>> => {
-      // TODO(integração): state_details de GET /terrains
-      // (TerrainDetailsListResponseDTO) → terrainMapper.toStateDetails,
-      // indexado pelo localId de cada terreno.
-      return integrationPending('estado dos terrenos');
-    },
+      const terrains = await terrainRepository.findAll();
 
-    networkMode: 'always',
+      const entries = await Promise.all(
+        terrains
+          .filter((terrain) => Boolean(terrain.remoteId))
+          .map(async (terrain) => {
+            const response = await terrainService.findDetails(
+              terrain.remoteId!,
+            );
+
+            return [
+              terrain.localId,
+              terrainMapper.toStateDetails(response),
+            ] as const;
+          }),
+      );
+
+      return Object.fromEntries(entries);
+    },
   });
 }

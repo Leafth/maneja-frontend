@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { integrationPending } from '@/shared/utils/integration-pending';
-
+import { terrainMapper } from '../mapper/terrain.mapper';
 import type { TerrainStateDetails } from '../models';
+import { terrainRepository } from '../repositories/terrain.repository';
+import { terrainService } from '../services/terrain.service';
+
 import { terrainQueryKeys } from './terrain.query-keys';
 
 export function useTerrainStateDetails(localId: string | undefined) {
@@ -14,13 +16,17 @@ export function useTerrainStateDetails(localId: string | undefined) {
         return null;
       }
 
-      // TODO(integração): GET /terrains/:id → TerrainDetailsResponseDTO
-      // → terrainMapper.toStateDetails. O endpoint usa o id remoto.
-      return integrationPending(`estado do terreno ${localId}`);
+      const terrain = await terrainRepository.findByLocalId(localId);
+
+      if (!terrain?.remoteId) {
+        return null;
+      }
+
+      const response = await terrainService.findDetails(terrain.remoteId);
+
+      return terrainMapper.toStateDetails(response);
     },
 
     enabled: Boolean(localId),
-
-    networkMode: 'always',
   });
 }

@@ -1,19 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { integrationPending } from '@/shared/utils/integration-pending';
-
 import type { AnimalGroupOccupation } from '../models';
+import { animalGroupRepository } from '../repositories/animal-group.repository';
+import { animalGroupService } from '../services/animal-group.service';
+
 import { animalGroupQueryKeys } from './animal-group.query-keys';
 
 export function useAnimalGroupOccupations(localId: string) {
   return useQuery({
-    networkMode: 'always',
     queryKey: animalGroupQueryKeys.occupations(localId),
 
     queryFn: async (): Promise<AnimalGroupOccupation[]> => {
-      // TODO(integração): ocupações do grupo
-      // (AnimalGroupOccupationListResponseDTO) → animalGroupMapper.fromOccupationDTO.
-      return integrationPending(`ocupações do grupo ${localId}`);
+      const group = await animalGroupRepository.findById(localId);
+
+      if (!group?.remoteId) {
+        return [];
+      }
+
+      return animalGroupService.listOccupations(group.remoteId);
     },
 
     enabled: Boolean(localId),
