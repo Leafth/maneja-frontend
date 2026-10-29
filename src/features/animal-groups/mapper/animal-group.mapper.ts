@@ -43,6 +43,13 @@ export const animalGroupMapper = {
       name: dto.name,
       animalCount: dto.animal_count,
 
+      currentTerrain: dto.current_terrain
+        ? {
+            remoteId: dto.current_terrain.id,
+            name: dto.current_terrain.name,
+          }
+        : null,
+
       remoteCreatedAt: dto.created_at,
       remoteUpdatedAt: dto.updated_at,
     };
@@ -50,6 +57,7 @@ export const animalGroupMapper = {
 
   fromTerrainRefDTO(dto: AnimalGroupTerrainRefDTO): AnimalGroupTerrainRef {
     return {
+      localId: null,
       remoteId: dto.id,
       name: dto.name,
     };

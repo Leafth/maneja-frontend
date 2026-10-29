@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 
 import type { AnimalGroupTerrainRef } from '../models';
 import { animalGroupRepository } from '../repositories/animal-group.repository';
-import { animalGroupService } from '../services/animal-group.service';
 
 import { animalGroupQueryKeys } from './animal-group.query-keys';
 
@@ -18,16 +17,16 @@ export function useAnimalGroupCurrentTerrains(localIds: string[]) {
       for (const localId of localIds) {
         const group = await animalGroupRepository.findById(localId);
 
-        if (!group?.remoteId) {
+        if (!group || !group.currentTerrainName) {
           result[localId] = null;
           continue;
         }
 
-        const response = await animalGroupService.findDetailsById(
-          group.remoteId,
-        );
-
-        result[localId] = response.currentTerrain;
+        result[localId] = {
+          localId: group.currentTerrainLocalId,
+          remoteId: group.currentTerrainRemoteId,
+          name: group.currentTerrainName,
+        };
       }
 
       return result;

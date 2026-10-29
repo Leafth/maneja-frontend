@@ -7,6 +7,10 @@ export interface AnimalGroup {
   name: string;
   animalCount: number;
 
+  currentTerrainLocalId: string | null;
+  currentTerrainRemoteId: string | null;
+  currentTerrainName: string | null;
+
   syncStatus: SyncStatus;
 
   remoteCreatedAt: string | null;

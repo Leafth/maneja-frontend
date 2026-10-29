@@ -1,8 +1,8 @@
 export interface AnimalGroupTerrainRef {
-  remoteId: string;
+  localId: string | null;
+  remoteId: string | null;
   name: string;
 }
-
 export interface AnimalGroupOccupation {
   remoteId: string;
   startedAt: string;

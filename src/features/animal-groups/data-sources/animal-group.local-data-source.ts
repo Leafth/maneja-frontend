@@ -1,7 +1,7 @@
 import { withDatabase } from '@/infrastructure/database/database';
 
-import type { AnimalGroup } from '../models';
 import { SyncStatus } from '@/shared/models';
+import type { AnimalGroup } from '../models';
 interface AnimalGroupRow {
   local_id: string;
   remote_id: string | null;
@@ -16,6 +16,10 @@ interface AnimalGroupRow {
 
   local_created_at: string;
   local_updated_at: string;
+
+  current_terrain_local_id: string | null;
+  current_terrain_remote_id: string | null;
+  current_terrain_name: string | null;
 
   last_synced_at: string | null;
   last_sync_error: string | null;
@@ -32,6 +36,10 @@ interface MarkAnimalGroupSyncedData {
   remoteId: string;
   name: string;
   animalCount: number;
+
+  currentTerrainRemoteId: string | null;
+  currentTerrainName: string | null;
+
   remoteCreatedAt: string;
   remoteUpdatedAt: string;
 }
@@ -54,6 +62,12 @@ function toModel(row: AnimalGroupRow): AnimalGroup {
 
     lastSyncedAt: row.last_synced_at,
     lastSyncError: row.last_sync_error,
+
+    currentTerrainLocalId: row.current_terrain_local_id,
+
+    currentTerrainRemoteId: row.current_terrain_remote_id,
+
+    currentTerrainName: row.current_terrain_name,
   };
 }
 
@@ -117,9 +131,12 @@ async function insert(group: AnimalGroup): Promise<void> {
           local_created_at,
           local_updated_at,
           last_synced_at,
-          last_sync_error
+          last_sync_error,
+          current_terrain_local_id,
+          current_terrain_remote_id,
+          current_terrain_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         group.localId,
@@ -133,6 +150,9 @@ async function insert(group: AnimalGroup): Promise<void> {
         group.localUpdatedAt,
         group.lastSyncedAt,
         group.lastSyncError,
+        group.currentTerrainLocalId,
+        group.currentTerrainRemoteId,
+        group.currentTerrainName,
       ],
     ),
   );
@@ -233,6 +253,10 @@ async function markAsSynced(
           remote_id = ?,
           name = ?,
           animal_count = ?,
+
+          current_terrain_remote_id = ?,
+          current_terrain_name = ?,
+
           sync_status = 'synced',
           remote_created_at = ?,
           remote_updated_at = ?,
@@ -244,6 +268,10 @@ async function markAsSynced(
         data.remoteId,
         data.name,
         data.animalCount,
+
+        data.currentTerrainRemoteId,
+        data.currentTerrainName,
+
         data.remoteCreatedAt,
         data.remoteUpdatedAt,
         now,

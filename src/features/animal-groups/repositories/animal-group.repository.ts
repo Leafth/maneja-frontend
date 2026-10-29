@@ -42,6 +42,10 @@ async function create(data: CreateAnimalGroupData): Promise<AnimalGroup> {
 
     lastSyncedAt: null,
     lastSyncError: null,
+
+    currentTerrainLocalId: null,
+    currentTerrainRemoteId: null,
+    currentTerrainName: null,
   };
 
   await animalGroupLocalDataSource.insert(group);
@@ -117,6 +121,8 @@ async function markAsSynced(
     remoteId: string;
     name: string;
     animalCount: number;
+    currentTerrainRemoteId: string | null;
+    currentTerrainName: string | null;
     remoteCreatedAt: string;
     remoteUpdatedAt: string;
   },
@@ -157,6 +163,12 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
 
       lastSyncedAt: now,
       lastSyncError: null,
+
+      currentTerrainLocalId: null,
+
+      currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+
+      currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
     };
 
     await animalGroupLocalDataSource.insert(newLocalGroup);
@@ -175,7 +187,13 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
+
+    currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+
+    currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
+
     remoteCreatedAt: remoteGroup.remoteCreatedAt,
+
     remoteUpdatedAt: remoteGroup.remoteUpdatedAt,
   });
 }
