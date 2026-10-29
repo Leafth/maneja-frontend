@@ -11,3 +11,5 @@ export type {
 } from './movement-command.model';
 
 export type { MovementOrigin } from './movement-origin.model';
+
+export type { Occupation } from './occupation.model';

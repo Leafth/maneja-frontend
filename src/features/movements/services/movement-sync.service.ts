@@ -4,6 +4,7 @@ import { animalGroupRepository } from '@/features/animal-groups/repositories/ani
 import { terrainRepository } from '@/features/terrains/repositories/terrain.repository';
 
 import { movementCommandRepository } from '../repositories/movement-command.repository';
+import { occupationRepository } from '../repositories/occupation.repository';
 import { occupationService } from './occupation.service';
 
 function getErrorMessage(error: unknown): string {
@@ -68,6 +69,11 @@ async function sync(accountId: string): Promise<void> {
         remoteId: occupation.id,
         remoteStartedAt: occupation.started_at,
       });
+
+      await occupationRepository.markCommandConfirmed(command.localId, {
+        remoteId: occupation.id,
+        startedAt: occupation.started_at,
+      });
     } catch (error) {
       const message = getErrorMessage(error);
 
@@ -82,6 +88,10 @@ async function sync(accountId: string): Promise<void> {
           await movementCommandRepository.markRejected(
             command.localId,
             message,
+          );
+
+          await occupationRepository.deleteByMovementCommandLocalId(
+            command.localId,
           );
 
           break;

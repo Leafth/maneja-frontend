@@ -243,11 +243,15 @@ async function createOptimistic(
 ): Promise<MovementCommand> {
   return withDatabaseTransaction(async (database) => {
     const group = await database.getFirstAsync<{
+      remote_id: string | null;
+      name: string;
       current_terrain_local_id: string | null;
       current_terrain_remote_id: string | null;
     }>(
       `
         SELECT
+          remote_id,
+          name,
           current_terrain_local_id,
           current_terrain_remote_id
         FROM animal_groups
@@ -380,6 +384,53 @@ async function createOptimistic(
         command.remoteStartedAt,
         command.lastSyncedAt,
         command.lastSyncError,
+      ],
+    );
+
+    await database.runAsync(
+      `
+        UPDATE occupations
+        SET ended_at = ?
+        WHERE group_local_id = ?
+          AND ended_at IS NULL
+      `,
+      [input.now, input.groupLocalId],
+    );
+
+    /*
+     * A nova ocupação local nasce junto com o comando de movimento.
+     * O remote_id e o horário oficial são reconciliados após o sync.
+     */
+    await database.runAsync(
+      `
+        INSERT INTO occupations (
+          local_id,
+          remote_id,
+          account_id,
+          group_local_id,
+          group_remote_id,
+          group_name,
+          terrain_local_id,
+          terrain_remote_id,
+          terrain_name,
+          started_at,
+          ended_at,
+          movement_command_local_id,
+          source
+        )
+        VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, 'local')
+      `,
+      [
+        command.localId,
+        command.accountId,
+        command.groupLocalId,
+        group.remote_id,
+        group.name,
+        destination.local_id,
+        destination.remote_id,
+        destination.name,
+        input.now,
+        command.localId,
       ],
     );
 

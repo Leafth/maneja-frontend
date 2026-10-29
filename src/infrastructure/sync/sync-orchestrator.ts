@@ -7,6 +7,7 @@ import { terrainSyncService } from '@/features/terrains/services/terrain-sync.se
 
 import { networkService } from '../network/network.service';
 import { syncEvents } from './sync-events';
+import { occupationSyncService } from '@/features/movements/services';
 
 interface SyncState {
   inFlight: Promise<void> | null;
@@ -111,27 +112,33 @@ class SyncOrchestrator {
 
           await animalGroupSyncService.pullRemote();
 
+          /*
+           * 6. Atualiza o cache local das ocupações.
+           * Histórico e detalhes passam a funcionar offline.
+           */
+          await occupationSyncService.pull(accountId);
+
           syncEvents.emit('terrains');
           syncEvents.emit('animal-groups');
 
           /*
-           * 6. Sincroniza criações e edições
+           * 7. Sincroniza criações e edições
            * pendentes de rações.
            */
           await feedSyncService.syncUpserts(accountId);
 
           /*
-           * 7. Envia entradas e saídas de estoque.
+           * 8. Envia entradas e saídas de estoque.
            */
           await feedMovementSyncService.sync(accountId);
 
           /*
-           * 8. Processa exclusões de rações.
+           * 9. Processa exclusões de rações.
            */
           await feedSyncService.syncDeletes(accountId);
 
           /*
-           * 9. Atualiza o snapshot remoto das
+           * 10. Atualiza o snapshot remoto das
            * rações no SQLite.
            */
           await feedSyncService.pull(accountId);
