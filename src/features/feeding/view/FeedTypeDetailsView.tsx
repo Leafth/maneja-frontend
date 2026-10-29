@@ -4,10 +4,12 @@ import { AppText } from '@/shared/components/AppText';
 import { HeaderSecondary } from '@/shared/components/Header';
 
 import { FeedActionButton } from '../components/FeedActionButton';
+import { FeedHistoryItem } from '../components/FeedHistoryItem';
 import { useFeedTypeDetailsViewModel } from '../viewmodels/use-feed-type-details-view-model';
 
 export default function FeedTypeDetailsView() {
-  const { type, goBack, addEntry, addExit } = useFeedTypeDetailsViewModel();
+  const { type, movements, goBack, addEntry, addExit } =
+    useFeedTypeDetailsViewModel();
 
   return (
     <View className='flex-1 bg-white'>
@@ -24,7 +26,7 @@ export default function FeedTypeDetailsView() {
                 Total disponível
               </AppText>
 
-              <AppText>{type.availableKg}</AppText>
+              <AppText>{type.availableKg}kg</AppText>
             </View>
           </View>
 
@@ -38,14 +40,28 @@ export default function FeedTypeDetailsView() {
             </FeedActionButton>
           </View>
 
-          <AppText color='muted' className='mt-6'>
+          <AppText color='muted' weight='semiBold' className='mt-6'>
             Histórico
           </AppText>
 
-          <View className='mt-4 rounded-xl border border-gray-300 px-4 py-5'>
-            <AppText size='sm' color='muted' align='center'>
-              Funcionalidade em desenvolvimento
-            </AppText>
+          <View className='mt-2'>
+            {movements.length > 0 ? (
+              movements.map((movement, index) => (
+                <View key={movement.localId}>
+                  <FeedHistoryItem movement={movement} />
+
+                  {index < movements.length - 1 && (
+                    <View className='h-px bg-gray-300' />
+                  )}
+                </View>
+              ))
+            ) : (
+              <View className='py-8'>
+                <AppText size='sm' color='muted' align='center'>
+                  Nenhuma movimentação registrada.
+                </AppText>
+              </View>
+            )}
           </View>
         </View>
       ) : (
