@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import type { HistoryItem } from '@/shared/models';
-import { integrationPending } from '@/shared/utils/integration-pending';
 
 import type { AnimalGroupHistoryKind } from '../models';
+import { animalGroupRepository } from '../repositories/animal-group.repository';
+import { animalGroupService } from '../services/animal-group.service';
+import { buildAnimalGroupMovementHistory } from '../utils/build-animal-group-history';
+
 import { animalGroupQueryKeys } from './animal-group.query-keys';
 
 export function useAnimalGroupHistory(
@@ -11,14 +14,25 @@ export function useAnimalGroupHistory(
   kind: AnimalGroupHistoryKind,
 ) {
   return useQuery({
-    networkMode: 'always',
     queryKey: animalGroupQueryKeys.history(localId, kind),
 
-    // TODO(integração): endpoint(s) de histórico de movimentações e
-    // alimentação ainda indefinidos. Quando o contrato existir, criar
-    // DTO/model e converter para HistoryItem (ver buildTerrainHistory).
-    queryFn: async (): Promise<HistoryItem[]> =>
-      integrationPending(`histórico (${kind}) do grupo ${localId}`),
+    queryFn: async (): Promise<HistoryItem[]> => {
+      if (kind === 'feeding') {
+        return [];
+      }
+
+      const group = await animalGroupRepository.findById(localId);
+
+      if (!group?.remoteId) {
+        return [];
+      }
+
+      const occupations = await animalGroupService.listOccupations(
+        group.remoteId,
+      );
+
+      return buildAnimalGroupMovementHistory(occupations);
+    },
 
     enabled: Boolean(localId),
   });
