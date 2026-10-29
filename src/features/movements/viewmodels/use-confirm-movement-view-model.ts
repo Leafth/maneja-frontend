@@ -13,12 +13,16 @@ import {
 import { useMoveAnimalGroup } from '../hooks';
 import type { MovementOrigin } from '../models';
 
+import { useAuthStore } from '@/features/auth/stores';
+
 function getParam(value: string | string[] | undefined): string {
   return typeof value === 'string' ? value : '';
 }
 
 export function useConfirmMovementViewModel() {
   const router = useRouter();
+
+  const accountId = useAuthStore((state) => state.user?.id ?? null);
 
   const params = useLocalSearchParams<{
     groupId?: string | string[];
@@ -50,13 +54,15 @@ export function useConfirmMovementViewModel() {
       : destinationQuery.data;
 
   const currentTerrains = currentTerrainsQuery.data;
-  const originRef = currentTerrains ? (currentTerrains[groupId] ?? null) : undefined;
+  const originRef = currentTerrains
+    ? (currentTerrains[groupId] ?? null)
+    : undefined;
 
   // O ref do grupo traz só id e nome; o período de descanso vem do terreno local.
   const originTerrain = originRef
     ? (terrainsQuery.data ?? []).find(
         (terrain) =>
-          terrain.localId === originRef.remoteId ||
+          terrain.localId === originRef.localId ||
           terrain.remoteId === originRef.remoteId,
       )
     : undefined;
@@ -83,6 +89,7 @@ export function useConfirmMovementViewModel() {
 
   function handleConfirm() {
     if (
+      !accountId ||
       !group ||
       !destination ||
       !isDestinationAvailable ||
@@ -92,13 +99,21 @@ export function useConfirmMovementViewModel() {
     }
 
     moveMutation.mutate(
-      { group, terrain: destination },
-      { onSuccess: returnToOrigin },
+      {
+        accountId,
+        group,
+        terrain: destination,
+      },
+      {
+        onSuccess: returnToOrigin,
+      },
     );
   }
 
   function handleCancel() {
-    if (moveMutation.isPending) { return; }
+    if (moveMutation.isPending) {
+      return;
+    }
 
     if (router.canGoBack()) {
       router.back();
@@ -128,7 +143,9 @@ export function useConfirmMovementViewModel() {
     isUnavailable:
       !hasIds ||
       (!groupQuery.isPending && !groupQuery.isError && !group) ||
-      (!destinationQuery.isPending && !destinationQuery.isError && !destination),
+      (!destinationQuery.isPending &&
+        !destinationQuery.isError &&
+        !destination),
 
     isConfirming: moveMutation.isPending,
     confirmError: moveMutation.error,

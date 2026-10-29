@@ -1,6 +1,7 @@
 import type {
   CreateTerrainRequestDTO,
   RemoteTerrain,
+  Terrain,
   TerrainDetailsResponseDTO,
   TerrainGroupRef,
   TerrainGroupRefDTO,
@@ -121,10 +122,38 @@ function toOccupationModel(dto: TerrainOccupationDTO): TerrainOccupation {
   };
 }
 
+function toLocalStateDetails(terrain: Terrain): TerrainStateDetails {
+  switch (terrain.status) {
+    case 'occupied':
+      return {
+        status: 'occupied',
+        currentGroup: null,
+        enteredAt: null,
+      };
+
+    case 'resting':
+      return {
+        status: 'resting',
+        remainingRestDays: terrain.restDays,
+        lastGroup: null,
+        lastOccupation: null,
+      };
+
+    case 'available':
+      return {
+        status: 'available',
+        daysFree: 0,
+        lastGroup: null,
+        lastOccupation: null,
+      };
+  }
+}
+
 export const terrainMapper = {
   toRemoteModel,
   toCreateDTO,
   toUpdateDTO,
   toStateDetails,
   toOccupationModel,
+  toLocalStateDetails,
 };

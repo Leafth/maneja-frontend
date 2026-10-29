@@ -16,25 +16,39 @@ import { useTerrainDetailsViewModel } from '../viewmodels/use-terrain-details-vi
 
 function getSummaryText(stateDetails: TerrainStateDetails) {
   switch (stateDetails.status) {
-    case 'available':
-      return { title: 'Sem grupo alocado' };
-
     case 'occupied':
       return {
         label: 'Grupo atual',
-        title: stateDetails.currentGroup.name,
-        caption: `Entrada: ${formatDate(stateDetails.enteredAt)}`,
+        title: stateDetails.currentGroup?.name ?? 'Terreno ocupado',
+        caption: stateDetails.enteredAt
+          ? `Entrada: ${formatDate(stateDetails.enteredAt)}`
+          : 'Informação de entrada indisponível',
       };
 
-    case 'resting': {
-      const days = stateDetails.remainingRestDays;
-
+    case 'resting':
       return {
-        label: 'Disponível em',
-        title: `${days} ${days === 1 ? 'Dia' : 'Dias'}`,
-        caption: `Último grupo: ${stateDetails.lastGroup.name}`,
+        label: 'Período de descanso',
+        title: `${stateDetails.remainingRestDays} ${
+          stateDetails.remainingRestDays === 1
+            ? 'dia restante'
+            : 'dias restantes'
+        }`,
+        caption: stateDetails.lastGroup?.name
+          ? `Último grupo: ${stateDetails.lastGroup.name}`
+          : 'Último grupo indisponível',
       };
-    }
+
+    case 'available':
+      return {
+        label: 'Disponibilidade',
+        title: 'Terreno disponível',
+        caption:
+          stateDetails.daysFree > 0
+            ? `${stateDetails.daysFree} ${
+                stateDetails.daysFree === 1 ? 'dia livre' : 'dias livres'
+              }`
+            : 'Disponível para alocação',
+      };
   }
 }
 
@@ -71,13 +85,11 @@ export default function TerrainDetailsView() {
   } = useTerrainDetailsViewModel();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className='flex-1 bg-white'>
       <HeaderSecondary
         title={terrain?.name ?? 'Terreno'}
         onBackPress={goBack}
-        menuDisabled={
-          isLoading || isUnavailable || isDeleting || !!loadError
-        }
+        menuDisabled={isLoading || isUnavailable || isDeleting || !!loadError}
         menuItems={[
           {
             label: 'Editar',
@@ -94,26 +106,24 @@ export default function TerrainDetailsView() {
       />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View className='flex-1 items-center justify-center'>
           <ActivityIndicator />
         </View>
       ) : loadError ? (
-        <View className="flex-1 items-center justify-center gap-4 px-5">
-          <AppText color="error" align="center">
+        <View className='flex-1 items-center justify-center gap-4 px-5'>
+          <AppText color='error' align='center'>
             Não foi possível carregar o terreno.
           </AppText>
 
           <Button onPress={retry}>Tentar novamente</Button>
         </View>
       ) : isUnavailable ? (
-        <View className="flex-1 items-center justify-center">
-          <AppText color="muted">
-            Terreno não encontrado.
-          </AppText>
+        <View className='flex-1 items-center justify-center'>
+          <AppText color='muted'>Terreno não encontrado.</AppText>
         </View>
       ) : terrain && stateDetails ? (
         <ScrollView
-          className="flex-1"
+          className='flex-1'
           contentContainerStyle={{
             paddingHorizontal: 20,
             paddingTop: 20,
@@ -130,13 +140,13 @@ export default function TerrainDetailsView() {
           />
 
           {showAllocateGroup && (
-            <Button size="md" onPress={handleAllocateGroup}>
+            <Button size='md' onPress={handleAllocateGroup}>
               Alocar Grupo
             </Button>
           )}
 
           {showForceRestRemoval && (
-            <Button variant="dark" size="md" onPress={handleForceRestRemoval}>
+            <Button variant='dark' size='md' onPress={handleForceRestRemoval}>
               Forçar retirada de descanso
             </Button>
           )}
@@ -148,7 +158,7 @@ export default function TerrainDetailsView() {
                 : 'Histórico'
             }
             items={history}
-            emptyMessage="Nenhuma ocupação registrada neste terreno."
+            emptyMessage='Nenhuma ocupação registrada neste terreno.'
             isLoading={isHistoryLoading}
             hasError={hasHistoryError}
             onRetry={retryHistory}
@@ -158,13 +168,13 @@ export default function TerrainDetailsView() {
 
       <ConfirmModal
         visible={isForceRestModalOpen}
-        title="Forçar retirada de descanso?"
+        title='Forçar retirada de descanso?'
         description={
           forceRestError
             ? 'Não foi possível retirar o terreno do descanso. Tente novamente.'
             : `Este terreno ainda precisa de ${remainingRestDays ?? 0} ${remainingRestDays === 1 ? 'dia' : 'dias'} de descanso. Retirar antes disso é uma exceção.`
         }
-        confirmLabel="Forçar retirada"
+        confirmLabel='Forçar retirada'
         isConfirming={isForcingRest}
         onConfirm={handleConfirmForceRest}
         onCancel={handleCancelForceRest}
@@ -172,7 +182,7 @@ export default function TerrainDetailsView() {
 
       <ConfirmDeleteModal
         visible={isDeleteModalOpen}
-        title="Excluir Terreno?"
+        title='Excluir Terreno?'
         description={
           deleteError
             ? 'Não foi possível excluir o terreno. Tente novamente.'
