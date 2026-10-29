@@ -68,9 +68,34 @@ type DatabaseOperations = Pick<
 export function withDatabase<T>(
   operation: (database: DatabaseOperations) => Promise<T>,
 ): Promise<T> {
-  const result = state.operations.then(async () => operation(await getDatabase()));
+  const result = state.operations.then(async () =>
+    operation(await getDatabase()),
+  );
 
   // A failed operation rejects its caller, but must not poison the queue.
+  state.operations = result.then(
+    () => undefined,
+    () => undefined,
+  );
+
+  return result;
+}
+
+export function withDatabaseTransaction<T>(
+  operation: (database: SQLite.SQLiteDatabase) => Promise<T>,
+): Promise<T> {
+  const result = state.operations.then(async () => {
+    const database = await getDatabase();
+
+    let value!: T;
+
+    await database.withTransactionAsync(async () => {
+      value = await operation(database);
+    });
+
+    return value;
+  });
+
   state.operations = result.then(
     () => undefined,
     () => undefined,

@@ -4,8 +4,10 @@ import { createAnimalGroupsTable } from './001-create-animal-groups';
 import { createTerrainsTable } from './002-create-terrains';
 import { createFeedTable } from './003-create-feed';
 import { createFeedMovimentsTable } from './004-create-feed-moviments';
+import { createMovementCommandsTable } from './005-create-movement-commands';
+import { addCurrentTerrainToAnimalGroups } from './006-add-current-terrain-to-animal-groups';
 
-const DATABASE_VERSION = 4;
+const DATABASE_VERSION = 6;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -33,6 +35,14 @@ export async function migrateDatabase(database: SQLiteDatabase) {
 
     if (currentVersion < 4) {
       await createFeedMovimentsTable(database);
+    }
+
+    if (currentVersion < 5) {
+      await createMovementCommandsTable(database);
+    }
+
+    if (currentVersion < 6) {
+      await addCurrentTerrainToAnimalGroups(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
