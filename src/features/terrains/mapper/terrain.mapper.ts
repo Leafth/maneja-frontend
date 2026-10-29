@@ -1,7 +1,6 @@
 import type {
   CreateTerrainRequestDTO,
   RemoteTerrain,
-  Terrain,
   TerrainDetailsResponseDTO,
   TerrainGroupRef,
   TerrainGroupRefDTO,
@@ -51,6 +50,7 @@ function toUpdateDTO(data: {
 
 function toGroupRef(dto: TerrainGroupRefDTO): TerrainGroupRef {
   return {
+    localId: null,
     remoteId: dto.id,
     name: dto.name,
   };
@@ -81,6 +81,7 @@ function toStateDetails(dto: TerrainDetailsResponseDTO): TerrainStateDetails {
 
         lastOccupation: dto.state_details.last_occupation
           ? {
+              localId: dto.state_details.last_occupation.id,
               remoteId: dto.state_details.last_occupation.id,
 
               startedAt: dto.state_details.last_occupation.started_at,
@@ -102,6 +103,7 @@ function toStateDetails(dto: TerrainDetailsResponseDTO): TerrainStateDetails {
 
         lastOccupation: dto.state_details.last_occupation
           ? {
+              localId: dto.state_details.last_occupation.id,
               remoteId: dto.state_details.last_occupation.id,
 
               startedAt: dto.state_details.last_occupation.started_at,
@@ -115,38 +117,12 @@ function toStateDetails(dto: TerrainDetailsResponseDTO): TerrainStateDetails {
 
 function toOccupationModel(dto: TerrainOccupationDTO): TerrainOccupation {
   return {
+    localId: dto.id,
     remoteId: dto.id,
     startedAt: dto.started_at,
     endedAt: dto.ended_at,
     group: toGroupRef(dto.group),
   };
-}
-
-function toLocalStateDetails(terrain: Terrain): TerrainStateDetails {
-  switch (terrain.status) {
-    case 'occupied':
-      return {
-        status: 'occupied',
-        currentGroup: null,
-        enteredAt: null,
-      };
-
-    case 'resting':
-      return {
-        status: 'resting',
-        remainingRestDays: terrain.restDays,
-        lastGroup: null,
-        lastOccupation: null,
-      };
-
-    case 'available':
-      return {
-        status: 'available',
-        daysFree: 0,
-        lastGroup: null,
-        lastOccupation: null,
-      };
-  }
 }
 
 export const terrainMapper = {
@@ -155,5 +131,4 @@ export const terrainMapper = {
   toUpdateDTO,
   toStateDetails,
   toOccupationModel,
-  toLocalStateDetails,
 };

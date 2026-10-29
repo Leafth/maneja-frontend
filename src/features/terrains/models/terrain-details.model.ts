@@ -1,10 +1,12 @@
 export interface TerrainGroupRef {
-  remoteId: string;
+  localId: string | null;
+  remoteId: string | null;
   name: string;
 }
 
 export interface FinishedTerrainOccupation {
-  remoteId: string;
+  localId: string;
+  remoteId: string | null;
   startedAt: string;
   endedAt: string;
 }
@@ -29,7 +31,8 @@ export type TerrainStateDetails =
     };
 
 export interface TerrainOccupation {
-  remoteId: string;
+  localId: string;
+  remoteId: string | null;
   startedAt: string;
   endedAt: string | null;
   group: TerrainGroupRef;

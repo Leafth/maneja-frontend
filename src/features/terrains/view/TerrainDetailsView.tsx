@@ -40,14 +40,11 @@ function getSummaryText(stateDetails: TerrainStateDetails) {
 
     case 'available':
       return {
-        label: 'Disponibilidade',
-        title: 'Terreno disponível',
-        caption:
-          stateDetails.daysFree > 0
-            ? `${stateDetails.daysFree} ${
-                stateDetails.daysFree === 1 ? 'dia livre' : 'dias livres'
-              }`
-            : 'Disponível para alocação',
+        label: 'Última ocupação',
+        title: stateDetails.lastGroup?.name ?? 'Nenhuma ocupação anterior',
+        caption: stateDetails.lastOccupation
+          ? `Livre desde: ${formatDate(stateDetails.lastOccupation.endedAt)}`
+          : 'Sem ocupações registradas',
       };
   }
 }

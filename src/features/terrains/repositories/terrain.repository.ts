@@ -22,6 +22,10 @@ async function findByLocalId(localId: string): Promise<Terrain | null> {
   return terrainLocalDataSource.findByLocalId(localId);
 }
 
+async function findByRemoteId(remoteId: string): Promise<Terrain | null> {
+  return terrainLocalDataSource.findByRemoteId(remoteId);
+}
+
 async function create(data: CreateTerrainData): Promise<Terrain> {
   const now = new Date().toISOString();
 
@@ -219,6 +223,7 @@ async function deleteLocal(localId: string): Promise<void> {
 export const terrainRepository = {
   findAll,
   findByLocalId,
+  findByRemoteId,
 
   create,
   update,

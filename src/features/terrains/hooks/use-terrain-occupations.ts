@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import type { TerrainOccupation } from '../models';
-import { terrainRepository } from '../repositories/terrain.repository';
-import { terrainService } from '../services/terrain.service';
-
 import { terrainQueryKeys } from './terrain.query-keys';
+import { occupationRepository } from '@/features/movements/repositories/occupation.repository';
 
 export function useTerrainOccupations(localId: string | undefined) {
   return useQuery({
@@ -15,13 +13,10 @@ export function useTerrainOccupations(localId: string | undefined) {
         return [];
       }
 
-      const terrain = await terrainRepository.findByLocalId(localId);
+      const occupations =
+        await occupationRepository.findByTerrainLocalId(localId);
 
-      if (!terrain?.remoteId) {
-        return [];
-      }
-
-      return terrainService.listOccupations(terrain.remoteId);
+      return occupations.map(occupationRepository.toTerrainOccupation);
     },
 
     enabled: Boolean(localId),
