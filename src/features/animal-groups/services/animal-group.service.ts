@@ -108,17 +108,30 @@ async function findDetailsById(remoteId: string) {
 async function listOccupations(
   remoteId: string,
 ): Promise<AnimalGroupOccupation[]> {
-  const response = await api.get<AnimalGroupOccupationListResponseDTO>(
-    `/groups/${remoteId}/occupations`,
-    {
-      params: {
-        page: 1,
-        per_page: 100,
-      },
-    },
-  );
+  const occupations: AnimalGroupOccupation[] = [];
+  let page = 1;
+  let totalPages = 1;
 
-  return response.data.data.map(animalGroupMapper.fromOccupationDTO);
+  do {
+    const response = await api.get<AnimalGroupOccupationListResponseDTO>(
+      `/groups/${remoteId}/occupations`,
+      {
+        params: {
+          page,
+          per_page: 100,
+        },
+      },
+    );
+
+    occupations.push(
+      ...response.data.data.map(animalGroupMapper.fromOccupationDTO),
+    );
+
+    totalPages = response.data.meta.total_pages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return occupations;
 }
 
 export const animalGroupService = {

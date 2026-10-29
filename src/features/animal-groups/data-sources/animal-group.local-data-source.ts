@@ -254,6 +254,12 @@ async function markAsSynced(
           name = ?,
           animal_count = ?,
 
+          current_terrain_local_id = (
+            SELECT local_id
+            FROM terrains
+            WHERE remote_id = ?
+            LIMIT 1
+          ),
           current_terrain_remote_id = ?,
           current_terrain_name = ?,
 
@@ -269,6 +275,7 @@ async function markAsSynced(
         data.name,
         data.animalCount,
 
+        data.currentTerrainRemoteId,
         data.currentTerrainRemoteId,
         data.currentTerrainName,
 

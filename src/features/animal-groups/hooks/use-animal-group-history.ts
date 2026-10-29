@@ -1,12 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { occupationRepository } from '@/features/movements/repositories/occupation.repository';
 import type { HistoryItem } from '@/shared/models';
 
 import type { AnimalGroupHistoryKind } from '../models';
-import { animalGroupRepository } from '../repositories/animal-group.repository';
-import { animalGroupService } from '../services/animal-group.service';
 import { buildAnimalGroupMovementHistory } from '../utils/build-animal-group-history';
-
 import { animalGroupQueryKeys } from './animal-group.query-keys';
 
 export function useAnimalGroupHistory(
@@ -21,17 +19,12 @@ export function useAnimalGroupHistory(
         return [];
       }
 
-      const group = await animalGroupRepository.findById(localId);
+      const occupations =
+        await occupationRepository.findByGroupLocalId(localId);
 
-      if (!group?.remoteId) {
-        return [];
-      }
-
-      const occupations = await animalGroupService.listOccupations(
-        group.remoteId,
+      return buildAnimalGroupMovementHistory(
+        occupations.map(occupationRepository.toAnimalGroupOccupation),
       );
-
-      return buildAnimalGroupMovementHistory(occupations);
     },
 
     enabled: Boolean(localId),

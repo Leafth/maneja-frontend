@@ -34,8 +34,8 @@ interface IInfoColumnProps {
 
 function InfoColumn({ label, children }: IInfoColumnProps) {
   return (
-    <View className="flex-1 items-center gap-2">
-      <AppText className="text-neutral-textMuted">{label}</AppText>
+    <View className='flex-1 items-center gap-2'>
+      <AppText className='text-neutral-textMuted'>{label}</AppText>
       {children}
     </View>
   );
@@ -68,7 +68,7 @@ export default function GroupView() {
   } = useGroupViewModel();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className='flex-1 bg-white'>
       <HeaderSecondary
         title={group?.name ?? 'Grupo'}
         onBackPress={handleBack}
@@ -92,24 +92,22 @@ export default function GroupView() {
         }
       />
 
-      <SafeAreaView edges={['bottom']} className="flex-1">
+      <SafeAreaView edges={['bottom']} className='flex-1'>
         {isLoading ? (
-          <View className="flex-1 items-center justify-center">
+          <View className='flex-1 items-center justify-center'>
             <ActivityIndicator />
           </View>
         ) : error ? (
-          <View className="flex-1 items-center justify-center gap-4 px-5">
-            <AppText color="error" align="center">
+          <View className='flex-1 items-center justify-center gap-4 px-5'>
+            <AppText color='error' align='center'>
               Não foi possível carregar o grupo.
             </AppText>
 
-            <Button onPress={retry}>
-              Tentar novamente
-            </Button>
+            <Button onPress={retry}>Tentar novamente</Button>
           </View>
         ) : group ? (
           <ScrollView
-            className="flex-1"
+            className='flex-1'
             contentContainerStyle={{
               paddingHorizontal: 20,
               paddingTop: 24,
@@ -118,27 +116,29 @@ export default function GroupView() {
             }}
             showsVerticalScrollIndicator={false}
           >
-            <View className="flex-row">
-              <InfoColumn label="Quantidade">
-                <AppText weight="medium" className="text-neutral-textHead">
+            <View className='flex-row'>
+              <InfoColumn label='Quantidade'>
+                <AppText weight='medium' className='text-neutral-textHead'>
                   {group.animalCount}{' '}
                   {group.animalCount === 1 ? 'cabeça' : 'cabeças'}
                 </AppText>
               </InfoColumn>
 
-              <InfoColumn label="Terreno atual">
+              <InfoColumn label='Terreno atual'>
                 {isCurrentTerrainLoading ? (
-                  <ActivityIndicator size="small" />
+                  <ActivityIndicator size='small' />
                 ) : (
                   <AppText
-                    weight="medium"
-                    align="center"
-                    className="text-neutral-textHead"
+                    weight='medium'
+                    align='center'
+                    className='text-neutral-textHead'
                   >
                     {hasCurrentTerrainError
                       ? '—'
                       : currentTerrain
-                        ? `${currentTerrain.name} · ${formatDaysAgo(currentTerrain.enteredAt)}`
+                        ? currentTerrain.enteredAt
+                          ? `${currentTerrain.name} · ${formatDaysAgo(currentTerrain.enteredAt)}`
+                          : currentTerrain.name
                         : 'Sem alocação'}
                   </AppText>
                 )}
@@ -146,10 +146,10 @@ export default function GroupView() {
             </View>
 
             {/* Necessidade alimentar fica para outra sprint. */}
-            <View className="items-center">
-              <Button size="md" disabled>
-                <View className="flex-row items-center gap-2">
-                  <AppText size="sm" weight="medium" color="white">
+            <View className='items-center'>
+              <Button size='md' disabled>
+                <View className='flex-row items-center gap-2'>
+                  <AppText size='sm' weight='medium' color='white'>
                     Cadastrar Necessidade Alimentar
                   </AppText>
 
@@ -158,7 +158,7 @@ export default function GroupView() {
               </Button>
             </View>
 
-            <View className="h-px bg-neutral-border" />
+            <View className='h-px bg-neutral-border' />
 
             <SegmentedControl
               options={historyOptions}
@@ -167,7 +167,7 @@ export default function GroupView() {
             />
 
             <HistoryList
-              title="Histórico"
+              title='Histórico'
               items={history}
               emptyMessage={emptyHistoryMessages[historyKind]}
               isLoading={isHistoryLoading}
@@ -176,17 +176,15 @@ export default function GroupView() {
             />
           </ScrollView>
         ) : (
-          <View className="flex-1 items-center justify-center">
-            <AppText color="muted">
-              Grupo de animais não encontrado.
-            </AppText>
+          <View className='flex-1 items-center justify-center'>
+            <AppText color='muted'>Grupo de animais não encontrado.</AppText>
           </View>
         )}
       </SafeAreaView>
 
       <ConfirmDeleteModal
         visible={isDeleteModalOpen}
-        title="Excluir Grupo?"
+        title='Excluir Grupo?'
         description={
           deleteError
             ? 'Não foi possível excluir o grupo. Tente novamente.'

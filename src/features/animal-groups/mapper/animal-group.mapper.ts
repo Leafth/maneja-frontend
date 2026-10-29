@@ -65,6 +65,7 @@ export const animalGroupMapper = {
 
   fromOccupationDTO(dto: AnimalGroupOccupationDTO): AnimalGroupOccupation {
     return {
+      localId: dto.id,
       remoteId: dto.id,
       startedAt: dto.started_at,
       endedAt: dto.ended_at,

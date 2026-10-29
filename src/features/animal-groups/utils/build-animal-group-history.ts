@@ -15,10 +15,8 @@ export function buildAnimalGroupMovementHistory(
   return [...occupations]
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
     .map((occupation) => ({
-      id: occupation.remoteId,
-
+      id: occupation.remoteId ?? occupation.localId,
       title: `Alocado em ${occupation.terrain.name}`,
-
       period: formatPeriod(occupation.startedAt, occupation.endedAt),
     }));
 }
