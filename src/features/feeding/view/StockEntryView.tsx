@@ -13,13 +13,27 @@ import { FeedTypePicker } from '../components/FeedTypePicker';
 import { useStockEntryViewModel } from '../viewmodels/use-stock-entry-view-model';
 
 export default function StockEntryView() {
-  const { control, types, selectedTypeId, selectType, onSubmit, goBack } = useStockEntryViewModel();
+  const {
+    control,
+    types,
+    isTypeLocked,
+    lockedTypeName,
+    selectedTypeId,
+    selectType,
+    onSubmit,
+    goBack,
+  } = useStockEntryViewModel();
 
   return (
-    <FeedFormLayout title="Entrada de Estoque" onBack={goBack}>
-      <Controller control={control} name="typeId" render={({ fieldState }) => (
-        <FeedTypePicker types={types} value={selectedTypeId} onChange={selectType} error={fieldState.error?.message} />
-      )} />
+    <FeedFormLayout
+      title={lockedTypeName ? `Entrada · ${lockedTypeName}` : 'Entrada de Estoque'}
+      onBack={goBack}
+    >
+      {!isTypeLocked && (
+        <Controller control={control} name="typeId" render={({ fieldState }) => (
+          <FeedTypePicker types={types} value={selectedTypeId} onChange={selectType} error={fieldState.error?.message} />
+        )} />
+      )}
       <Controller control={control} name="quantityKg" render={({ field, fieldState }) => (
         <FormGroup label="Quantidade" required error={fieldState.error?.message}>
           <Input placeholder="80" suffix="kg" keyboardType="decimal-pad" value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} />

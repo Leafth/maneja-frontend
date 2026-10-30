@@ -12,23 +12,36 @@ import { FeedTypePicker } from '../components/FeedTypePicker';
 import { useStockExitViewModel } from '../viewmodels/use-stock-exit-view-model';
 
 export default function StockExitView() {
-  const { control, types, selectedTypeId, selectType, onSubmit, goBack } =
-    useStockExitViewModel();
+  const {
+    control,
+    types,
+    isTypeLocked,
+    lockedTypeName,
+    selectedTypeId,
+    selectType,
+    onSubmit,
+    goBack,
+  } = useStockExitViewModel();
 
   return (
-    <FeedFormLayout title='Saída de Estoque' onBack={goBack}>
-      <Controller
-        control={control}
-        name='typeId'
-        render={({ fieldState }) => (
-          <FeedTypePicker
-            types={types}
-            value={selectedTypeId}
-            onChange={selectType}
-            error={fieldState.error?.message}
-          />
-        )}
-      />
+    <FeedFormLayout
+      title={lockedTypeName ? `Saída · ${lockedTypeName}` : 'Saída de Estoque'}
+      onBack={goBack}
+    >
+      {!isTypeLocked && (
+        <Controller
+          control={control}
+          name='typeId'
+          render={({ fieldState }) => (
+            <FeedTypePicker
+              types={types}
+              value={selectedTypeId}
+              onChange={selectType}
+              error={fieldState.error?.message}
+            />
+          )}
+        />
+      )}
 
       <Controller
         control={control}
@@ -41,6 +54,7 @@ export default function StockExitView() {
           >
             <Input
               placeholder='80'
+              suffix='kg'
               keyboardType='decimal-pad'
               value={field.value}
               onChangeText={field.onChange}

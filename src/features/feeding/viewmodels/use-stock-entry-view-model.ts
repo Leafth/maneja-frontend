@@ -23,6 +23,9 @@ export function useStockEntryViewModel() {
 
   const createEntry = useCreateFeedEntry(accountId);
 
+  // Aberto a partir do detalhe: o tipo de ração vem da rota e não muda.
+  const lockedTypeId = typeof typeId === 'string' && typeId ? typeId : null;
+
   const types = (feedsQuery.data ?? []).map((feed) => ({
     id: feed.localId,
     name: feed.name,
@@ -31,7 +34,7 @@ export function useStockEntryViewModel() {
   const { control, handleSubmit, setValue } = useForm<StockEntryFormData>({
     resolver: zodResolver(stockEntrySchema),
     defaultValues: {
-      typeId: typeof typeId === 'string' ? typeId : '',
+      typeId: lockedTypeId ?? '',
       quantityKg: '',
       value: '',
       date: new Date().toLocaleDateString('pt-BR'),
@@ -62,6 +65,9 @@ export function useStockEntryViewModel() {
   return {
     control,
     types,
+    isTypeLocked: lockedTypeId !== null,
+    lockedTypeName:
+      types.find((type) => type.id === lockedTypeId)?.name ?? null,
     selectedTypeId,
     onSubmit,
 

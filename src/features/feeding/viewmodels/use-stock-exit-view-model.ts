@@ -24,6 +24,9 @@ export function useStockExitViewModel() {
 
   const feeds = feedsQuery.data ?? [];
 
+  // Aberto a partir do detalhe: o tipo de ração vem da rota e não muda.
+  const lockedTypeId = typeof typeId === 'string' && typeId ? typeId : null;
+
   const types = feeds.map((feed) => ({
     id: feed.localId,
     name: feed.name,
@@ -33,7 +36,7 @@ export function useStockExitViewModel() {
     useForm<StockExitFormData>({
       resolver: zodResolver(stockExitSchema),
       defaultValues: {
-        typeId: typeof typeId === 'string' ? typeId : '',
+        typeId: lockedTypeId ?? '',
         quantity: '',
         reason: '',
         date: new Date().toLocaleDateString('pt-BR'),
@@ -73,6 +76,9 @@ export function useStockExitViewModel() {
   return {
     control,
     types,
+    isTypeLocked: lockedTypeId !== null,
+    lockedTypeName:
+      types.find((type) => type.id === lockedTypeId)?.name ?? null,
     selectedTypeId,
     onSubmit,
     isSubmitting: createExit.isPending,
