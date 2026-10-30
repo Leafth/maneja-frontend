@@ -1,6 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 
 import {
+  useDeleteFeed,
   useFeed,
   useFeedingAccount,
   useFeedMovements,
@@ -24,8 +26,13 @@ export function useFeedTypeDetailsViewModel() {
   const movementsQuery = useFeedMovements(accountId, localId);
 
   const syncStateQuery = useFeedSyncState(accountId, localId);
+  const deleteMutation = useDeleteFeed(accountId);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const feed = feedQuery.data;
+  const feed = feedQuery.data?.syncStatus === 'pending_delete'
+    ? null
+    : feedQuery.data;
+  const canAct = Boolean(feed && accountId && !feedQuery.isError && !deleteMutation.isPending);
 
   const type = feed
     ? {
@@ -47,8 +54,63 @@ export function useFeedTypeDetailsViewModel() {
     isLoading: isAccountLoading || feedQuery.isLoading,
 
     isError: feedQuery.isError,
+    retry: () => {
+      void feedQuery.refetch();
+    },
+    actionsDisabled: !canAct,
+    isDeleteModalOpen,
+    isDeleting: deleteMutation.isPending,
+    deleteError: deleteMutation.error,
 
-    goBack: () => router.back(),
+    goBack: () => {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/feeding');
+      }
+    },
+
+    handleEdit: () => {
+      if (!canAct || !localId) {
+        return;
+      }
+
+      router.push({
+        pathname: '/feeding/[typeId]/edit' as never,
+        params: { typeId: localId },
+      });
+    },
+
+    handleDelete: () => {
+      if (!canAct) {
+        return;
+      }
+
+      deleteMutation.reset();
+      setIsDeleteModalOpen(true);
+    },
+
+    handleCancelDelete: () => {
+      if (deleteMutation.isPending) {
+        return;
+      }
+
+      setIsDeleteModalOpen(false);
+      deleteMutation.reset();
+    },
+
+    handleConfirmDelete: () => {
+      if (!canAct || !localId) {
+        return;
+      }
+
+      deleteMutation.mutate({ localId }, {
+        onSuccess: () => {
+          setIsDeleteModalOpen(false);
+          router.dismissTo('/feeding');
+        },
+      });
+    },
 
     addEntry: () => {
       if (!localId) {

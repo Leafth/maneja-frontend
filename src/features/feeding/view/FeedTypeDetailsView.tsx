@@ -1,6 +1,9 @@
-import { View } from 'react-native';
+import { Pencil, Trash2 } from 'lucide-react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
+import { Button } from '@/shared/components/Button';
+import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
 import { HeaderSecondary } from '@/shared/components/Header';
 
 import { FeedActionButton } from '../components/FeedActionButton';
@@ -8,17 +11,49 @@ import { FeedHistoryItem } from '../components/FeedHistoryItem';
 import { useFeedTypeDetailsViewModel } from '../viewmodels/use-feed-type-details-view-model';
 
 export default function FeedTypeDetailsView() {
-  const { type, movements, goBack, addEntry, addExit } =
-    useFeedTypeDetailsViewModel();
+  const {
+    type,
+    movements,
+    isLoading,
+    isError,
+    retry,
+    actionsDisabled,
+    isDeleteModalOpen,
+    isDeleting,
+    deleteError,
+    goBack,
+    handleEdit,
+    handleDelete,
+    handleCancelDelete,
+    handleConfirmDelete,
+    addEntry,
+    addExit,
+  } = useFeedTypeDetailsViewModel();
 
   return (
     <View className='flex-1 bg-white'>
       <HeaderSecondary
         title={type?.name ?? 'Tipo de ração'}
         onBackPress={goBack}
+        menuDisabled={actionsDisabled}
+        menuItems={type ? [
+          { label: 'Editar', icon: Pencil, onPress: handleEdit },
+          { label: 'Deletar', icon: Trash2, onPress: handleDelete, destructive: true },
+        ] : undefined}
       />
 
-      {type ? (
+      {isLoading ? (
+        <View className='flex-1 items-center justify-center'>
+          <ActivityIndicator />
+        </View>
+      ) : isError ? (
+        <View className='flex-1 items-center justify-center gap-4 px-5'>
+          <AppText color='error' align='center'>
+            Não foi possível carregar o tipo de ração.
+          </AppText>
+          <Button onPress={retry}>Tentar novamente</Button>
+        </View>
+      ) : type ? (
         <View className='flex-1 px-4 pt-5'>
           <View className='rounded-2xl border border-gray-400 p-1'>
             <View className='gap-1 rounded-xl bg-gray-100 p-4'>
@@ -69,6 +104,19 @@ export default function FeedTypeDetailsView() {
           <AppText color='muted'>Tipo de ração não encontrado.</AppText>
         </View>
       )}
+
+      <ConfirmDeleteModal
+        visible={isDeleteModalOpen}
+        title='Excluir tipo de ração?'
+        description={
+          deleteError
+            ? 'Não foi possível excluir o tipo de ração. Tente novamente.'
+            : `Deseja realmente excluir o tipo de ração "${type?.name ?? ''}"? Essa ação não pode ser revertida.`
+        }
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </View>
   );
 }

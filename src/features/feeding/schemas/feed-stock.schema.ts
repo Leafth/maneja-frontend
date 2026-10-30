@@ -27,6 +27,8 @@ export const feedTypeSchema = z.object({
   initialKg: quantity,
 });
 
+export const editFeedTypeSchema = feedTypeSchema.pick({ name: true });
+
 export const stockEntrySchema = z.object({
   typeId: z.string().min(1, 'Selecione uma ração'),
   quantityKg: quantity,
@@ -62,5 +64,6 @@ export const stockExitSchema = z.object({
 });
 
 export type FeedTypeFormData = z.infer<typeof feedTypeSchema>;
+export type EditFeedTypeFormData = z.infer<typeof editFeedTypeSchema>;
 export type StockEntryFormData = z.infer<typeof stockEntrySchema>;
 export type StockExitFormData = z.infer<typeof stockExitSchema>;
