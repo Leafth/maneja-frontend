@@ -2,6 +2,7 @@ import { Minus, Plus } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
+import colors from '@/styles/colors';
 
 import type { FeedMovement } from '../models/feed-movement.model';
 import { scaledToDisplay } from '../utils/feed-decimal';
@@ -22,22 +23,23 @@ export function FeedHistoryItem({ movement }: FeedHistoryItemProps) {
   return (
     <View className='flex-row items-center py-4'>
       <View
-        className='mr-4 h-12 w-12 items-center justify-center rounded-md'
-        style={{
-          backgroundColor: isEntry ? '#10B981' : '#F83D45',
-        }}
+        className={`mr-4 h-12 w-12 items-center justify-center rounded-[10px] ${
+          isEntry ? 'bg-support-success-bg' : 'bg-support-danger-bg'
+        }`}
       >
         {isEntry ? (
-          <Plus size={22} color='#FFFFFF' strokeWidth={2} />
+          <Plus size={22} color={colors.support.success.solid} strokeWidth={2} />
         ) : (
-          <Minus size={22} color='#FFFFFF' strokeWidth={2} />
+          <Minus size={22} color={colors.support.danger.solid} strokeWidth={2} />
         )}
       </View>
 
       <View className='flex-1'>
-        <AppText color='muted'>{isEntry ? 'Entrada' : 'Saída'}</AppText>
+        <AppText className='text-neutral-textBody'>
+          {isEntry ? 'Entrada' : 'Saída'}
+        </AppText>
 
-        <AppText size='sm' weight='semiBold' color='muted' className='mt-1'>
+        <AppText size='sm' className='mt-1 text-neutral-textMuted'>
           {formatDate(movement.occurredOn)}
           {' – '}
           {isEntry
@@ -48,9 +50,9 @@ export function FeedHistoryItem({ movement }: FeedHistoryItemProps) {
 
       <AppText
         weight='semiBold'
-        style={{
-          color: isEntry ? '#10B981' : '#F83D45',
-        }}
+        className={
+          isEntry ? 'text-support-success-text' : 'text-support-danger-text'
+        }
       >
         {isEntry ? '+' : '−'}
         {scaledToDisplay(movement.quantityScaled)}

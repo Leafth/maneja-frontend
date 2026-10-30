@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react-native';
+import { Minus, Pencil, Plus, Trash2 } from 'lucide-react-native';
 import { ActivityIndicator, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
@@ -6,7 +6,6 @@ import { Button } from '@/shared/components/Button';
 import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
 import { HeaderSecondary } from '@/shared/components/Header';
 
-import { FeedActionButton } from '../components/FeedActionButton';
 import { FeedHistoryItem } from '../components/FeedHistoryItem';
 import { useFeedTypeDetailsViewModel } from '../viewmodels/use-feed-type-details-view-model';
 
@@ -55,29 +54,47 @@ export default function FeedTypeDetailsView() {
         </View>
       ) : type ? (
         <View className='flex-1 px-4 pt-5'>
-          <View className='rounded-2xl border border-gray-400 p-1'>
-            <View className='gap-1 rounded-xl bg-gray-100 p-4'>
-              <AppText size='sm' color='muted'>
+          <View className='rounded-[14px] border border-neutral-border bg-neutral-card p-2'>
+            <View className='gap-1 rounded-[10px] bg-neutral-surface px-3 py-4'>
+              <AppText size='sm' className='text-neutral-textMuted'>
                 Total disponível
               </AppText>
 
-              <AppText>{type.availableKg}kg</AppText>
+              <AppText
+                size='xl'
+                weight='medium'
+                className='text-neutral-textHead'
+              >
+                {type.availableKg} kg
+              </AppText>
             </View>
           </View>
 
           <View className='mt-4 flex-row gap-4'>
-            <FeedActionButton onPress={addEntry} className='flex-1'>
-              ＋ Entrada
-            </FeedActionButton>
+            <View className='flex-1'>
+              <Button
+                variant='success'
+                size='md'
+                leftIcon={Plus}
+                onPress={addEntry}
+              >
+                Entrada
+              </Button>
+            </View>
 
-            <FeedActionButton onPress={addExit} secondary className='flex-1'>
-              − Saída
-            </FeedActionButton>
+            <View className='flex-1'>
+              <Button
+                variant='danger'
+                size='md'
+                leftIcon={Minus}
+                onPress={addExit}
+              >
+                Saída
+              </Button>
+            </View>
           </View>
 
-          <AppText color='muted' weight='semiBold' className='mt-6'>
-            Histórico
-          </AppText>
+          <AppText className='mt-6 text-neutral-textMuted'>Histórico</AppText>
 
           <View className='mt-2'>
             {movements.length > 0 ? (
@@ -86,7 +103,7 @@ export default function FeedTypeDetailsView() {
                   <FeedHistoryItem movement={movement} />
 
                   {index < movements.length - 1 && (
-                    <View className='h-px bg-gray-300' />
+                    <View className='h-px bg-neutral-border' />
                   )}
                 </View>
               ))
