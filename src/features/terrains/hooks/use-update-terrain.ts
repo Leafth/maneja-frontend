@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { animalGroupQueryKeys } from '@/features/animal-groups/hooks';
 import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
 import { terrainRepository } from '../repositories/terrain.repository';
@@ -24,14 +25,15 @@ export function useUpdateTerrain() {
 
     networkMode: 'always',
 
-    onSuccess: async (terrain) => {
+    onSuccess: async () => {
+
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: terrainQueryKeys.lists(),
+          queryKey: terrainQueryKeys.all,
         }),
 
         queryClient.invalidateQueries({
-          queryKey: terrainQueryKeys.detail(terrain.localId),
+          queryKey: animalGroupQueryKeys.all,
         }),
       ]);
 

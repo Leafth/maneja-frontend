@@ -1,4 +1,7 @@
-import { getDatabase } from '@/infrastructure/database/database';
+import {
+  getDatabase,
+  withDatabaseTransaction,
+} from '@/infrastructure/database/database';
 import type { TerrainStatus } from '../models/terrain-status.model';
 import type { Terrain } from '../models/terrain.model';
 
@@ -128,38 +131,76 @@ async function insert(terrain: Terrain): Promise<void> {
 }
 
 async function update(terrain: Terrain): Promise<void> {
-  const database = await getDatabase();
+  await withDatabaseTransaction(async (database) => {
+    /*
+     * Atualiza o próprio terreno.
+     */
+    await database.runAsync(
+      `
+        UPDATE terrains
+        SET
+          remote_id = ?,
+          name = ?,
+          rest_days = ?,
+          status = ?,
+          sync_status = ?,
+          remote_created_at = ?,
+          remote_updated_at = ?,
+          local_created_at = ?,
+          local_updated_at = ?,
+          last_synced_at = ?,
+          last_sync_error = ?
+        WHERE local_id = ?
+      `,
+      [
+        terrain.remoteId,
+        terrain.name,
+        terrain.restDays,
+        terrain.status,
+        terrain.syncStatus,
+        terrain.remoteCreatedAt,
+        terrain.remoteUpdatedAt,
+        terrain.localCreatedAt,
+        terrain.localUpdatedAt,
+        terrain.lastSyncedAt,
+        terrain.lastSyncError,
+        terrain.localId,
+      ],
+    );
 
-  await database.runAsync(
-    `
-      UPDATE terrains
-      SET
-        remote_id = ?,
-        name = ?,
-        rest_days = ?,
-        status = ?,
-        sync_status = ?,
-        remote_created_at = ?,
-        remote_updated_at = ?,
-        local_created_at = ?,
-        local_updated_at = ?,
-        last_synced_at = ?,
-        last_sync_error = ?
-      WHERE local_id = ?
-    `,
-    terrain.remoteId,
-    terrain.name,
-    terrain.restDays,
-    terrain.status,
-    terrain.syncStatus,
-    terrain.remoteCreatedAt,
-    terrain.remoteUpdatedAt,
-    terrain.localCreatedAt,
-    terrain.localUpdatedAt,
-    terrain.lastSyncedAt,
-    terrain.lastSyncError,
-    terrain.localId,
-  );
+    /*
+     * O nome do terreno é duplicado no grupo como cache.
+     *
+     * Como current_terrain_name não representa uma edição
+     * do grupo, NÃO alteramos o sync_status do grupo.
+     */
+    await database.runAsync(
+      `
+        UPDATE animal_groups
+        SET current_terrain_name = ?
+        WHERE
+          current_terrain_local_id = ?
+          OR (
+            ? IS NOT NULL
+            AND current_terrain_remote_id = ?
+          )
+      `,
+      [terrain.name, terrain.localId, terrain.remoteId, terrain.remoteId],
+    );
+    await database.runAsync(
+      `
+        UPDATE occupations
+        SET terrain_name = ?
+        WHERE
+          terrain_local_id = ?
+          OR (
+            ? IS NOT NULL
+            AND terrain_remote_id = ?
+          )
+      `,
+      [terrain.name, terrain.localId, terrain.remoteId, terrain.remoteId],
+    );
+  });
 }
 
 async function markPendingDelete(
