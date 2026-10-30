@@ -1,63 +1,31 @@
 import { Plus } from 'lucide-react-native';
-import { Pressable, ScrollView, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
+import { Button } from '@/shared/components/Button';
 import { HeaderPrimary } from '@/shared/components/Header';
 import colors from '@/styles/colors';
 
-import { FeedActionButton } from '../components/FeedActionButton';
+import { FeedStockCard } from '../components/FeedStockCard';
 import { useFeedStockViewModel } from '../viewmodels/use-feed-stock-view-model';
-
-interface FeedStockCardItem {
-  name: string;
-  availableKg: number;
-}
-
-interface CardProps {
-  type: FeedStockCardItem;
-  onOpen: () => void;
-  onEntry: () => void;
-  onExit: () => void;
-}
-
-function FeedStockCard({ type, onOpen, onEntry, onExit }: CardProps) {
-  return (
-    <View className='rounded-2xl border border-gray-300 bg-white p-4'>
-      <Pressable
-        onPress={onOpen}
-        accessibilityRole='button'
-        accessibilityLabel={`Ver ${type.name}`}
-      >
-        <AppText weight='semiBold'>{type.name}</AppText>
-
-        <AppText size='sm' weight='semiBold' color='muted'>
-          {type.availableKg}kg disponíveis
-        </AppText>
-      </Pressable>
-
-      <View className='mt-3 flex-row gap-2'>
-        <FeedActionButton onPress={onEntry} className='h-9 px-4'>
-          + Entrada
-        </FeedActionButton>
-
-        <FeedActionButton onPress={onExit} secondary className='h-9 px-4'>
-          − Saída
-        </FeedActionButton>
-      </View>
-    </View>
-  );
-}
 
 export default function FeedStockView() {
   const {
     types,
     section,
     setSection,
+    isLoading,
+    isError,
+    retry,
     isOnline,
     openType,
     createType,
-    addEntry,
-    addExit,
   } = useFeedStockViewModel();
 
   return (
@@ -111,30 +79,41 @@ export default function FeedStockView() {
 
         {section === 'stock' ? (
           <>
-            <ScrollView
-              className='mt-4 flex-1'
-              contentContainerStyle={{
-                gap: 12,
-                paddingBottom: 84,
-              }}
-              showsVerticalScrollIndicator={false}
-            >
-              {types.map((type) => (
-                <FeedStockCard
-                  key={type.id}
-                  type={type}
-                  onOpen={() => openType(type.id)}
-                  onEntry={() => addEntry(type.id)}
-                  onExit={() => addExit(type.id)}
-                />
-              ))}
-
-              {types.length === 0 && (
-                <AppText color='muted'>
-                  Cadastre seu primeiro tipo de ração.
+            {isLoading ? (
+              <ActivityIndicator className='mt-6' />
+            ) : isError ? (
+              <View className='mt-4 gap-4'>
+                <AppText size='sm' color='error'>
+                  Não foi possível carregar o estoque.
                 </AppText>
-              )}
-            </ScrollView>
+
+                <Button onPress={retry}>Tentar novamente</Button>
+              </View>
+            ) : (
+              <ScrollView
+                className='mt-4 flex-1'
+                contentContainerStyle={{
+                  gap: 12,
+                  paddingBottom: 84,
+                }}
+                showsVerticalScrollIndicator={false}
+              >
+                {types.map((type) => (
+                  <FeedStockCard
+                    key={type.id}
+                    name={type.name}
+                    availableKg={type.availableKg}
+                    onPress={() => openType(type.id)}
+                  />
+                ))}
+
+                {types.length === 0 && (
+                  <AppText color='muted'>
+                    Cadastre seu primeiro tipo de ração.
+                  </AppText>
+                )}
+              </ScrollView>
+            )}
 
             <TouchableOpacity
               activeOpacity={0.8}

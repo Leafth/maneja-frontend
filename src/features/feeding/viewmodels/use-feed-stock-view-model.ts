@@ -32,6 +32,10 @@ export function useFeedStockViewModel() {
 
     isError: feedsQuery.isError,
 
+    retry: () => {
+      void feedsQuery.refetch();
+    },
+
     isOnline:
       network.isConnected === true && network.isInternetReachable !== false,
 
@@ -42,17 +46,5 @@ export function useFeedStockViewModel() {
       }),
 
     createType: () => router.push('/feeding/types/create'),
-
-    addEntry: (typeId: string) =>
-      router.push({
-        pathname: '/feeding/entry',
-        params: { typeId },
-      }),
-
-    addExit: (typeId: string) =>
-      router.push({
-        pathname: '/feeding/exit',
-        params: { typeId },
-      }),
   };
 }
