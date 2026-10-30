@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 
 import {
   useDeleteTerrain,
-  useForceTerrainRestRemoval,
   useTerrain,
   useTerrainOccupations,
   useTerrainStateDetails,
@@ -23,12 +22,8 @@ export function useTerrainDetailsViewModel() {
   const stateQuery = useTerrainStateDetails(terrainId || undefined);
   const occupationsQuery = useTerrainOccupations(terrainId || undefined);
   const deleteMutation = useDeleteTerrain();
-  const forceRestMutation = useForceTerrainRestRemoval();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isForceRestModalOpen, setIsForceRestModalOpen] = useState(false);
-  // Guardado ao abrir: após a retirada o status muda antes do fade do modal.
-  const [forceRestDays, setForceRestDays] = useState<number | null>(null);
 
   const terrain = terrainQuery.data ?? null;
   const stateDetails = stateQuery.data ?? null;
@@ -105,35 +100,6 @@ export function useTerrainDetailsViewModel() {
     });
   }
 
-  // O backend não valida o descanso: a confirmação é a única barreira.
-  function handleForceRestRemoval() {
-    if (isUnavailable || stateDetails?.status !== 'resting') {
-      return;
-    }
-
-    setForceRestDays(stateDetails.remainingRestDays);
-    forceRestMutation.reset();
-    setIsForceRestModalOpen(true);
-  }
-
-  function handleCancelForceRest() {
-    if (forceRestMutation.isPending) {
-      return;
-    }
-
-    setIsForceRestModalOpen(false);
-  }
-
-  function handleConfirmForceRest() {
-    if (!terrainId || forceRestMutation.isPending) {
-      return;
-    }
-
-    forceRestMutation.mutate(terrainId, {
-      onSuccess: () => setIsForceRestModalOpen(false),
-    });
-  }
-
   function retry() {
     void terrainQuery.refetch();
     void stateQuery.refetch();
@@ -147,7 +113,6 @@ export function useTerrainDetailsViewModel() {
     terrain,
     stateDetails,
     showAllocateGroup: status === 'available',
-    showForceRestRemoval: status === 'resting',
 
     history,
     isHistoryLoading: occupationsQuery.isPending && Boolean(terrainId),
@@ -159,11 +124,6 @@ export function useTerrainDetailsViewModel() {
     loadError: terrainQuery.error ?? stateQuery.error,
     isUnavailable,
 
-    remainingRestDays: forceRestDays,
-    isForceRestModalOpen,
-    isForcingRest: forceRestMutation.isPending,
-    forceRestError: forceRestMutation.error,
-
     isDeleteModalOpen,
     isDeleting: deleteMutation.isPending,
     deleteError: deleteMutation.error,
@@ -171,9 +131,6 @@ export function useTerrainDetailsViewModel() {
     goBack,
     retry,
     handleAllocateGroup,
-    handleForceRestRemoval,
-    handleCancelForceRest,
-    handleConfirmForceRest,
     handleEdit,
     handleDelete,
     handleCancelDelete,

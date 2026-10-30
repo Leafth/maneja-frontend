@@ -4,7 +4,6 @@ import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
 import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
-import { ConfirmModal } from '@/shared/components/ConfirmModal';
 import { HeaderSecondary } from '@/shared/components/Header';
 import { HistoryList } from '@/shared/components/HistoryList';
 import { formatDate } from '@/shared/utils/format-date';
@@ -54,7 +53,6 @@ export default function TerrainDetailsView() {
     terrain,
     stateDetails,
     showAllocateGroup,
-    showForceRestRemoval,
     history,
     isHistoryLoading,
     hasHistoryError,
@@ -62,19 +60,12 @@ export default function TerrainDetailsView() {
     isLoading,
     loadError,
     isUnavailable,
-    remainingRestDays,
-    isForceRestModalOpen,
-    isForcingRest,
-    forceRestError,
     isDeleteModalOpen,
     isDeleting,
     deleteError,
     goBack,
     retry,
     handleAllocateGroup,
-    handleForceRestRemoval,
-    handleCancelForceRest,
-    handleConfirmForceRest,
     handleEdit,
     handleDelete,
     handleCancelDelete,
@@ -147,12 +138,6 @@ export default function TerrainDetailsView() {
             </Button>
           )}
 
-          {showForceRestRemoval && (
-            <Button variant='dark' size='md' onPress={handleForceRestRemoval}>
-              Forçar retirada de descanso
-            </Button>
-          )}
-
           <HistoryList
             title={
               stateDetails.status === 'occupied'
@@ -167,20 +152,6 @@ export default function TerrainDetailsView() {
           />
         </ScrollView>
       ) : null}
-
-      <ConfirmModal
-        visible={isForceRestModalOpen}
-        title='Forçar retirada de descanso?'
-        description={
-          forceRestError
-            ? 'Não foi possível retirar o terreno do descanso. Tente novamente.'
-            : `Este terreno ainda precisa de ${remainingRestDays ?? 0} ${remainingRestDays === 1 ? 'dia' : 'dias'} de descanso. Retirar antes disso é uma exceção.`
-        }
-        confirmLabel='Forçar retirada'
-        isConfirming={isForcingRest}
-        onConfirm={handleConfirmForceRest}
-        onCancel={handleCancelForceRest}
-      />
 
       <ConfirmDeleteModal
         visible={isDeleteModalOpen}
