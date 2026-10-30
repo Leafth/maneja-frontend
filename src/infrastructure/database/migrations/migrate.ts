@@ -7,8 +7,9 @@ import { createFeedMovimentsTable } from './004-create-feed-moviments';
 import { createMovementCommandsTable } from './005-create-movement-commands';
 import { addCurrentTerrainToAnimalGroups } from './006-add-current-terrain-to-animal-groups';
 import { createOccupationsTable } from './007-create-occupations';
+import { addLocallyDeletedAtToFeeds } from './008-add-locally-deleted-at-to-feeds';
 
-const DATABASE_VERSION = 7;
+const DATABASE_VERSION = 8;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -48,6 +49,10 @@ export async function migrateDatabase(database: SQLiteDatabase) {
 
     if (currentVersion < 7) {
       await createOccupationsTable(database);
+    }
+
+    if (currentVersion < 8) {
+      await addLocallyDeletedAtToFeeds(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

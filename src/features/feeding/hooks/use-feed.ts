@@ -14,12 +14,18 @@ export function useFeed(
         ? feedQueryKeys.detail(accountId, localId)
         : feedQueryKeys.details(),
 
-    queryFn: () => {
+    queryFn: async () => {
       if (!accountId || !localId) {
         return null;
       }
 
-      return feedRepository.findByLocalId(accountId, localId);
+      const feed = await feedRepository.findByLocalId(accountId, localId);
+
+      if (feed?.syncStatus === 'pending_delete' || feed?.locallyDeletedAt) {
+        return null;
+      }
+
+      return feed;
     },
 
     enabled: Boolean(accountId && localId),

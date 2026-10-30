@@ -163,9 +163,10 @@ class FeedLocalDataSource {
           remote_created_at,
           remote_updated_at,
           last_synced_at,
-          last_sync_error
+          last_sync_error,
+          locally_deleted_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       feed.localId,
       feed.accountId,
@@ -181,6 +182,7 @@ class FeedLocalDataSource {
       feed.remoteUpdatedAt,
       feed.lastSyncedAt,
       feed.lastSyncError,
+      feed.locallyDeletedAt,
     );
   }
 
@@ -201,7 +203,8 @@ class FeedLocalDataSource {
           remote_created_at = ?,
           remote_updated_at = ?,
           last_synced_at = ?,
-          last_sync_error = ?
+          last_sync_error = ?,
+          locally_deleted_at = ?
         WHERE account_id = ?
           AND local_id = ?
       `,
@@ -216,6 +219,7 @@ class FeedLocalDataSource {
       feed.remoteUpdatedAt,
       feed.lastSyncedAt,
       feed.lastSyncError,
+      feed.locallyDeletedAt,
       feed.accountId,
       feed.localId,
     );

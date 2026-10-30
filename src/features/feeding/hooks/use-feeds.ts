@@ -8,12 +8,16 @@ export function useFeeds(accountId: string | undefined) {
   return useQuery({
     queryKey: accountId ? feedQueryKeys.list(accountId) : feedQueryKeys.lists(),
 
-    queryFn: () => {
+    queryFn: async () => {
       if (!accountId) {
         return [];
       }
 
-      return feedRepository.findAll(accountId);
+      const feeds = await feedRepository.findAll(accountId);
+
+      return feeds.filter(
+        (feed) => feed.syncStatus !== 'pending_delete' && !feed.locallyDeletedAt,
+      );
     },
 
     enabled: Boolean(accountId),

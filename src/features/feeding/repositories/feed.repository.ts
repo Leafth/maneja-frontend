@@ -105,12 +105,6 @@ class FeedRepository {
 
     const now = new Date().toISOString();
 
-    if (!feed.remoteId) {
-      await feedLocalDataSource.deleteByLocalId(accountId, localId);
-
-      return;
-    }
-
     await feedLocalDataSource.update({
       ...feed,
 
@@ -168,7 +162,12 @@ class FeedRepository {
 
       projectedStockScaled: current.projectedStockScaled,
 
-      syncStatus: changedWhileSyncing ? 'pending_update' : 'synced',
+      syncStatus:
+        current.syncStatus === 'pending_delete'
+          ? 'pending_delete'
+          : changedWhileSyncing
+            ? 'pending_update'
+            : 'synced',
 
       remoteCreatedAt: snapshot.remoteCreatedAt,
       remoteUpdatedAt: snapshot.remoteUpdatedAt,
@@ -206,7 +205,12 @@ class FeedRepository {
 
       remoteStockScaled: snapshot.remoteStockScaled,
 
-      syncStatus: changedWhileSyncing ? 'pending_update' : 'synced',
+      syncStatus:
+        current.syncStatus === 'pending_delete'
+          ? 'pending_delete'
+          : changedWhileSyncing
+            ? 'pending_update'
+            : 'synced',
 
       remoteUpdatedAt: snapshot.remoteUpdatedAt,
 
