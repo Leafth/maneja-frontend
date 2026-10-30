@@ -17,8 +17,7 @@ export function useTerrainDetailsViewModel() {
     terrainId?: string | string[];
   }>();
 
-  const terrainId =
-    typeof routeTerrainId === 'string' ? routeTerrainId : '';
+  const terrainId = typeof routeTerrainId === 'string' ? routeTerrainId : '';
 
   const terrainQuery = useTerrain(terrainId || undefined);
   const stateQuery = useTerrainStateDetails(terrainId || undefined);
@@ -56,7 +55,9 @@ export function useTerrainDetailsViewModel() {
   }
 
   function handleAllocateGroup() {
-    if (isUnavailable) { return; }
+    if (isUnavailable) {
+      return;
+    }
 
     router.push({
       pathname: '/movement/select-group',
@@ -65,7 +66,9 @@ export function useTerrainDetailsViewModel() {
   }
 
   function handleEdit() {
-    if (isUnavailable || deleteMutation.isPending) { return; }
+    if (isUnavailable || deleteMutation.isPending) {
+      return;
+    }
 
     router.push({
       pathname: '/terrain/[terrainId]/edit',
@@ -74,23 +77,23 @@ export function useTerrainDetailsViewModel() {
   }
 
   function handleDelete() {
-    if (isUnavailable || deleteMutation.isPending) { return; }
+    if (isUnavailable || deleteMutation.isPending || status === 'occupied') {
+      return;
+    }
 
     setIsDeleteModalOpen(true);
   }
 
   function handleCancelDelete() {
-    if (deleteMutation.isPending) { return; }
+    if (deleteMutation.isPending) {
+      return;
+    }
 
     setIsDeleteModalOpen(false);
   }
 
   function handleConfirmDelete() {
-    if (
-      !terrainId ||
-      isUnavailable ||
-      deleteMutation.isPending
-    ) {
+    if (!terrainId || isUnavailable || deleteMutation.isPending) {
       return;
     }
 
@@ -104,7 +107,9 @@ export function useTerrainDetailsViewModel() {
 
   // O backend não valida o descanso: a confirmação é a única barreira.
   function handleForceRestRemoval() {
-    if (isUnavailable || stateDetails?.status !== 'resting') { return; }
+    if (isUnavailable || stateDetails?.status !== 'resting') {
+      return;
+    }
 
     setForceRestDays(stateDetails.remainingRestDays);
     forceRestMutation.reset();
@@ -112,13 +117,17 @@ export function useTerrainDetailsViewModel() {
   }
 
   function handleCancelForceRest() {
-    if (forceRestMutation.isPending) { return; }
+    if (forceRestMutation.isPending) {
+      return;
+    }
 
     setIsForceRestModalOpen(false);
   }
 
   function handleConfirmForceRest() {
-    if (!terrainId || forceRestMutation.isPending) { return; }
+    if (!terrainId || forceRestMutation.isPending) {
+      return;
+    }
 
     forceRestMutation.mutate(terrainId, {
       onSuccess: () => setIsForceRestModalOpen(false),

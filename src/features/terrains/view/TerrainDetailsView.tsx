@@ -93,12 +93,17 @@ export default function TerrainDetailsView() {
             icon: Pencil,
             onPress: handleEdit,
           },
-          {
-            label: 'Deletar',
-            icon: Trash2,
-            onPress: handleDelete,
-            destructive: true,
-          },
+
+          ...(stateDetails?.status !== 'occupied'
+            ? [
+                {
+                  label: 'Deletar',
+                  icon: Trash2,
+                  onPress: handleDelete,
+                  destructive: true,
+                },
+              ]
+            : []),
         ]}
       />
 
