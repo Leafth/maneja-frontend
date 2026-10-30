@@ -267,6 +267,27 @@ async function markAsSynced(
   );
 }
 
+async function cancelPendingDelete(
+  localId: string,
+  error: string,
+): Promise<void> {
+  const database = await getDatabase();
+
+  await database.runAsync(
+    `
+      UPDATE terrains
+      SET
+        sync_status = 'synced',
+        local_updated_at = ?,
+        last_sync_error = ?
+      WHERE local_id = ?
+    `,
+    new Date().toISOString(),
+    error,
+    localId,
+  );
+}
+
 export const terrainLocalDataSource = {
   findAll,
   findByLocalId,
@@ -282,4 +303,6 @@ export const terrainLocalDataSource = {
 
   setSyncError,
   markAsSynced,
+
+  cancelPendingDelete,
 };

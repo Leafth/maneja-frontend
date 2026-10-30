@@ -96,8 +96,13 @@ async function remove(localId: string): Promise<void> {
     return;
   }
 
+  if (terrain.status === 'occupied') {
+    throw new Error('Não é possível excluir um terreno que possui animais.');
+  }
+
   if (terrain.remoteId === null) {
     await terrainLocalDataSource.deleteByLocalId(localId);
+
     return;
   }
 
@@ -220,6 +225,13 @@ async function deleteLocal(localId: string): Promise<void> {
   await terrainLocalDataSource.deleteByLocalId(localId);
 }
 
+async function cancelPendingDelete(
+  localId: string,
+  error: string,
+): Promise<void> {
+  await terrainLocalDataSource.cancelPendingDelete(localId, error);
+}
+
 export const terrainRepository = {
   findAll,
   findByLocalId,
@@ -228,6 +240,8 @@ export const terrainRepository = {
   create,
   update,
   remove,
+
+  cancelPendingDelete,
 
   findPending,
 
