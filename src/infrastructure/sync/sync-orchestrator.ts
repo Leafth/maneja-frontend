@@ -1,5 +1,9 @@
 import { animalGroupSyncService } from '@/features/animal-groups/services/animal-group-sync.service';
-import { feedMovementSyncService } from '@/features/feeding/services/feed-movement-sync.service';
+import { feedStockSyncService } from '@/features/feeding/services/feed-stock-sync.service';
+import { feedRequirementSyncService } from '@/features/feeding/services/feed-requirement-sync.service';
+import { feedingSyncService } from '@/features/feeding/services/feeding-sync.service';
+import { verifyFeedingGroups } from '@/features/feeding/services/feeding-sync-context';
+import { feedingStockHistoryService } from '@/features/feeding/services/feeding-stock-history.service';
 import { feedSyncService } from '@/features/feeding/services/feed-sync.service';
 import { movementCommandRepository } from '@/features/movements/repositories/movement-command.repository';
 import { movementSyncService } from '@/features/movements/services/movement-sync.service';
@@ -127,10 +131,19 @@ class SyncOrchestrator {
            */
           await feedSyncService.syncUpserts(accountId);
 
+          await verifyFeedingGroups(accountId);
+          syncEvents.emit('animal-groups');
+          await feedRequirementSyncService.sync(accountId);
+          syncEvents.emit('feed-requirements');
+
           /*
            * 8. Envia entradas e saídas de estoque.
            */
-          await feedMovementSyncService.sync(accountId);
+          try {
+            await feedStockSyncService.sync(accountId);
+          } finally {
+            syncEvents.emit('feedings');
+          }
 
           /*
            * 9. Processa exclusões de rações.
@@ -142,6 +155,12 @@ class SyncOrchestrator {
            * rações no SQLite.
            */
           await feedSyncService.pull(accountId);
+
+          await feedRequirementSyncService.pull(accountId);
+          await feedingSyncService.pull(accountId);
+          await feedingStockHistoryService.pull(accountId);
+          syncEvents.emit('feed-requirements');
+          syncEvents.emit('feedings');
 
           syncEvents.emit('feeds');
         } catch (error) {
