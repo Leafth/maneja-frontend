@@ -9,7 +9,10 @@ import { addCurrentTerrainToAnimalGroups } from './006-add-current-terrain-to-an
 import { createOccupationsTable } from './007-create-occupations';
 import { addLocallyDeletedAtToFeeds } from './008-add-locally-deleted-at-to-feeds';
 
-const DATABASE_VERSION = 8;
+import { createFeedRequirements } from './009-create-feed-requirements';
+import { createFeedingRecords } from './010-create-feeding-records';
+
+const DATABASE_VERSION = 10;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -54,6 +57,9 @@ export async function migrateDatabase(database: SQLiteDatabase) {
     if (currentVersion < 8) {
       await addLocallyDeletedAtToFeeds(database);
     }
+
+    if (currentVersion < 9) {await createFeedRequirements(database);}
+    if (currentVersion < 10) {await createFeedingRecords(database);}
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
