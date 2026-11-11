@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { DatabaseSync } = require('node:sqlite');
+const { harness } = require('./feeding-harness.cjs');
 const { test } = require('node:test');
 const vm = require('node:vm');
 const ts = require('typescript');
@@ -26,57 +26,16 @@ function load(file, dependencies = {}) {
   return module.exports;
 }
 
-function sqliteAdapter(database) {
-  return {
-    execAsync: async (sql) => database.exec(sql),
-    getFirstAsync: async (sql, ...args) => database.prepare(sql).get(...args) ?? null,
-    getAllAsync: async (sql, ...args) => database.prepare(sql).all(...args),
-    runAsync: async (sql, ...args) => database.prepare(sql).run(...args),
-    withTransactionAsync: async (action) => {
-      database.exec('BEGIN');
-      try {
-        await action();
-        database.exec('COMMIT');
-      } catch (error) {
-        database.exec('ROLLBACK');
-        throw error;
-      }
-    },
-  };
-}
-
 test('exclusão persiste após sincronizar e respostas antigas não reativam a ração', async () => {
-  const database = new DatabaseSync(':memory:');
-  const adapter = sqliteAdapter(database);
+  const h = harness();
+  const database = h.native;
+  const adapter = h.db;
 
   try {
-    const create = load('src/infrastructure/database/migrations/003-create-feed.ts');
-    await create.createFeedTable(adapter);
-    database.exec('PRAGMA user_version = 7');
-
-    const migration8 = load('src/infrastructure/database/migrations/008-add-locally-deleted-at-to-feeds.ts');
-    const skipped = () => { throw new Error('Migração anterior não deveria executar'); };
-    const migrations = load('src/infrastructure/database/migrations/migrate.ts', {
-      './001-create-animal-groups': { createAnimalGroupsTable: skipped },
-      './002-create-terrains': { createTerrainsTable: skipped },
-      './003-create-feed': { createFeedTable: skipped },
-      './004-create-feed-moviments': { createFeedMovimentsTable: skipped },
-      './005-create-movement-commands': { createMovementCommandsTable: skipped },
-      './006-add-current-terrain-to-animal-groups': { addCurrentTerrainToAnimalGroups: skipped },
-      './007-create-occupations': { createOccupationsTable: skipped },
-      './008-add-locally-deleted-at-to-feeds': migration8,
-    });
+    const migrations = h.load('src/infrastructure/database/migrations/migrate.ts');
     await migrations.migrateDatabase(adapter);
-    assert.equal(database.prepare('PRAGMA user_version').get().user_version, 8);
-
-    const dataSource = load('src/features/feeding/data/local/feed-local-data-source.ts', {
-      '@/infrastructure/database/database': { getDatabase: async () => adapter },
-    }).feedLocalDataSource;
-    let nextId = 0;
-    const repository = load('src/features/feeding/repositories/feed.repository.ts', {
-      'expo-crypto': { randomUUID: () => `feed-${++nextId}` },
-      '../data/local/feed-local-data-source': { feedLocalDataSource: dataSource },
-    }).feedRepository;
+    assert.equal(database.prepare('PRAGMA user_version').get().user_version, 10);
+    const repository = h.load('src/features/feeding/repositories/feed.repository.ts').feedRepository;
 
     const remoteFeed = await repository.createLocal({ accountId: 'conta', name: 'Soja', initialStockScaled: 18000 });
     await repository.assignRemoteIdentity('conta', remoteFeed.localId, {
