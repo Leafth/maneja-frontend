@@ -135,7 +135,7 @@ class FeedMovementSyncService {
     }
   }
 
-  private async pushMovement(
+  async pushMovement(
     feedRemoteId: string,
     movement: FeedMovement,
   ): Promise<boolean> {
@@ -216,7 +216,7 @@ class FeedMovementSyncService {
     );
   }
 
-  private async reconcileFeed(
+  async reconcileFeed(
     accountId: string,
     feedLocalId: string,
     feedRemoteId: string,

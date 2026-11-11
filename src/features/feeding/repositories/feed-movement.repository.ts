@@ -2,6 +2,7 @@ import { getDatabase } from '@/infrastructure/database/database';
 
 import { feedLocalDataSource } from '../data/local/feed-local-data-source';
 import { feedMovementLocalDataSource } from '../data/local/feed-movement-local-data-source';
+import { feedingLocalDataSource } from '../data/local/feeding-local-data-source';
 
 import * as Crypto from 'expo-crypto';
 
@@ -257,6 +258,19 @@ class FeedMovementRepository {
       const now = new Date().toISOString();
 
       let pendingDelta = 0;
+
+      const feedings = await feedingLocalDataSource.list(input.accountId, 'AND feed_local_id = ?', [input.feedLocalId], transaction);
+      if ([...movements, ...feedings].some(record => ['sending', 'uncertain'].includes(record.dispatchState))) {
+        throw new Error('Saldo aguardando confirmação de uma operação incerta.');
+      }
+      for (const feeding of feedings) {
+        if (feeding.balanceState !== 'pending') {continue;}
+        if (feeding.dispatchState === 'confirmed' && feeding.remoteId) {
+          await feedingLocalDataSource.update({ ...feeding, balanceState: 'incorporated', lastSyncedAt: now }, transaction);
+        } else {
+          pendingDelta -= feeding.quantityScaled;
+        }
+      }
 
       for (const movement of movements) {
         if (movement.balanceState !== 'pending') {

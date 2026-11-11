@@ -252,10 +252,14 @@ class FeedMovementLocalDataSource {
         SELECT
           COALESCE(MAX(sequence_number), 0) + 1
             AS next_sequence
-        FROM feed_movements
-        WHERE account_id = ?
-          AND feed_local_id = ?
+        FROM (
+          SELECT sequence_number FROM feed_movements WHERE account_id = ? AND feed_local_id = ?
+          UNION ALL
+          SELECT sequence_number FROM feeding_records WHERE account_id = ? AND feed_local_id = ?
+        )
       `,
+      accountId,
+      feedLocalId,
       accountId,
       feedLocalId,
     );
