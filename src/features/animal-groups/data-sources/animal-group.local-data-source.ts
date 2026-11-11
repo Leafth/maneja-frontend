@@ -1,4 +1,4 @@
-import { withDatabase } from '@/infrastructure/database/database';
+import { withDatabase, withDatabaseTransaction } from '@/infrastructure/database/database';
 
 import { SyncStatus } from '@/shared/models';
 import type { AnimalGroup } from '../models';
@@ -116,9 +116,9 @@ async function findByRemoteId(remoteId: string): Promise<AnimalGroup | null> {
   return row ? toModel(row) : null;
 }
 
-async function insert(group: AnimalGroup): Promise<void> {
-  await withDatabase((database) =>
-    database.runAsync(
+async function insert(group: AnimalGroup, accountId?: string): Promise<void> {
+  await withDatabaseTransaction(async (database) => {
+    await database.runAsync(
       `
         INSERT INTO animal_groups (
           local_id,
@@ -154,8 +154,11 @@ async function insert(group: AnimalGroup): Promise<void> {
         group.currentTerrainRemoteId,
         group.currentTerrainName,
       ],
-    ),
-  );
+    );
+    if (accountId) {
+      await database.runAsync('INSERT INTO feeding_group_accounts(group_local_id, account_id) VALUES (?, ?)', [group.localId, accountId]);
+    }
+  });
 }
 
 async function update(

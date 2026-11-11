@@ -22,7 +22,7 @@ async function findById(localId: string): Promise<AnimalGroup | null> {
   return animalGroupLocalDataSource.findByLocalId(localId);
 }
 
-async function create(data: CreateAnimalGroupData): Promise<AnimalGroup> {
+async function create(data: CreateAnimalGroupData, accountId?: string): Promise<AnimalGroup> {
   const now = new Date().toISOString();
 
   const group: AnimalGroup = {
@@ -48,7 +48,7 @@ async function create(data: CreateAnimalGroupData): Promise<AnimalGroup> {
     currentTerrainName: null,
   };
 
-  await animalGroupLocalDataSource.insert(group);
+  await animalGroupLocalDataSource.insert(group, accountId);
 
   return group;
 }
