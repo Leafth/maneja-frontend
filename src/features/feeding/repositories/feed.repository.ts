@@ -3,6 +3,19 @@ import { feedLocalDataSource } from '../data/local/feed-local-data-source';
 import type { Feed } from '../models/feed.model';
 
 import type { RemoteFeedSnapshot } from '../mappers/feed.mapper';
+import { getDatabase } from '@/infrastructure/database/database';
+import type { SQLiteDatabase } from 'expo-sqlite';
+
+async function feedTransaction<T>(work: (tx: SQLiteDatabase) => Promise<T>): Promise<T> {
+  const db = await getDatabase();
+  let result!: T;
+  await db.withExclusiveTransactionAsync(async tx => { result = await work(tx); });
+  return result;
+}
+
+async function hasPendingFeedingBalance(accountId: string, feedLocalId: string, db: SQLiteDatabase) {
+  return !!await db.getFirstAsync('SELECT 1 FROM feeding_records WHERE account_id = ? AND feed_local_id = ? AND balance_state = \'pending\' LIMIT 1', [accountId, feedLocalId]);
+}
 
 interface CreateFeedInput {
   accountId: string;
@@ -64,7 +77,8 @@ class FeedRepository {
     localId: string,
     name: string,
   ): Promise<Feed> {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!feed) {
       throw new Error('Alimento não encontrado.');
@@ -91,13 +105,15 @@ class FeedRepository {
       lastSyncError: null,
     };
 
-    await feedLocalDataSource.update(updatedFeed);
+    await feedLocalDataSource.update(updatedFeed, tx);
 
     return updatedFeed;
+    });
   }
 
   async markPendingDelete(accountId: string, localId: string): Promise<void> {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!feed) {
       return;
@@ -113,6 +129,7 @@ class FeedRepository {
       localUpdatedAt: now,
 
       lastSyncError: null,
+    }, tx);
     });
   }
 
@@ -121,7 +138,8 @@ class FeedRepository {
     localId: string,
     message: string,
   ): Promise<void> {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!feed) {
       return;
@@ -132,6 +150,7 @@ class FeedRepository {
 
       lastSyncError: message,
       localUpdatedAt: new Date().toISOString(),
+    }, tx);
     });
   }
   async assignRemoteIdentity(
@@ -140,7 +159,8 @@ class FeedRepository {
     snapshot: RemoteFeedSnapshot,
     expectedLocalUpdatedAt: string,
   ): Promise<Feed> {
-    const current = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const current = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!current) {
       throw new Error('Alimento local não encontrado.');
@@ -176,9 +196,10 @@ class FeedRepository {
       lastSyncError: null,
     };
 
-    await feedLocalDataSource.update(updated);
+    await feedLocalDataSource.update(updated, tx);
 
     return updated;
+    });
   }
 
   async confirmRemoteUpdate(
@@ -187,7 +208,8 @@ class FeedRepository {
     snapshot: RemoteFeedSnapshot,
     expectedLocalUpdatedAt: string,
   ): Promise<Feed> {
-    const current = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const current = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!current) {
       throw new Error('Alimento local não encontrado.');
@@ -203,7 +225,7 @@ class FeedRepository {
 
       name: changedWhileSyncing ? current.name : snapshot.name,
 
-      remoteStockScaled: snapshot.remoteStockScaled,
+      remoteStockScaled: await hasPendingFeedingBalance(accountId, localId, tx) ? current.remoteStockScaled : snapshot.remoteStockScaled,
 
       syncStatus:
         current.syncStatus === 'pending_delete'
@@ -218,13 +240,15 @@ class FeedRepository {
       lastSyncError: null,
     };
 
-    await feedLocalDataSource.update(updated);
+    await feedLocalDataSource.update(updated, tx);
 
     return updated;
+    });
   }
 
   async confirmRemoteDelete(accountId: string, localId: string): Promise<void> {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId);
+    return feedTransaction(async tx => {
+    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
 
     if (!feed) {
       return;
@@ -243,6 +267,7 @@ class FeedRepository {
       lastSyncedAt: now,
 
       lastSyncError: null,
+    }, tx);
     });
   }
 
@@ -250,9 +275,11 @@ class FeedRepository {
     accountId: string,
     snapshot: RemoteFeedSnapshot,
   ): Promise<Feed> {
+    return feedTransaction(async tx => {
     const existing = await feedLocalDataSource.findByRemoteId(
       accountId,
       snapshot.remoteId,
+      tx,
     );
 
     const now = new Date().toISOString();
@@ -295,7 +322,7 @@ class FeedRepository {
         locallyDeletedAt: null,
       };
 
-      await feedLocalDataSource.insert(imported);
+      await feedLocalDataSource.insert(imported, tx);
 
       return imported;
     }
@@ -329,6 +356,9 @@ class FeedRepository {
       existing.projectedStockScaled;
 
     const localDelta = existing.projectedStockScaled - projectionBase;
+    // A snapshot cannot disambiguate an uncertain Feeding, and confirmed
+    // reservations must be incorporated atomically by reconcileBalance.
+    const preserveBalance = await hasPendingFeedingBalance(accountId, existing.localId, tx);
 
     /*
      * Se existe rename local pendente, não deixamos
@@ -343,9 +373,9 @@ class FeedRepository {
 
       name: preserveLocalName ? existing.name : snapshot.name,
 
-      remoteStockScaled: snapshot.remoteStockScaled,
+      remoteStockScaled: preserveBalance ? existing.remoteStockScaled : snapshot.remoteStockScaled,
 
-      projectedStockScaled: snapshot.remoteStockScaled + localDelta,
+      projectedStockScaled: preserveBalance ? existing.projectedStockScaled : snapshot.remoteStockScaled + localDelta,
 
       remoteCreatedAt: snapshot.remoteCreatedAt,
 
@@ -355,9 +385,10 @@ class FeedRepository {
       lastSyncError: null,
     };
 
-    await feedLocalDataSource.update(updated);
+    await feedLocalDataSource.update(updated, tx);
 
     return updated;
+    });
   }
 }
 
