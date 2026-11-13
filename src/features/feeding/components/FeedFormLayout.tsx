@@ -1,6 +1,6 @@
 import type { ComponentRef, ReactNode, Ref } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HeaderSecondary } from '@/shared/components/Header';
 
@@ -12,20 +12,23 @@ interface Props {
 }
 
 export function FeedFormLayout({ title, onBack, children, scrollRef }: Props) {
+  const { bottom } = useSafeAreaInsets();
+
   return (
     <View className="flex-1 bg-white">
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <HeaderSecondary title={title} onBackPress={onBack} />
-        <SafeAreaView edges={['bottom']} className="flex-1">
-          <ScrollView
-            ref={scrollRef}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32, gap: 16 }}
-          >
-            {children}
-          </ScrollView>
-        </SafeAreaView>
+        {/* O recuo inferior fica no fim da rolagem: num SafeAreaView ele virava
+            uma faixa branca fixa acima do teclado. */}
+        <ScrollView
+          ref={scrollRef}
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 + bottom, gap: 16 }}
+        >
+          {children}
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
