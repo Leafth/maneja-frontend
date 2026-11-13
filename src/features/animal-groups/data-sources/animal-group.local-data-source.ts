@@ -79,7 +79,8 @@ async function findAll(): Promise<AnimalGroup[]> {
       SELECT *
       FROM animal_groups
       WHERE locally_deleted_at IS NULL AND sync_status != 'pending_delete'
-      ORDER BY local_updated_at DESC
+      -- Mais recentes primeiro, pela data de cadastro (estável na sincronização).
+      ORDER BY COALESCE(remote_created_at, local_created_at) DESC
     `),
   );
 
