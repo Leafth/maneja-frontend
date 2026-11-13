@@ -1,6 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { useFeedRequirementItems } from '@/features/feeding/hooks/use-feed-requirement-items';
+
 import {
   useAnimalGroup,
   useAnimalGroupHistory,
@@ -12,8 +14,9 @@ import type { AnimalGroupHistoryKind } from '../models';
 export function useGroupViewModel() {
   const router = useRouter();
 
-  const { localId: routeLocalId } = useLocalSearchParams<{
+  const { localId: routeLocalId, history: routeHistory } = useLocalSearchParams<{
     localId?: string | string[];
+    history?: string;
   }>();
 
   const localId = typeof routeLocalId === 'string' ? routeLocalId : '';
@@ -23,8 +26,8 @@ export function useGroupViewModel() {
   const occupationsQuery = useAnimalGroupOccupations(localId);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [historyKind, setHistoryKind] =
-    useState<AnimalGroupHistoryKind>('movements');
+  const historyKind: AnimalGroupHistoryKind = routeHistory === 'feeding' ? 'feeding' : 'movements';
+  const setHistoryKind = (kind: AnimalGroupHistoryKind) => router.setParams({ history: kind });
 
   const historyQuery = useAnimalGroupHistory(localId, historyKind);
 
@@ -32,6 +35,7 @@ export function useGroupViewModel() {
     occupationsQuery.data?.find((occupation) => !occupation.endedAt) ?? null;
 
   const group = query.data?.syncStatus === 'pending_delete' ? null : query.data;
+  const feedingNeeds = useFeedRequirementItems(localId, group?.animalCount ?? 0);
 
   const canAct = Boolean(group) && !query.isError && !deleteMutation.isPending;
 
@@ -87,6 +91,13 @@ export function useGroupViewModel() {
 
   return {
     group,
+    feedingNeeds: feedingNeeds.items,
+    isFeedingNeedsLoading: feedingNeeds.isLoading,
+    hasFeedingNeedsError: feedingNeeds.hasError,
+    retryFeedingNeeds: feedingNeeds.retry,
+    handleFeedingNeeds: () => {
+      if (canAct) { router.push({ pathname: '/group/[localId]/feeding-need', params: { localId } }); }
+    },
 
     currentTerrain: currentOccupation
       ? {

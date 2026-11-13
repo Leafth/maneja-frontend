@@ -44,6 +44,11 @@ function InfoColumn({ label, children }: IInfoColumnProps) {
 export default function GroupView() {
   const {
     group,
+    feedingNeeds,
+    isFeedingNeedsLoading,
+    hasFeedingNeedsError,
+    retryFeedingNeeds,
+    handleFeedingNeeds,
     currentTerrain,
     isCurrentTerrainLoading,
     hasCurrentTerrainError,
@@ -145,18 +150,37 @@ export default function GroupView() {
               </InfoColumn>
             </View>
 
-            {/* Necessidade alimentar fica para outra sprint. */}
-            <View className='items-center'>
-              <Button size='md' disabled>
-                <View className='flex-row items-center gap-2'>
-                  <AppText size='sm' weight='medium' color='white'>
-                    Cadastrar Necessidade Alimentar
-                  </AppText>
-
-                  <Plus size={18} strokeWidth={2} color={colors.white} />
-                </View>
-              </Button>
-            </View>
+            {isFeedingNeedsLoading ? (
+              <ActivityIndicator />
+            ) : hasFeedingNeedsError ? (
+              <View className='gap-3'>
+                <AppText size='sm' color='error' align='center'>Não foi possível carregar a necessidade alimentar.</AppText>
+                <Button size='md' variant='secondary' onPress={retryFeedingNeeds}>Tentar novamente</Button>
+              </View>
+            ) : (
+              <View className='items-center gap-5'>
+                {feedingNeeds.length > 0 && (
+                  <View className='items-center gap-2'>
+                    <AppText color='muted'>Necessidade alimentar estimada</AppText>
+                    {feedingNeeds.map((item) => (
+                      <AppText key={item.localId} weight='medium' align='center' className='text-neutral-textHead'>
+                        {item.dailyTotal} kg de {item.name}/dia
+                      </AppText>
+                    ))}
+                  </View>
+                )}
+                <Button size='md' className={feedingNeeds.length > 0 ? 'bg-black-600' : undefined} disabled={actionsDisabled} onPress={handleFeedingNeeds}>
+                  <View className='flex-row items-center gap-2'>
+                    <AppText size='sm' weight='medium' color='white' className='shrink' align='center'>
+                      {feedingNeeds.length > 0 ? 'Editar Necessidade Alimentar' : 'Cadastrar Necessidade Alimentar'}
+                    </AppText>
+                    {feedingNeeds.length > 0
+                      ? <Pencil size={18} strokeWidth={2} color={colors.white} />
+                      : <Plus size={18} strokeWidth={2} color={colors.white} />}
+                  </View>
+                </Button>
+              </View>
+            )}
 
             <View className='h-px bg-neutral-border' />
 
