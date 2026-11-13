@@ -28,7 +28,7 @@ export function useFeedRequirementViewModel() {
   });
   const isBusy = save.isPending || remove.isPending;
   const feedOptions = data.feeds
-    .filter((feed) => !data.requirements.some((item) => item.feedLocalId === feed.localId && item.localId !== editingId))
+    .filter((feed) => !data.items.some((item) => item.feedLocalId === feed.localId && item.localId !== editingId))
     .map((feed) => ({ value: feed.localId, label: feed.name }));
 
   function cancelEdit() {

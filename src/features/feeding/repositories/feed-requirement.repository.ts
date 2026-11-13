@@ -24,6 +24,21 @@ class FeedRequirementRepository {
       lastSyncedAt: null, lastSyncError: null, lastSyncHttpStatus: null };
     await db.withExclusiveTransactionAsync(async tx => {
       await validateFeedingParents(tx, input.accountId, input.groupLocalId, input.feedLocalId);
+      const deleted = (await local.list(input.accountId,
+        'AND group_local_id = ? AND feed_local_id = ? AND sync_status = \'pending_delete\'',
+        [input.groupLocalId, input.feedLocalId], tx))[0];
+      if (deleted) {
+        // Reuse an unsent deletion instead of creating a duplicate remote requirement.
+        this.assertEditable(deleted);
+        await this.assertUnique(input, tx, deleted.localId);
+        Object.assign(record, {
+          localId: deleted.localId, remoteId: deleted.remoteId, syncStatus: 'pending_update',
+          localCreatedAt: deleted.localCreatedAt, remoteCreatedAt: deleted.remoteCreatedAt,
+          remoteUpdatedAt: deleted.remoteUpdatedAt, lastSyncedAt: deleted.lastSyncedAt,
+        });
+        await local.update(record, tx);
+        return;
+      }
       await this.assertUnique(input, tx);
       await local.insert(record, tx);
     });
