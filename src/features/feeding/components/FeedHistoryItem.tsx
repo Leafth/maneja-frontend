@@ -34,7 +34,8 @@ export function FeedHistoryItem({ movement }: FeedHistoryItemProps) {
         )}
       </View>
 
-      <View className='flex-1'>
+      {/* Margem à direita para a descrição longa não encostar no valor. */}
+      <View className='mr-6 flex-1'>
         <AppText className='text-neutral-textBody'>
           {isEntry ? 'Entrada' : 'Saída'}
         </AppText>
@@ -50,7 +51,7 @@ export function FeedHistoryItem({ movement }: FeedHistoryItemProps) {
 
       <AppText
         weight='semiBold'
-        className={
+        className={`shrink-0 ${
           isEntry ? 'text-support-success-text' : 'text-support-danger-text'
         }`}
       >
