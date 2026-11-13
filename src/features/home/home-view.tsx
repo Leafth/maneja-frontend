@@ -1,39 +1,31 @@
 import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
 
-import { useLogoutViewModel } from '../../features/auth/viewmodels/use-logout.view-model';
-import { useMeViewModel } from '../../features/auth/viewmodels/use-me.view-model';
+import { useHomeViewModel } from './viewmodels/use-home-view-model';
 
 export default function HomeView() {
-  const { logout, isLoggingOut } = useLogoutViewModel();
-  const { user } = useMeViewModel();
+  const { userName, logout, isLoggingOut } = useHomeViewModel();
 
   return (
-    <View className='flex-1 bg-white'>
-      <View className='flex-1 gap-5 px-6 pt-6'>
-        <AppText
-          size='3xl'
-          weight='semiBold'
-        >
+    <SafeAreaView edges={['top']} className='flex-1 bg-white px-6'>
+      <View className='flex-1 items-center justify-center gap-3'>
+        <AppText size='3xl' weight='semiBold' align='center'>
           Início
         </AppText>
 
-        <AppText size='xl'>
-          Bem-vindo ao Maneja {user?.name}!
+        <AppText size='lg' color='muted' align='center'>
+          Bem-vindo ao Maneja{userName ? `, ${userName}` : ''}!
         </AppText>
-
-        <View className='mt-4'>
-          <Button
-            onPress={logout}
-            isLoading={isLoggingOut}
-            className='bg-support-red'
-          >
-            Sair
-          </Button>
-        </View>
       </View>
-    </View>
+
+      <View className='pb-6'>
+        <Button variant='danger' onPress={logout} isLoading={isLoggingOut}>
+          Sair
+        </Button>
+      </View>
+    </SafeAreaView>
   );
 }
