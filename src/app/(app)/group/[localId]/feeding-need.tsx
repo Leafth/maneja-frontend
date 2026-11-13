@@ -1,5 +1,5 @@
-import { ScreenPlaceholder } from '@/shared/components/ScreenPlaceholder';
+import FeedRequirementView from '@/features/feeding/view/FeedRequirementView';
 
 export default function Route() {
-  return <ScreenPlaceholder name='Registrar Alimentação' />;
+  return <FeedRequirementView />;
 }
