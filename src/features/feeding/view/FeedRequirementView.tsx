@@ -31,10 +31,12 @@ export default function FeedRequirementView() {
           <AppText color='muted'>Grupo de animais não encontrado.</AppText>
         ) : (
           <>
-            <AppText weight='medium' className='uppercase'>{vm.group.name}</AppText>
-            <AppText color='muted'>
-              {vm.editingId ? 'Edite a necessidade alimentar' : 'Cadastre uma necessidade alimentar'}
-            </AppText>
+            <View>
+              <AppText size='sm' weight='medium' className='uppercase'>{vm.group.name}</AppText>
+              <AppText size='sm' color='muted' className='mt-3'>
+                {vm.editingId ? 'Edite a necessidade alimentar' : 'Cadastre uma necessidade alimentar'}
+              </AppText>
+            </View>
 
             <View style={{ zIndex: 2 }}>
               <Controller control={vm.control} name='feedLocalId' render={({ field, fieldState }) => (
@@ -71,10 +73,12 @@ export default function FeedRequirementView() {
 
             {vm.saveError && <AppText size='sm' color='error'>{vm.saveError}</AppText>}
 
-            <Button onPress={() => { void vm.onSubmit(); }} isLoading={vm.isSaving} disabled={vm.isBusy || vm.feedOptions.length === 0}>
-              {vm.editingId ? 'Salvar alterações' : 'Cadastrar'}
-            </Button>
-            {vm.editingId && <Button variant='secondary' size='md' onPress={vm.cancelEdit} disabled={vm.isBusy}>Cancelar edição</Button>}
+            <View className='gap-3'>
+              <Button onPress={() => { void vm.onSubmit(); }} isLoading={vm.isSaving} disabled={vm.isBusy || vm.feedOptions.length === 0}>
+                {vm.editingId ? 'Salvar alterações' : 'Adicionar ração'}
+              </Button>
+              {vm.editingId && <Button variant='secondary' onPress={vm.cancelEdit} disabled={vm.isBusy}>Cancelar</Button>}
+            </View>
 
             <View className='gap-3'>
               {vm.items.map((item) => (

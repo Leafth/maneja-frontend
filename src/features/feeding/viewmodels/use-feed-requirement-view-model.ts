@@ -9,7 +9,7 @@ import { useDeleteFeedRequirement } from '../hooks/use-delete-feed-requirement';
 import { useFeedRequirementItems } from '../hooks/use-feed-requirement-items';
 import { useSaveFeedRequirement } from '../hooks/use-save-feed-requirement';
 import { feedRequirementSchema, type FeedRequirementFormData } from '../schemas/feeding.schema';
-import { decimalStringToScaled, scaledToDisplay } from '../utils/feed-decimal';
+import { decimalStringToScaled, scaledToInputValue } from '../utils/feed-decimal';
 
 export function useFeedRequirementViewModel() {
   const router = useRouter();
@@ -76,7 +76,7 @@ export function useFeedRequirementViewModel() {
       }
       save.reset();
       setEditingId(id);
-      reset({ feedLocalId: item.feedLocalId, quantityKg: scaledToDisplay(item.quantityPerAnimalScaled) });
+      reset({ feedLocalId: item.feedLocalId, quantityKg: scaledToInputValue(item.quantityPerAnimalScaled) });
     },
     requestDelete: (id: string) => { remove.reset(); setDeletingId(id); },
     cancelDelete: () => { if (!remove.isPending) { setDeletingId(null); remove.reset(); } },
