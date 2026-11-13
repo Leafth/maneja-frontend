@@ -6,7 +6,7 @@ export const feedingGroupRepository = {
     const db = await getDatabase();
     return db.getAllAsync<FeedingGroup>(`SELECT g.local_id AS localId, g.remote_id AS remoteId, g.name, g.animal_count AS animalCount
       FROM animal_groups g JOIN feeding_group_accounts a ON a.group_local_id = g.local_id
-      WHERE a.account_id = ? AND g.sync_status != 'pending_delete'`, [accountId]);
+      WHERE a.account_id = ? AND g.sync_status != 'pending_delete' AND g.locally_deleted_at IS NULL`, [accountId]);
   },
   async bindVerifiedRemote(accountId: string, remoteId: string) {
     const db = await getDatabase();

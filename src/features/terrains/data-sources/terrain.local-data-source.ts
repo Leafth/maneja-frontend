@@ -8,6 +8,7 @@ import type { Terrain } from '../models/terrain.model';
 interface TerrainRow {
   local_id: string;
   remote_id: string | null;
+  locally_deleted_at: string | null;
 
   name: string;
   rest_days: number;
@@ -29,6 +30,7 @@ function toTerrain(row: TerrainRow): Terrain {
   return {
     localId: row.local_id,
     remoteId: row.remote_id,
+    locallyDeletedAt: row.locally_deleted_at,
 
     name: row.name,
     restDays: row.rest_days,
@@ -54,7 +56,7 @@ async function findAll(): Promise<Terrain[]> {
     `
       SELECT *
       FROM terrains
-      WHERE sync_status != 'pending_delete'
+      WHERE locally_deleted_at IS NULL AND sync_status != 'pending_delete'
       ORDER BY local_updated_at DESC
     `,
   );
@@ -69,7 +71,7 @@ async function findByLocalId(localId: string): Promise<Terrain | null> {
     `
       SELECT *
       FROM terrains
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
       LIMIT 1
     `,
     localId,
@@ -150,7 +152,7 @@ async function update(terrain: Terrain): Promise<void> {
           local_updated_at = ?,
           last_synced_at = ?,
           last_sync_error = ?
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [
         terrain.remoteId,
@@ -216,7 +218,7 @@ async function markPendingDelete(
         sync_status = 'pending_delete',
         local_updated_at = ?,
         last_sync_error = NULL
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     localUpdatedAt,
     localId,
@@ -228,8 +230,10 @@ async function deleteByLocalId(localId: string): Promise<void> {
 
   await database.runAsync(
     `
-      DELETE FROM terrains
-      WHERE local_id = ?
+      UPDATE terrains
+        SET sync_status = 'synced', locally_deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+            last_synced_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), last_sync_error = NULL
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     localId,
   );
@@ -242,7 +246,7 @@ async function findPending(): Promise<Terrain[]> {
     `
       SELECT *
       FROM terrains
-      WHERE sync_status IN (
+      WHERE locally_deleted_at IS NULL AND sync_status IN (
         'pending_create',
         'pending_update',
         'pending_delete'
@@ -261,7 +265,7 @@ async function setSyncError(localId: string, error: string): Promise<void> {
     `
       UPDATE terrains
       SET last_sync_error = ?
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     error,
     localId,
@@ -290,12 +294,12 @@ async function markAsSynced(
         name = ?,
         rest_days = ?,
         status = ?,
-        sync_status = 'synced',
+        sync_status = CASE WHEN sync_status = 'pending_delete' THEN 'pending_delete' ELSE 'synced' END,
         remote_created_at = ?,
         remote_updated_at = ?,
         last_synced_at = ?,
         last_sync_error = NULL
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     data.remoteId,
     data.name,
@@ -321,7 +325,7 @@ async function cancelPendingDelete(
         sync_status = 'synced',
         local_updated_at = ?,
         last_sync_error = ?
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     new Date().toISOString(),
     error,

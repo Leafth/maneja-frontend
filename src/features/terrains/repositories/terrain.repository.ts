@@ -32,6 +32,7 @@ async function create(data: CreateTerrainData): Promise<Terrain> {
   const terrain: Terrain = {
     localId: Crypto.randomUUID(),
     remoteId: null,
+    locallyDeletedAt: null,
 
     name: data.name,
     restDays: data.restDays,
@@ -100,12 +101,6 @@ async function remove(localId: string): Promise<void> {
     throw new Error('Não é possível excluir um terreno que possui animais.');
   }
 
-  if (terrain.remoteId === null) {
-    await terrainLocalDataSource.deleteByLocalId(localId);
-
-    return;
-  }
-
   await terrainLocalDataSource.markPendingDelete(
     localId,
     new Date().toISOString(),
@@ -152,6 +147,7 @@ async function upsertFromRemote(
     const terrain: Terrain = {
       localId: Crypto.randomUUID(),
       remoteId: remoteTerrain.remoteId,
+      locallyDeletedAt: null,
 
       name: remoteTerrain.name,
       restDays: remoteTerrain.restDays,
@@ -174,6 +170,8 @@ async function upsertFromRemote(
 
     return terrain;
   }
+
+  if (existing.locallyDeletedAt !== null) {return existing;}
 
   if (
     existing.syncStatus === 'pending_update' ||

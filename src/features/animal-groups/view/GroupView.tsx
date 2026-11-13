@@ -211,7 +211,7 @@ export default function GroupView() {
         title='Excluir Grupo?'
         description={
           deleteError
-            ? 'Não foi possível excluir o grupo. Tente novamente.'
+            ? deleteError.message || 'Não foi possível excluir o grupo. Tente novamente.'
             : `Deseja realmente excluir o grupo "${group?.name ?? ''}"? Essa ação não pode ser revertida.`
         }
         isDeleting={isDeleting}

@@ -48,7 +48,7 @@ export const commonFeedingFields = {
 export async function validateFeedingParents(db: FeedingExecutor, accountId: string, groupLocalId: string, feedLocalId: string) {
   const group = await db.getFirstAsync<{ local_id: string }>(`
     SELECT g.local_id FROM animal_groups g JOIN feeding_group_accounts a ON a.group_local_id = g.local_id
-    WHERE a.account_id = ? AND g.local_id = ? AND g.sync_status != 'pending_delete'`, [accountId, groupLocalId]);
+    WHERE a.account_id = ? AND g.local_id = ? AND g.sync_status != 'pending_delete' AND g.locally_deleted_at IS NULL`, [accountId, groupLocalId]);
   if (!group) {throw new Error('Grupo indisponível nesta conta. Conecte-se para verificar o vínculo do grupo.');}
   const feed = await db.getFirstAsync<{ projected_stock_scaled: number }>(`
     SELECT projected_stock_scaled FROM feeds WHERE account_id = ? AND local_id = ?

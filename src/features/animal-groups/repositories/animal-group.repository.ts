@@ -28,6 +28,7 @@ async function create(data: CreateAnimalGroupData, accountId?: string): Promise<
   const group: AnimalGroup = {
     localId: Crypto.randomUUID(),
     remoteId: null,
+    locallyDeletedAt: null,
 
     name: data.name,
     animalCount: data.animalCount,
@@ -98,12 +99,6 @@ async function remove(localId: string): Promise<void> {
     return;
   }
 
-  if (group.remoteId === null) {
-    await animalGroupLocalDataSource.deleteByLocalId(localId);
-
-    return;
-  }
-
   await animalGroupLocalDataSource.markPendingDelete(localId);
 }
 
@@ -149,6 +144,7 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
     const newLocalGroup: AnimalGroup = {
       localId: Crypto.randomUUID(),
       remoteId: remoteGroup.remoteId,
+      locallyDeletedAt: null,
 
       name: remoteGroup.name,
       animalCount: remoteGroup.animalCount,
@@ -177,6 +173,7 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
   }
 
   if (
+    localGroup.locallyDeletedAt !== null ||
     localGroup.syncStatus === 'pending_update' ||
     localGroup.syncStatus === 'pending_delete'
   ) {

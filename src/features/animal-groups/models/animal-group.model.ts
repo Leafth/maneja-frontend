@@ -3,6 +3,7 @@ import type { SyncStatus } from '@/shared/models';
 export interface AnimalGroup {
   localId: string;
   remoteId: string | null;
+  locallyDeletedAt: string | null;
 
   name: string;
   animalCount: number;

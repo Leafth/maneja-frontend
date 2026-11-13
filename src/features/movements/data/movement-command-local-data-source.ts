@@ -255,7 +255,7 @@ async function createOptimistic(
           current_terrain_local_id,
           current_terrain_remote_id
         FROM animal_groups
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL AND sync_status != 'pending_delete'
       `,
       [input.groupLocalId],
     );
@@ -276,6 +276,7 @@ async function createOptimistic(
         FROM terrains
         WHERE local_id = ?
           AND sync_status != 'pending_delete'
+          AND locally_deleted_at IS NULL
       `,
       [input.destinationTerrainLocalId],
     );

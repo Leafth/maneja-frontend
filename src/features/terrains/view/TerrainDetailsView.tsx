@@ -158,7 +158,7 @@ export default function TerrainDetailsView() {
         title='Excluir Terreno?'
         description={
           deleteError
-            ? 'Não foi possível excluir o terreno. Tente novamente.'
+            ? deleteError.message || 'Não foi possível excluir o terreno. Tente novamente.'
             : `Deseja realmente excluir o terreno "${terrain?.name ?? ''}"? Essa ação não pode ser revertida.`
         }
         isDeleting={isDeleting}

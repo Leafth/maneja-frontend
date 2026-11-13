@@ -45,7 +45,7 @@ test('concurrent feeding reservations cannot overspend; rename and pull preserve
     assert.equal(h.stock(), 3000);
     assert.equal((await feeds.findByLocalId('a', 'f')).name, 'Novo nome');
     await assert.rejects(feeds.markPendingDelete('a', 'f'), /pendentes/);
-    await assert.rejects(h.db.runAsync("UPDATE animal_groups SET sync_status='pending_delete' WHERE local_id='g'"), /histórico/);
+    await assert.rejects(h.db.runAsync("UPDATE animal_groups SET sync_status='pending_delete' WHERE local_id='g'"), /pendentes/);
   } finally { h.close(); }
 });
 
