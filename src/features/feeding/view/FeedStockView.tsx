@@ -14,6 +14,7 @@ import colors from '@/styles/colors';
 
 import { FeedStockCard } from '../components/FeedStockCard';
 import { useFeedStockViewModel } from '../viewmodels/use-feed-stock-view-model';
+import FeedPlanningSection from './FeedPlanningSection';
 
 export default function FeedStockView() {
   const {
@@ -126,9 +127,7 @@ export default function FeedStockView() {
             </TouchableOpacity>
           </>
         ) : (
-          <View className='flex-1 items-center justify-center'>
-            <AppText color='muted'>Planejamento em desenvolvimento</AppText>
-          </View>
+          <FeedPlanningSection />
         )}
       </View>
     </View>
