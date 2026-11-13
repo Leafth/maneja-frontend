@@ -22,18 +22,15 @@ export default function RegisterFeedingView() {
         <ActivityIndicator />
       ) : vm.hasError ? (
         <View className='gap-4'>
-          <AppText color='error'>Não foi possível carregar os grupos e as rações.</AppText>
+          <AppText color='error'>Não foi possível carregar o grupo e as rações.</AppText>
           <Button onPress={vm.retry}>Tentar novamente</Button>
         </View>
+      ) : !vm.group ? (
+        <AppText color='muted'>Grupo de animais não encontrado.</AppText>
       ) : (
         <>
-          <View style={{ zIndex: 3 }}>
-            <Controller control={vm.control} name='groupLocalId' render={({ field, fieldState }) => (
-              <FormGroup label='Grupo' required error={fieldState.error?.message}>
-                <Select options={vm.groupOptions} value={field.value} onChange={field.onChange} placeholder='Selecionar grupo' emptyMessage='Nenhum grupo disponível.' disabled={vm.isSubmitting} />
-              </FormGroup>
-            )} />
-          </View>
+          <AppText weight='medium' className='uppercase'>{vm.group.name}</AppText>
+          <AppText color='muted'>Registre uma nova alimentação</AppText>
           <View style={{ zIndex: 2 }}>
             <Controller control={vm.control} name='feedLocalId' render={({ field, fieldState }) => (
               <FormGroup label='Tipo de ração' required error={fieldState.error?.message}>

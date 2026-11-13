@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 
 import { formatDate, formatTime } from '@/shared/utils/format-date';
 
@@ -14,6 +14,7 @@ import { decimalStringToScaled, scaledToNumber } from '../utils/feed-decimal';
 export function useRegisterFeedingViewModel() {
   const router = useRouter();
   const { groupId } = useLocalSearchParams<{ groupId?: string | string[] }>();
+  const groupLocalId = typeof groupId === 'string' ? groupId : '';
   const account = useFeedingAccount();
   const groupsQuery = useFeedingGroups(account.accountId);
   const feedsQuery = useFeeds(account.accountId);
@@ -21,23 +22,19 @@ export function useRegisterFeedingViewModel() {
   const { control, handleSubmit, setError } = useForm<RegisterFeedingFormData>({
     resolver: zodResolver(registerFeedingSchema),
     defaultValues: {
-      groupLocalId: typeof groupId === 'string' ? groupId : '',
+      groupLocalId,
       feedLocalId: '', quantityKg: '', date: formatDate(now), time: formatTime(now),
     },
   });
-  const selectedGroupId = useWatch({ control, name: 'groupLocalId' });
-  const register = useRegisterFeeding(account.accountId, selectedGroupId);
+  const register = useRegisterFeeding(account.accountId, groupLocalId);
   const groups = groupsQuery.data ?? [];
+  const group = groups.find((item) => item.localId === groupLocalId);
   const feeds = feedsQuery.data ?? [];
   const hasError = account.isError || groupsQuery.isError || feedsQuery.isError;
   const isLoading = account.isLoading || groupsQuery.isLoading || feedsQuery.isLoading;
 
   const onSubmit = handleSubmit((values) => {
-    if (register.isPending || !account.accountId) { return; }
-    if (!groups.some((group) => group.localId === values.groupLocalId)) {
-      setError('groupLocalId', { message: 'Selecione um grupo disponível' });
-      return;
-    }
+    if (register.isPending || !account.accountId || !group) { return; }
     const feed = feeds.find((item) => item.localId === values.feedLocalId);
     if (!feed) {
       setError('feedLocalId', { message: 'Selecione uma ração disponível' });
@@ -54,19 +51,19 @@ export function useRegisterFeedingViewModel() {
       occurredAt: brDateTimeToIso(values.date, values.time),
     }, { onSuccess: () => router.dismissTo({
       pathname: '/group/[localId]',
-      params: { localId: values.groupLocalId, history: 'feeding' },
+      params: { localId: groupLocalId, history: 'feeding' },
     }) });
   });
 
   return {
     control,
-    groupOptions: groups.map((group) => ({ value: group.localId, label: `${group.name} (${group.animalCount} ${group.animalCount === 1 ? 'animal' : 'animais'})` })),
+    group,
     feedOptions: feeds.map((feed) => ({ value: feed.localId, label: `${feed.name} – ${scaledToNumber(feed.projectedStockScaled).toLocaleString('pt-BR')} kg em estoque` })),
     isLoading,
     hasError,
     isSubmitting: register.isPending,
     error: register.error?.message,
-    canSubmit: !isLoading && !hasError && Boolean(account.accountId) && groups.length > 0 && feeds.length > 0,
+    canSubmit: !isLoading && !hasError && Boolean(account.accountId) && Boolean(group) && feeds.length > 0,
     retry: () => { void groupsQuery.refetch(); void feedsQuery.refetch(); },
     onSubmit,
     goBack: () => { if (router.canGoBack()) { router.back(); } else { router.replace('/herd'); } },
