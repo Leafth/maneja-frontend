@@ -1,8 +1,9 @@
 import { Controller } from 'react-hook-form';
-import { Keyboard, Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
+import { DismissKeyboardArea } from '@/shared/components/DismissKeyboardArea';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { Select } from '@/shared/components/Select';
 
@@ -25,12 +26,7 @@ export default function FeedPlanningSection() {
   } = useFeedPlanningViewModel();
 
   return (
-    // Tocar fora dos campos fecha o teclado (o numérico do iOS não tem "OK").
-    <Pressable
-      onPress={Keyboard.dismiss}
-      accessible={false}
-      className='mt-6 flex-1 gap-5'
-    >
+    <DismissKeyboardArea className='mt-6 gap-5'>
       <AppText className='text-neutral-textMuted'>
         Veja quanta ração seus animais vão precisar e se o seu estoque é
         suficiente.
@@ -102,6 +98,6 @@ export default function FeedPlanningSection() {
       >
         Calcular Planejamento
       </Button>
-    </Pressable>
+    </DismissKeyboardArea>
   );
 }
