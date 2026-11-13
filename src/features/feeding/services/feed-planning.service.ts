@@ -5,7 +5,7 @@ import { feedPlanningMapper } from '../mappers/feed-planning.mapper';
 
 export const feedPlanningService = {
   async calculate(body: FeedPlanningRequestDto) {
-    if (!await networkService.isConnected()) {throw new Error('O planejamento requer conexão com a internet.');}
+    if (!await networkService.isConnected()) { throw new Error('O planejamento requer conexão com a internet.'); }
     return feedPlanningMapper.fromDto((await api.post<FeedPlanningDto>('/feed_planning', body)).data);
   },
 };

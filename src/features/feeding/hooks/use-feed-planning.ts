@@ -5,9 +5,10 @@ import { assertFeedingAccount } from '../services/feeding-sync-context';
 import { feedingQueryKeys } from './feeding-query-keys';
 
 export function useFeedPlanning(accountId: string | undefined) {
-  return useMutation({ mutationKey: feedingQueryKeys.planning(accountId ?? ''), networkMode: 'always', retry: false,
+  return useMutation({
+    mutationKey: feedingQueryKeys.planning(accountId ?? ''), networkMode: 'always', retry: false,
     mutationFn: async (body: FeedPlanningRequestDto) => {
-      if (!accountId) {throw new Error('Conta não identificada.');}
+      if (!accountId) { throw new Error('Conta não identificada.'); }
       assertFeedingAccount(accountId);
       const result = await feedPlanningService.calculate(body);
       assertFeedingAccount(accountId);
