@@ -7,20 +7,21 @@ import colors from '@/styles/colors';
 
 interface IFeedStockCardProps {
   name: string;
-  availableKg: number;
+  /** Quantidade já formatada, ex.: "1.414 kg". */
+  availableLabel: string;
   onPress: () => void;
 }
 
 function FeedStockCardComponent({
   name,
-  availableKg,
+  availableLabel,
   onPress,
 }: IFeedStockCardProps) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole='button'
-      accessibilityLabel={`${name}, ${availableKg} kg disponíveis`}
+      accessibilityLabel={`${name}, ${availableLabel} disponíveis`}
       className='flex-row items-center rounded-[14px] border border-neutral-border bg-neutral-card px-5 py-4 active:opacity-80'
     >
       <View className='mr-3 flex-1'>
@@ -34,7 +35,7 @@ function FeedStockCardComponent({
         </AppText>
 
         <AppText size='sm' className='mt-1 text-neutral-textMuted'>
-          {availableKg} kg disponíveis
+          {availableLabel} disponíveis
         </AppText>
       </View>
 

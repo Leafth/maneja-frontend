@@ -5,7 +5,7 @@ import { AppText } from '@/shared/components/AppText';
 import colors from '@/styles/colors';
 
 import type { FeedMovement } from '../models/feed-movement.model';
-import { scaledToDisplay } from '../utils/feed-decimal';
+import { scaledToDisplay, scaledToKgLabel } from '../utils/feed-decimal';
 
 interface FeedHistoryItemProps {
   movement: FeedMovement;
@@ -52,10 +52,10 @@ export function FeedHistoryItem({ movement }: FeedHistoryItemProps) {
         weight='semiBold'
         className={
           isEntry ? 'text-support-success-text' : 'text-support-danger-text'
-        }
+        }`}
       >
         {isEntry ? '+' : '−'}
-        {scaledToDisplay(movement.quantityScaled)}
+        {scaledToKgLabel(movement.quantityScaled)}
       </AppText>
     </View>
   );

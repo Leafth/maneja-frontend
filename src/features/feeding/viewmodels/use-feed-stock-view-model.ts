@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import { useFeedingAccount, useFeeds } from '../hooks';
-import { scaledToNumber } from '../utils/feed-decimal';
+import { scaledToKgLabel, scaledToNumber } from '../utils/feed-decimal';
 
 export function useFeedStockViewModel() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export function useFeedStockViewModel() {
     id: feed.localId,
     name: feed.name,
     availableKg: scaledToNumber(feed.projectedStockScaled),
+    availableLabel: scaledToKgLabel(feed.projectedStockScaled),
     syncStatus: feed.syncStatus,
     lastSyncError: feed.lastSyncError,
   }));

@@ -73,7 +73,7 @@ export default function FeedTypeDetailsView() {
                 weight='medium'
                 className='text-neutral-textHead'
               >
-                {type.availableKg} kg
+                {type.availableLabel}
               </AppText>
             </View>
           </View>

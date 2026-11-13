@@ -103,7 +103,7 @@ export default function FeedStockView() {
                   <FeedStockCard
                     key={type.id}
                     name={type.name}
-                    availableKg={type.availableKg}
+                    availableLabel={type.availableLabel}
                     onPress={() => openType(type.id)}
                   />
                 ))}

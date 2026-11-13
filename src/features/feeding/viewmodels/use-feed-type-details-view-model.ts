@@ -8,7 +8,7 @@ import {
   useFeedMovements,
   useFeedSyncState,
 } from '../hooks';
-import { scaledToNumber } from '../utils/feed-decimal';
+import { scaledToKgLabel, scaledToNumber } from '../utils/feed-decimal';
 
 export function useFeedTypeDetailsViewModel() {
   const router = useRouter();
@@ -39,6 +39,7 @@ export function useFeedTypeDetailsViewModel() {
         id: feed.localId,
         name: feed.name,
         availableKg: scaledToNumber(feed.projectedStockScaled),
+        availableLabel: scaledToKgLabel(feed.projectedStockScaled),
         syncStatus: feed.syncStatus,
         lastSyncError: feed.lastSyncError,
       }
