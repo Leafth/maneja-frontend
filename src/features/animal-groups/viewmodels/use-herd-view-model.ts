@@ -34,6 +34,6 @@ export function useHerdViewModel() {
     handleMove: (localId: string) =>
       router.push({ pathname: '/movement/select-terrain', params: { groupId: localId } }),
     handleRegisterFeeding: (localId: string) =>
-      router.push({ pathname: '/group/[localId]/feeding-need', params: { localId } }),
+      router.push({ pathname: '/feeding/register', params: { groupId: localId } }),
   };
 }
