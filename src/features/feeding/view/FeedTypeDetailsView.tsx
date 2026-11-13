@@ -1,5 +1,5 @@
 import { Minus, Pencil, Plus, Trash2 } from 'lucide-react-native';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
@@ -53,7 +53,15 @@ export default function FeedTypeDetailsView() {
           <Button onPress={retry}>Tentar novamente</Button>
         </View>
       ) : type ? (
-        <View className='flex-1 px-4 pt-5'>
+        <ScrollView
+          className='flex-1'
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 20,
+            paddingBottom: 32,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
           <View className='rounded-[14px] border border-neutral-border bg-neutral-card p-2'>
             <View className='gap-1 rounded-[10px] bg-neutral-surface px-3 py-4'>
               <AppText size='sm' className='text-neutral-textMuted'>
@@ -115,7 +123,7 @@ export default function FeedTypeDetailsView() {
               </View>
             )}
           </View>
-        </View>
+        </ScrollView>
       ) : (
         <View className='flex-1 items-center justify-center'>
           <AppText color='muted'>Tipo de ração não encontrado.</AppText>
