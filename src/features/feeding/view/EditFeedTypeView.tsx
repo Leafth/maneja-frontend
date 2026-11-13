@@ -7,7 +7,7 @@ import { FormGroup } from '@/shared/components/FormGroup';
 import { Input } from '@/shared/components/Input';
 
 import { FeedFormLayout } from '../components/FeedFormLayout';
-import { scaledToDisplay } from '../utils/feed-decimal';
+import { scaledToQuantityLabel } from '../utils/feed-decimal';
 import { useEditFeedTypeViewModel } from '../viewmodels/use-edit-feed-type-view-model';
 
 export default function EditFeedTypeView() {
@@ -56,7 +56,7 @@ export default function EditFeedTypeView() {
           />
 
           <FormGroup label='Estoque atual'>
-            <Input value={scaledToDisplay(feed.projectedStockScaled)} suffix='kg' disabled />
+            <Input value={scaledToQuantityLabel(feed.projectedStockScaled)} suffix='kg' disabled />
           </FormGroup>
 
           <AppText size='sm' color='muted'>
