@@ -29,7 +29,7 @@ export function useForgotPasswordViewModel() {
     },
   });
 
-  const onSubmit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data) => {
     await forgotPasswordMutation.mutateAsync(data);
 
     setEmail(data.email);
@@ -45,7 +45,11 @@ export function useForgotPasswordViewModel() {
 
   return {
     control,
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
     goBack,
     isValid,
 

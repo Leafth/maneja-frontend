@@ -47,7 +47,7 @@ export function useSignUpViewModel() {
     }
   }, [password, touchedFields.passwordConfirmation, trigger]);
 
-  const onSubmit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data) => {
     const result = await registerMutation.mutateAsync(data);
 
     await authTokenStorage.saveSession(result.session);
@@ -67,7 +67,11 @@ export function useSignUpViewModel() {
     control,
     setFocus,
 
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
     goBack,
 
     isValid,
