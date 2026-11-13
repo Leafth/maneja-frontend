@@ -1,10 +1,8 @@
-import { CalendarDays } from 'lucide-react-native';
 import { Controller } from 'react-hook-form';
-import { View } from 'react-native';
 
+import { DateField } from '@/shared/components/DateField';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { Input } from '@/shared/components/Input';
-import colors from '@/styles/colors';
 
 import { FeedActionButton } from '../components/FeedActionButton';
 import { FeedFormLayout } from '../components/FeedFormLayout';
@@ -85,18 +83,13 @@ export default function StockExitView() {
         name='date'
         render={({ field, fieldState }) => (
           <FormGroup label='Data' required error={fieldState.error?.message}>
-            <View className='flex-row items-center rounded-[10px] border border-gray-400 pr-3'>
-              <Input
-                className='flex-1 border-0'
-                placeholder='DD/MM/AAAA'
-                keyboardType='numbers-and-punctuation'
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-              />
-
-              <CalendarDays size={18} color={colors.black[700]} />
-            </View>
+            <DateField
+              accessibilityLabel='Data da saída'
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              maximumDate={new Date()}
+            />
           </FormGroup>
         )}
       />

@@ -4,13 +4,14 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
+import { DateField } from '@/shared/components/DateField';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { Input } from '@/shared/components/Input';
 import { Select } from '@/shared/components/Select';
 import colors from '@/styles/colors';
 
 import { FeedFormLayout } from '../components/FeedFormLayout';
-import { formatDateInput, formatTimeInput } from '../utils/feed-date';
+import { formatTimeInput } from '../utils/feed-date';
 import { useRegisterFeedingViewModel } from '../viewmodels/use-register-feeding-view-model';
 
 export default function RegisterFeedingView() {
@@ -47,7 +48,7 @@ export default function RegisterFeedingView() {
             <View className='flex-1'>
               <Controller control={vm.control} name='date' render={({ field, fieldState }) => (
                 <FormGroup label='Data' required error={fieldState.error?.message}>
-                  <Input ref={field.ref} accessibilityLabel='Data da alimentação' placeholder='DD/MM/AAAA' keyboardType='number-pad' maxLength={10} formatter={formatDateInput} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} disabled={vm.isSubmitting} />
+                  <DateField accessibilityLabel='Data da alimentação' value={field.value} onChange={field.onChange} onBlur={field.onBlur} maximumDate={new Date()} disabled={vm.isSubmitting} />
                 </FormGroup>
               )} />
             </View>
