@@ -69,6 +69,7 @@ class SyncOrchestrator {
            * dos grupos.
            */
           await animalGroupSyncService.sync();
+          await verifyFeedingGroups(accountId);
 
           syncEvents.emit('animal-groups');
 
@@ -131,8 +132,6 @@ class SyncOrchestrator {
            */
           await feedSyncService.syncUpserts(accountId);
 
-          await verifyFeedingGroups(accountId);
-          syncEvents.emit('animal-groups');
           await feedRequirementSyncService.sync(accountId);
           syncEvents.emit('feed-requirements');
 
