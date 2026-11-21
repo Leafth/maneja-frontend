@@ -13,8 +13,9 @@ import { createFeedRequirements } from './009-create-feed-requirements';
 import { createFeedingRecords } from './010-create-feeding-records';
 
 import { preserveDeletedParents } from './011-preserve-deleted-parents';
+import { addFeedCoverage } from './012-add-feed-coverage';
 
-const DATABASE_VERSION = 11;
+const DATABASE_VERSION = 12;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -60,10 +61,20 @@ export async function migrateDatabase(database: SQLiteDatabase) {
       await addLocallyDeletedAtToFeeds(database);
     }
 
-    if (currentVersion < 9) {await createFeedRequirements(database);}
-    if (currentVersion < 10) {await createFeedingRecords(database);}
+    if (currentVersion < 9) {
+      await createFeedRequirements(database);
+    }
+    if (currentVersion < 10) {
+      await createFeedingRecords(database);
+    }
 
-    if (currentVersion < 11) {await preserveDeletedParents(database);}
+    if (currentVersion < 11) {
+      await preserveDeletedParents(database);
+    }
+
+    if (currentVersion < 12) {
+      await addFeedCoverage(database);
+    }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
   });
