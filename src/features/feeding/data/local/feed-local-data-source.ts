@@ -21,6 +21,10 @@ interface FeedRow {
   remote_stock_scaled: number | null;
   projected_stock_scaled: number;
 
+  daily_required_scaled: number | null;
+  days_remaining: number | null;
+  alert_level: Feed['alertLevel'];
+
   sync_status: FeedSyncStatus;
 
   local_created_at: string;
@@ -49,6 +53,9 @@ function mapRowToFeed(row: FeedRow): Feed {
     initialStockScaled: row.initial_stock_scaled,
     remoteStockScaled: row.remote_stock_scaled,
     projectedStockScaled: row.projected_stock_scaled,
+    dailyRequiredScaled: row.daily_required_scaled,
+    daysRemaining: row.days_remaining,
+    alertLevel: row.alert_level,
     syncStatus: row.sync_status,
     localCreatedAt: row.local_created_at,
     localUpdatedAt: row.local_updated_at,
@@ -157,6 +164,9 @@ class FeedLocalDataSource {
           initial_stock_scaled,
           remote_stock_scaled,
           projected_stock_scaled,
+          daily_required_scaled,
+          days_remaining,
+          alert_level,
           sync_status,
           local_created_at,
           local_updated_at,
@@ -166,20 +176,29 @@ class FeedLocalDataSource {
           last_sync_error,
           locally_deleted_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       feed.localId,
       feed.accountId,
       feed.remoteId,
       feed.name,
+
       feed.initialStockScaled,
       feed.remoteStockScaled,
       feed.projectedStockScaled,
+
+      feed.dailyRequiredScaled,
+      feed.daysRemaining,
+      feed.alertLevel,
+
       feed.syncStatus,
+
       feed.localCreatedAt,
       feed.localUpdatedAt,
+
       feed.remoteCreatedAt,
       feed.remoteUpdatedAt,
+
       feed.lastSyncedAt,
       feed.lastSyncError,
       feed.locallyDeletedAt,
@@ -198,6 +217,9 @@ class FeedLocalDataSource {
           initial_stock_scaled = ?,
           remote_stock_scaled = ?,
           projected_stock_scaled = ?,
+          daily_required_scaled = ?,
+          days_remaining = ?,
+          alert_level = ?,
           sync_status = ?,
           local_updated_at = ?,
           remote_created_at = ?,
@@ -213,6 +235,9 @@ class FeedLocalDataSource {
       feed.initialStockScaled,
       feed.remoteStockScaled,
       feed.projectedStockScaled,
+      feed.dailyRequiredScaled,
+      feed.daysRemaining,
+      feed.alertLevel,
       feed.syncStatus,
       feed.localUpdatedAt,
       feed.remoteCreatedAt,

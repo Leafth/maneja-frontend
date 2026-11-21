@@ -4,6 +4,8 @@ export type FeedSyncStatus =
   | 'pending_update'
   | 'pending_delete';
 
+export type FeedAlertLevel = 'critical' | 'urgency' | 'attention' | 'info';
+
 export interface Feed {
   localId: string;
   accountId: string;
@@ -14,6 +16,10 @@ export interface Feed {
   initialStockScaled: number | null;
   remoteStockScaled: number | null;
   projectedStockScaled: number;
+
+  dailyRequiredScaled: number | null;
+  daysRemaining: number | null;
+  alertLevel: FeedAlertLevel | null;
 
   syncStatus: FeedSyncStatus;
 

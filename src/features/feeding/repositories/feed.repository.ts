@@ -2,19 +2,30 @@ import * as Crypto from 'expo-crypto';
 import { feedLocalDataSource } from '../data/local/feed-local-data-source';
 import type { Feed } from '../models/feed.model';
 
-import type { RemoteFeedSnapshot } from '../mappers/feed.mapper';
 import { getDatabase } from '@/infrastructure/database/database';
 import type { SQLiteDatabase } from 'expo-sqlite';
+import type { RemoteFeedSnapshot } from '../mappers/feed.mapper';
 
-async function feedTransaction<T>(work: (tx: SQLiteDatabase) => Promise<T>): Promise<T> {
+async function feedTransaction<T>(
+  work: (tx: SQLiteDatabase) => Promise<T>,
+): Promise<T> {
   const db = await getDatabase();
   let result!: T;
-  await db.withExclusiveTransactionAsync(async tx => { result = await work(tx); });
+  await db.withExclusiveTransactionAsync(async (tx) => {
+    result = await work(tx);
+  });
   return result;
 }
 
-async function hasPendingFeedingBalance(accountId: string, feedLocalId: string, db: SQLiteDatabase) {
-  return !!await db.getFirstAsync('SELECT 1 FROM feeding_records WHERE account_id = ? AND feed_local_id = ? AND balance_state = \'pending\' LIMIT 1', [accountId, feedLocalId]);
+async function hasPendingFeedingBalance(
+  accountId: string,
+  feedLocalId: string,
+  db: SQLiteDatabase,
+) {
+  return !!(await db.getFirstAsync(
+    'SELECT 1 FROM feeding_records WHERE account_id = ? AND feed_local_id = ? AND balance_state = \'pending\' LIMIT 1',
+    [accountId, feedLocalId],
+  ));
 }
 
 interface CreateFeedInput {
@@ -57,6 +68,9 @@ class FeedRepository {
       initialStockScaled: input.initialStockScaled,
       remoteStockScaled: null,
       projectedStockScaled: input.initialStockScaled,
+      dailyRequiredScaled: null,
+      daysRemaining: null,
+      alertLevel: null,
       syncStatus: 'pending_create',
       localCreatedAt: now,
       localUpdatedAt: now,
@@ -77,59 +91,70 @@ class FeedRepository {
     localId: string,
     name: string,
   ): Promise<Feed> {
-    return feedTransaction(async tx => {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
-
-    if (!feed) {
-      throw new Error('Alimento não encontrado.');
-    }
-
-    if (feed.syncStatus === 'pending_delete') {
-      throw new Error(
-        'Não é possível editar um alimento pendente de exclusão.',
+    return feedTransaction(async (tx) => {
+      const feed = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
       );
-    }
 
-    const updatedFeed: Feed = {
-      ...feed,
+      if (!feed) {
+        throw new Error('Alimento não encontrado.');
+      }
 
-      name: name.trim(),
+      if (feed.syncStatus === 'pending_delete') {
+        throw new Error(
+          'Não é possível editar um alimento pendente de exclusão.',
+        );
+      }
 
-      syncStatus:
-        feed.syncStatus === 'pending_create'
-          ? 'pending_create'
-          : 'pending_update',
+      const updatedFeed: Feed = {
+        ...feed,
 
-      localUpdatedAt: new Date().toISOString(),
+        name: name.trim(),
 
-      lastSyncError: null,
-    };
+        syncStatus:
+          feed.syncStatus === 'pending_create'
+            ? 'pending_create'
+            : 'pending_update',
 
-    await feedLocalDataSource.update(updatedFeed, tx);
+        localUpdatedAt: new Date().toISOString(),
 
-    return updatedFeed;
+        lastSyncError: null,
+      };
+
+      await feedLocalDataSource.update(updatedFeed, tx);
+
+      return updatedFeed;
     });
   }
 
   async markPendingDelete(accountId: string, localId: string): Promise<void> {
-    return feedTransaction(async tx => {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
+    return feedTransaction(async (tx) => {
+      const feed = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
+      );
 
-    if (!feed) {
-      return;
-    }
+      if (!feed) {
+        return;
+      }
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    await feedLocalDataSource.update({
-      ...feed,
+      await feedLocalDataSource.update(
+        {
+          ...feed,
 
-      syncStatus: 'pending_delete',
+          syncStatus: 'pending_delete',
 
-      localUpdatedAt: now,
+          localUpdatedAt: now,
 
-      lastSyncError: null,
-    }, tx);
+          lastSyncError: null,
+        },
+        tx,
+      );
     });
   }
 
@@ -138,19 +163,26 @@ class FeedRepository {
     localId: string,
     message: string,
   ): Promise<void> {
-    return feedTransaction(async tx => {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
+    return feedTransaction(async (tx) => {
+      const feed = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
+      );
 
-    if (!feed) {
-      return;
-    }
+      if (!feed) {
+        return;
+      }
 
-    await feedLocalDataSource.update({
-      ...feed,
+      await feedLocalDataSource.update(
+        {
+          ...feed,
 
-      lastSyncError: message,
-      localUpdatedAt: new Date().toISOString(),
-    }, tx);
+          lastSyncError: message,
+          localUpdatedAt: new Date().toISOString(),
+        },
+        tx,
+      );
     });
   }
   async assignRemoteIdentity(
@@ -159,46 +191,54 @@ class FeedRepository {
     snapshot: RemoteFeedSnapshot,
     expectedLocalUpdatedAt: string,
   ): Promise<Feed> {
-    return feedTransaction(async tx => {
-    const current = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
+    return feedTransaction(async (tx) => {
+      const current = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
+      );
 
-    if (!current) {
-      throw new Error('Alimento local não encontrado.');
-    }
+      if (!current) {
+        throw new Error('Alimento local não encontrado.');
+      }
 
-    const changedWhileSyncing =
-      current.localUpdatedAt !== expectedLocalUpdatedAt;
+      const changedWhileSyncing =
+        current.localUpdatedAt !== expectedLocalUpdatedAt;
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    const updated: Feed = {
-      ...current,
+      const updated: Feed = {
+        ...current,
 
-      remoteId: snapshot.remoteId,
+        remoteId: snapshot.remoteId,
 
-      name: changedWhileSyncing ? current.name : snapshot.name,
+        name: changedWhileSyncing ? current.name : snapshot.name,
 
-      remoteStockScaled: snapshot.remoteStockScaled,
+        remoteStockScaled: snapshot.remoteStockScaled,
 
-      projectedStockScaled: current.projectedStockScaled,
+        dailyRequiredScaled: snapshot.dailyRequiredScaled,
+        daysRemaining: snapshot.daysRemaining,
+        alertLevel: snapshot.alertLevel,
 
-      syncStatus:
-        current.syncStatus === 'pending_delete'
-          ? 'pending_delete'
-          : changedWhileSyncing
-            ? 'pending_update'
-            : 'synced',
+        projectedStockScaled: current.projectedStockScaled,
 
-      remoteCreatedAt: snapshot.remoteCreatedAt,
-      remoteUpdatedAt: snapshot.remoteUpdatedAt,
+        syncStatus:
+          current.syncStatus === 'pending_delete'
+            ? 'pending_delete'
+            : changedWhileSyncing
+              ? 'pending_update'
+              : 'synced',
 
-      lastSyncedAt: now,
-      lastSyncError: null,
-    };
+        remoteCreatedAt: snapshot.remoteCreatedAt,
+        remoteUpdatedAt: snapshot.remoteUpdatedAt,
 
-    await feedLocalDataSource.update(updated, tx);
+        lastSyncedAt: now,
+        lastSyncError: null,
+      };
 
-    return updated;
+      await feedLocalDataSource.update(updated, tx);
+
+      return updated;
     });
   }
 
@@ -208,66 +248,87 @@ class FeedRepository {
     snapshot: RemoteFeedSnapshot,
     expectedLocalUpdatedAt: string,
   ): Promise<Feed> {
-    return feedTransaction(async tx => {
-    const current = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
+    return feedTransaction(async (tx) => {
+      const current = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
+      );
 
-    if (!current) {
-      throw new Error('Alimento local não encontrado.');
-    }
+      if (!current) {
+        throw new Error('Alimento local não encontrado.');
+      }
 
-    const changedWhileSyncing =
-      current.localUpdatedAt !== expectedLocalUpdatedAt;
+      const changedWhileSyncing =
+        current.localUpdatedAt !== expectedLocalUpdatedAt;
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    const updated: Feed = {
-      ...current,
+      const updated: Feed = {
+        ...current,
 
-      name: changedWhileSyncing ? current.name : snapshot.name,
+        name: changedWhileSyncing ? current.name : snapshot.name,
 
-      remoteStockScaled: await hasPendingFeedingBalance(accountId, localId, tx) ? current.remoteStockScaled : snapshot.remoteStockScaled,
+        remoteStockScaled: (await hasPendingFeedingBalance(
+          accountId,
+          localId,
+          tx,
+        ))
+          ? current.remoteStockScaled
+          : snapshot.remoteStockScaled,
 
-      syncStatus:
-        current.syncStatus === 'pending_delete'
-          ? 'pending_delete'
-          : changedWhileSyncing
-            ? 'pending_update'
-            : 'synced',
+        syncStatus:
+          current.syncStatus === 'pending_delete'
+            ? 'pending_delete'
+            : changedWhileSyncing
+              ? 'pending_update'
+              : 'synced',
 
-      remoteUpdatedAt: snapshot.remoteUpdatedAt,
+        remoteUpdatedAt: snapshot.remoteUpdatedAt,
 
-      lastSyncedAt: now,
-      lastSyncError: null,
-    };
+        dailyRequiredScaled: snapshot.dailyRequiredScaled,
+        daysRemaining: snapshot.daysRemaining,
+        alertLevel: snapshot.alertLevel,
 
-    await feedLocalDataSource.update(updated, tx);
+        lastSyncedAt: now,
+        lastSyncError: null,
+      };
 
-    return updated;
+      await feedLocalDataSource.update(updated, tx);
+
+      return updated;
     });
   }
 
   async confirmRemoteDelete(accountId: string, localId: string): Promise<void> {
-    return feedTransaction(async tx => {
-    const feed = await feedLocalDataSource.findByLocalId(accountId, localId, tx);
+    return feedTransaction(async (tx) => {
+      const feed = await feedLocalDataSource.findByLocalId(
+        accountId,
+        localId,
+        tx,
+      );
 
-    if (!feed) {
-      return;
-    }
+      if (!feed) {
+        return;
+      }
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    await feedLocalDataSource.update({
-      ...feed,
+      await feedLocalDataSource.update(
+        {
+          ...feed,
 
-      syncStatus: 'synced',
+          syncStatus: 'synced',
 
-      locallyDeletedAt: now,
+          locallyDeletedAt: now,
 
-      localUpdatedAt: now,
-      lastSyncedAt: now,
+          localUpdatedAt: now,
+          lastSyncedAt: now,
 
-      lastSyncError: null,
-    }, tx);
+          lastSyncError: null,
+        },
+        tx,
+      );
     });
   }
 
@@ -275,42 +336,122 @@ class FeedRepository {
     accountId: string,
     snapshot: RemoteFeedSnapshot,
   ): Promise<Feed> {
-    return feedTransaction(async tx => {
-    const existing = await feedLocalDataSource.findByRemoteId(
-      accountId,
-      snapshot.remoteId,
-      tx,
-    );
-
-    const now = new Date().toISOString();
-
-    /*
-     * O Feed existe no servidor, mas ainda não existe
-     * neste dispositivo.
-     */
-    if (!existing) {
-      const imported: Feed = {
-        localId: Crypto.randomUUID(),
+    return feedTransaction(async (tx) => {
+      const existing = await feedLocalDataSource.findByRemoteId(
         accountId,
+        snapshot.remoteId,
+        tx,
+      );
 
-        remoteId: snapshot.remoteId,
+      const now = new Date().toISOString();
 
-        name: snapshot.name,
+      /*
+       * O Feed existe no servidor, mas ainda não existe
+       * neste dispositivo.
+       */
+      if (!existing) {
+        const imported: Feed = {
+          localId: Crypto.randomUUID(),
+          accountId,
 
-        /*
-         * A API não devolve o saldo inicial depois
-         * que o Feed foi criado.
-         */
-        initialStockScaled: null,
+          remoteId: snapshot.remoteId,
 
-        remoteStockScaled: snapshot.remoteStockScaled,
+          name: snapshot.name,
 
-        projectedStockScaled: snapshot.remoteStockScaled,
+          /*
+           * A API não devolve o saldo inicial depois
+           * que o Feed foi criado.
+           */
+          initialStockScaled: null,
 
-        syncStatus: 'synced',
+          remoteStockScaled: snapshot.remoteStockScaled,
 
-        localCreatedAt: now,
-        localUpdatedAt: now,
+          projectedStockScaled: snapshot.remoteStockScaled,
+
+          dailyRequiredScaled: snapshot.dailyRequiredScaled,
+          daysRemaining: snapshot.daysRemaining,
+          alertLevel: snapshot.alertLevel,
+
+          syncStatus: 'synced',
+
+          localCreatedAt: now,
+          localUpdatedAt: now,
+
+          remoteCreatedAt: snapshot.remoteCreatedAt,
+
+          remoteUpdatedAt: snapshot.remoteUpdatedAt,
+
+          lastSyncedAt: now,
+          lastSyncError: null,
+
+          locallyDeletedAt: null,
+        };
+
+        await feedLocalDataSource.insert(imported, tx);
+
+        return imported;
+      }
+
+      /*
+       * Se o usuário já pediu para excluir localmente,
+       * um PULL não deve "ressuscitar" o Feed.
+       */
+      if (
+        existing.syncStatus === 'pending_delete' ||
+        existing.locallyDeletedAt
+      ) {
+        return existing;
+      }
+
+      /*
+       * Calculamos apenas o efeito que ainda existe
+       * na projeção local.
+       *
+       * Exemplo:
+       *
+       * remote antigo = 100
+       * projected = 130
+       *
+       * delta local = +30
+       *
+       * novo remote = 80
+       *
+       * novo projected = 110
+       */
+      const projectionBase =
+        existing.remoteStockScaled ??
+        existing.initialStockScaled ??
+        existing.projectedStockScaled;
+
+      const localDelta = existing.projectedStockScaled - projectionBase;
+      // A snapshot cannot disambiguate an uncertain Feeding, and confirmed
+      // reservations must be incorporated atomically by reconcileBalance.
+      const preserveBalance = await hasPendingFeedingBalance(
+        accountId,
+        existing.localId,
+        tx,
+      );
+
+      /*
+       * Se existe rename local pendente, não deixamos
+       * o PULL sobrescrever o nome escolhido pelo usuário.
+       */
+      const preserveLocalName =
+        existing.syncStatus === 'pending_create' ||
+        existing.syncStatus === 'pending_update';
+
+      const updated: Feed = {
+        ...existing,
+
+        name: preserveLocalName ? existing.name : snapshot.name,
+
+        remoteStockScaled: preserveBalance
+          ? existing.remoteStockScaled
+          : snapshot.remoteStockScaled,
+
+        projectedStockScaled: preserveBalance
+          ? existing.projectedStockScaled
+          : snapshot.remoteStockScaled + localDelta,
 
         remoteCreatedAt: snapshot.remoteCreatedAt,
 
@@ -318,76 +459,11 @@ class FeedRepository {
 
         lastSyncedAt: now,
         lastSyncError: null,
-
-        locallyDeletedAt: null,
       };
 
-      await feedLocalDataSource.insert(imported, tx);
+      await feedLocalDataSource.update(updated, tx);
 
-      return imported;
-    }
-
-    /*
-     * Se o usuário já pediu para excluir localmente,
-     * um PULL não deve "ressuscitar" o Feed.
-     */
-    if (existing.syncStatus === 'pending_delete' || existing.locallyDeletedAt) {
-      return existing;
-    }
-
-    /*
-     * Calculamos apenas o efeito que ainda existe
-     * na projeção local.
-     *
-     * Exemplo:
-     *
-     * remote antigo = 100
-     * projected = 130
-     *
-     * delta local = +30
-     *
-     * novo remote = 80
-     *
-     * novo projected = 110
-     */
-    const projectionBase =
-      existing.remoteStockScaled ??
-      existing.initialStockScaled ??
-      existing.projectedStockScaled;
-
-    const localDelta = existing.projectedStockScaled - projectionBase;
-    // A snapshot cannot disambiguate an uncertain Feeding, and confirmed
-    // reservations must be incorporated atomically by reconcileBalance.
-    const preserveBalance = await hasPendingFeedingBalance(accountId, existing.localId, tx);
-
-    /*
-     * Se existe rename local pendente, não deixamos
-     * o PULL sobrescrever o nome escolhido pelo usuário.
-     */
-    const preserveLocalName =
-      existing.syncStatus === 'pending_create' ||
-      existing.syncStatus === 'pending_update';
-
-    const updated: Feed = {
-      ...existing,
-
-      name: preserveLocalName ? existing.name : snapshot.name,
-
-      remoteStockScaled: preserveBalance ? existing.remoteStockScaled : snapshot.remoteStockScaled,
-
-      projectedStockScaled: preserveBalance ? existing.projectedStockScaled : snapshot.remoteStockScaled + localDelta,
-
-      remoteCreatedAt: snapshot.remoteCreatedAt,
-
-      remoteUpdatedAt: snapshot.remoteUpdatedAt,
-
-      lastSyncedAt: now,
-      lastSyncError: null,
-    };
-
-    await feedLocalDataSource.update(updated, tx);
-
-    return updated;
+      return updated;
     });
   }
 }
