@@ -1,10 +1,11 @@
-import { withDatabase } from '@/infrastructure/database/database';
+import { withDatabase, withDatabaseTransaction } from '@/infrastructure/database/database';
 
-import type { AnimalGroup } from '../models';
 import { SyncStatus } from '@/shared/models';
+import type { AnimalGroup } from '../models';
 interface AnimalGroupRow {
   local_id: string;
   remote_id: string | null;
+  locally_deleted_at: string | null;
 
   name: string;
   animal_count: number;
@@ -16,6 +17,10 @@ interface AnimalGroupRow {
 
   local_created_at: string;
   local_updated_at: string;
+
+  current_terrain_local_id: string | null;
+  current_terrain_remote_id: string | null;
+  current_terrain_name: string | null;
 
   last_synced_at: string | null;
   last_sync_error: string | null;
@@ -32,6 +37,10 @@ interface MarkAnimalGroupSyncedData {
   remoteId: string;
   name: string;
   animalCount: number;
+
+  currentTerrainRemoteId: string | null;
+  currentTerrainName: string | null;
+
   remoteCreatedAt: string;
   remoteUpdatedAt: string;
 }
@@ -40,6 +49,7 @@ function toModel(row: AnimalGroupRow): AnimalGroup {
   return {
     localId: row.local_id,
     remoteId: row.remote_id,
+    locallyDeletedAt: row.locally_deleted_at,
 
     name: row.name,
     animalCount: row.animal_count,
@@ -54,6 +64,12 @@ function toModel(row: AnimalGroupRow): AnimalGroup {
 
     lastSyncedAt: row.last_synced_at,
     lastSyncError: row.last_sync_error,
+
+    currentTerrainLocalId: row.current_terrain_local_id,
+
+    currentTerrainRemoteId: row.current_terrain_remote_id,
+
+    currentTerrainName: row.current_terrain_name,
   };
 }
 
@@ -62,8 +78,9 @@ async function findAll(): Promise<AnimalGroup[]> {
     database.getAllAsync<AnimalGroupRow>(`
       SELECT *
       FROM animal_groups
-      WHERE sync_status != 'pending_delete'
-      ORDER BY local_updated_at DESC
+      WHERE locally_deleted_at IS NULL AND sync_status != 'pending_delete'
+      -- Mais recentes primeiro, pela data de cadastro (estável na sincronização).
+      ORDER BY COALESCE(remote_created_at, local_created_at) DESC
     `),
   );
 
@@ -76,7 +93,7 @@ async function findByLocalId(localId: string): Promise<AnimalGroup | null> {
       `
         SELECT *
         FROM animal_groups
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
         LIMIT 1
       `,
       [localId],
@@ -102,9 +119,9 @@ async function findByRemoteId(remoteId: string): Promise<AnimalGroup | null> {
   return row ? toModel(row) : null;
 }
 
-async function insert(group: AnimalGroup): Promise<void> {
-  await withDatabase((database) =>
-    database.runAsync(
+async function insert(group: AnimalGroup, accountId?: string): Promise<void> {
+  await withDatabaseTransaction(async (database) => {
+    await database.runAsync(
       `
         INSERT INTO animal_groups (
           local_id,
@@ -117,9 +134,12 @@ async function insert(group: AnimalGroup): Promise<void> {
           local_created_at,
           local_updated_at,
           last_synced_at,
-          last_sync_error
+          last_sync_error,
+          current_terrain_local_id,
+          current_terrain_remote_id,
+          current_terrain_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         group.localId,
@@ -133,9 +153,15 @@ async function insert(group: AnimalGroup): Promise<void> {
         group.localUpdatedAt,
         group.lastSyncedAt,
         group.lastSyncError,
+        group.currentTerrainLocalId,
+        group.currentTerrainRemoteId,
+        group.currentTerrainName,
       ],
-    ),
-  );
+    );
+    if (accountId) {
+      await database.runAsync('INSERT INTO feeding_group_accounts(group_local_id, account_id) VALUES (?, ?)', [group.localId, accountId]);
+    }
+  });
 }
 
 async function update(
@@ -152,7 +178,7 @@ async function update(
           sync_status = ?,
           local_updated_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [
         data.name,
@@ -174,7 +200,7 @@ async function markPendingDelete(localId: string): Promise<void> {
           sync_status = 'pending_delete',
           local_updated_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [new Date().toISOString(), localId],
     ),
@@ -185,8 +211,10 @@ async function deleteByLocalId(localId: string): Promise<void> {
   await withDatabase((database) =>
     database.runAsync(
       `
-        DELETE FROM animal_groups
-        WHERE local_id = ?
+        UPDATE animal_groups
+        SET sync_status = 'synced', locally_deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+            last_synced_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), last_sync_error = NULL
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [localId],
     ),
@@ -198,7 +226,7 @@ async function findPending(): Promise<AnimalGroup[]> {
     database.getAllAsync<AnimalGroupRow>(`
       SELECT *
       FROM animal_groups
-      WHERE sync_status != 'synced'
+      WHERE locally_deleted_at IS NULL AND sync_status != 'synced'
       ORDER BY local_updated_at ASC
     `),
   );
@@ -212,7 +240,7 @@ async function setSyncError(localId: string, message: string): Promise<void> {
       `
         UPDATE animal_groups
         SET last_sync_error = ?
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [message, localId],
     ),
@@ -233,17 +261,32 @@ async function markAsSynced(
           remote_id = ?,
           name = ?,
           animal_count = ?,
-          sync_status = 'synced',
+
+          current_terrain_local_id = (
+            SELECT local_id
+            FROM terrains
+            WHERE remote_id = ?
+            LIMIT 1
+          ),
+          current_terrain_remote_id = ?,
+          current_terrain_name = ?,
+
+          sync_status = CASE WHEN sync_status = 'pending_delete' THEN 'pending_delete' ELSE 'synced' END,
           remote_created_at = ?,
           remote_updated_at = ?,
           last_synced_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
       `,
       [
         data.remoteId,
         data.name,
         data.animalCount,
+
+        data.currentTerrainRemoteId,
+        data.currentTerrainRemoteId,
+        data.currentTerrainName,
+
         data.remoteCreatedAt,
         data.remoteUpdatedAt,
         now,

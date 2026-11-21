@@ -1,9 +1,15 @@
+export interface AnimalGroupTerrainRefDTO {
+  id: string;
+  name: string;
+}
+
 export interface AnimalGroupResponseDTO {
   id: string;
   name: string;
   animal_count: number;
   created_at: string;
   updated_at: string;
+  current_terrain: AnimalGroupTerrainRefDTO | null;
 }
 
 export interface CreateAnimalGroupRequestDTO {
@@ -31,14 +37,7 @@ export interface AnimalGroupListResponseDTO {
   };
 }
 
-export interface AnimalGroupTerrainRefDTO {
-  id: string;
-  name: string;
-}
-
-export interface AnimalGroupDetailsResponseDTO extends AnimalGroupResponseDTO {
-  current_terrain: AnimalGroupTerrainRefDTO | null;
-}
+export type AnimalGroupDetailsResponseDTO = AnimalGroupResponseDTO;
 
 export interface AnimalGroupDetailsListResponseDTO {
   data: AnimalGroupDetailsResponseDTO[];

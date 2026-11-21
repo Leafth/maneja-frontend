@@ -10,11 +10,6 @@ function formatPeriod(startedAt: string, endedAt: string | null): string {
     : `Desde ${formatDate(startedAt)}`;
 }
 
-/**
- * Monta o histórico (mais recente primeiro) a partir das ocupações.
- * Os períodos de descanso são os intervalos entre o fim de uma ocupação e o
- * início da seguinte; o descanso atual só aparece quando o terreno está em descanso.
- */
 export function buildTerrainHistory(
   occupations: TerrainOccupation[],
   status: TerrainStatus,
@@ -26,10 +21,11 @@ export function buildTerrainHistory(
   return sorted.flatMap((occupation, index) => {
     const items: HistoryItem[] = [];
     const newerOccupation = sorted[index - 1];
+    const occupationId = occupation.remoteId ?? occupation.localId;
 
     if (occupation.endedAt && (newerOccupation || status === 'resting')) {
       items.push({
-        id: `${occupation.remoteId}-rest`,
+        id: `${occupationId}-rest`,
         title: 'Em descanso',
         period: formatPeriod(
           occupation.endedAt,
@@ -39,7 +35,7 @@ export function buildTerrainHistory(
     }
 
     items.push({
-      id: occupation.remoteId,
+      id: occupationId,
       title: `Ocupado por ${occupation.group.name}`,
       period: formatPeriod(occupation.startedAt, occupation.endedAt),
     });

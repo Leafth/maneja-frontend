@@ -1,10 +1,11 @@
-import { ArrowRight, TriangleAlert } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
 import { HeaderSecondary } from '@/shared/components/Header';
+import { WarningAlert } from '@/shared/components/WarningAlert';
 import colors from '@/styles/colors';
 
 import { MovementGroupSummary } from '../components/MovementGroupSummary';
@@ -114,17 +115,10 @@ export default function ConfirmMovementView() {
               </View>
 
               {originName && originRestDays !== null && (
-                <View className="flex-row items-start gap-2 rounded-[8px] border border-support-warning-border bg-support-warning-bg px-3 py-2">
-                  <TriangleAlert
-                    size={16}
-                    color={colors.support.warning.solid}
-                  />
-
-                  <AppText size="xs" className="flex-1 text-support-warning-text">
-                    {originName} iniciará automaticamente o período de descanso
-                    de {originRestDays} {originRestDays === 1 ? 'dia' : 'dias'}.
-                  </AppText>
-                </View>
+                <WarningAlert>
+                  {originName} iniciará automaticamente o período de descanso
+                  de {originRestDays} {originRestDays === 1 ? 'dia' : 'dias'}.
+                </WarningAlert>
               )}
             </View>
 

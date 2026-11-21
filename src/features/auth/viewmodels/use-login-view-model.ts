@@ -32,7 +32,7 @@ export function useLoginViewModel() {
     },
   });
 
-  const onSubmit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data) => {
     const session = await loginMutation.mutateAsync({
       email: data.email,
       password: data.password,
@@ -52,7 +52,11 @@ export function useLoginViewModel() {
   return {
     control,
     setFocus,
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
 
     isValid,
 

@@ -46,7 +46,7 @@ export function useVerifyPasswordResetCodeViewModel() {
     },
   });
 
-  const onSubmit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data) => {
     try {
       const result = await verifyMutation.mutateAsync(data);
 
@@ -97,7 +97,11 @@ export function useVerifyPasswordResetCodeViewModel() {
 
     maskedEmail,
 
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
     resendCode,
     goBack,
     clearCodeError,

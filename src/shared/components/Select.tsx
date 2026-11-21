@@ -1,6 +1,12 @@
 import { ChevronDown } from 'lucide-react-native';
-import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { type ComponentRef, useRef, useState } from 'react';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
 import colors from '@/styles/colors';
@@ -20,6 +26,17 @@ interface ISelectProps {
   disabled?: boolean;
 }
 
+const LIST_MAX_HEIGHT = 220;
+const LIST_OFFSET = 4;
+const SCREEN_MARGIN = 16;
+
+interface TriggerLayout {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export function Select({
   options,
   value,
@@ -29,13 +46,45 @@ export function Select({
   error,
   disabled,
 }: ISelectProps) {
-  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<ComponentRef<typeof View>>(null);
+  const [layout, setLayout] = useState<TriggerLayout | null>(null);
+  const { height: windowHeight } = useWindowDimensions();
+
+  const open = layout !== null;
   const selected = options.find((option) => option.value === value);
 
+  function close() {
+    setLayout(null);
+  }
+
+  // A lista abre num Modal: tocar fora dela fecha, e ela não fica cortada
+  // por ScrollViews ou atrás de outros elementos da tela.
+  function toggle() {
+    if (open) {
+      close();
+      return;
+    }
+
+    triggerRef.current?.measureInWindow((x, y, width, height) => {
+      setLayout({ x, y, width, height });
+    });
+  }
+
+  function select(optionValue: string) {
+    onChange(optionValue);
+    close();
+  }
+
+  const opensUpward =
+    layout !== null &&
+    layout.y + layout.height + LIST_OFFSET + LIST_MAX_HEIGHT >
+      windowHeight - SCREEN_MARGIN;
+
   return (
-    <View style={{ zIndex: open ? 20 : 0 }}>
+    <View>
       <Pressable
-        onPress={() => setOpen(!open)}
+        ref={triggerRef}
+        onPress={toggle}
         disabled={disabled}
         accessibilityRole='button'
         accessibilityLabel={selected?.label ?? placeholder}
@@ -55,45 +104,61 @@ export function Select({
         <ChevronDown size={18} color={colors.black[700]} />
       </Pressable>
 
-      {open && (
-        <View
-          className='absolute left-0 right-0 top-[56px] overflow-hidden rounded-[10px] border border-gray-400 bg-white'
-          style={{
-            elevation: 8,
-            shadowColor: '#000',
-            shadowOpacity: 0.12,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-          }}
-        >
-          <ScrollView
-            nestedScrollEnabled
-            style={{ maxHeight: 220 }}
-            keyboardShouldPersistTaps='always'
-          >
-            {options.map((option) => (
-              <Pressable
-                key={option.value}
-                className='border-b border-gray-300 px-4 py-4'
-                onPress={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-                accessibilityRole='button'
-                accessibilityState={{ selected: option.value === value }}
-              >
-                <AppText>{option.label}</AppText>
-              </Pressable>
-            ))}
+      <Modal
+        visible={open}
+        transparent
+        animationType='fade'
+        statusBarTranslucent
+        onRequestClose={close}
+      >
+        <Pressable
+          className='flex-1'
+          onPress={close}
+          accessibilityRole='button'
+          accessibilityLabel='Fechar lista de opções'
+        />
 
-            {options.length === 0 && (
-              <AppText color='muted' className='px-4 py-4'>
-                {emptyMessage}
-              </AppText>
-            )}
-          </ScrollView>
-        </View>
-      )}
+        {layout && (
+          <View
+            className='absolute overflow-hidden rounded-[10px] border border-gray-400 bg-white'
+            style={{
+              left: layout.x,
+              width: layout.width,
+              ...(opensUpward
+                ? { bottom: windowHeight - layout.y + LIST_OFFSET }
+                : { top: layout.y + layout.height + LIST_OFFSET }),
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+            }}
+          >
+            <ScrollView
+              style={{ maxHeight: LIST_MAX_HEIGHT }}
+              keyboardShouldPersistTaps='always'
+            >
+              {options.map((option) => (
+                <Pressable
+                  key={option.value}
+                  className='border-b border-gray-300 px-4 py-4'
+                  onPress={() => select(option.value)}
+                  accessibilityRole='button'
+                  accessibilityState={{ selected: option.value === value }}
+                >
+                  <AppText>{option.label}</AppText>
+                </Pressable>
+              ))}
+
+              {options.length === 0 && (
+                <AppText color='muted' className='px-4 py-4'>
+                  {emptyMessage}
+                </AppText>
+              )}
+            </ScrollView>
+          </View>
+        )}
+      </Modal>
     </View>
   );
 }

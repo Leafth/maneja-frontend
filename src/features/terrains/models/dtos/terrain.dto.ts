@@ -38,26 +38,42 @@ export interface TerrainGroupRefDTO {
   name: string;
 }
 
+export interface FinishedTerrainOccupationDTO {
+  id: string;
+  started_at: string;
+  ended_at: string;
+}
+
 export interface OccupiedStateDetailsDTO {
-  current_group: TerrainGroupRefDTO;
-  entered_at: string;
+  current_group: TerrainGroupRefDTO | null;
+  entered_at: string | null;
 }
 
 export interface RestingStateDetailsDTO {
   remaining_rest_days: number;
-  last_group: TerrainGroupRefDTO;
-  last_occupation: {
-    id: string;
-    started_at: string;
-    ended_at: string;
-  };
+  last_group: TerrainGroupRefDTO | null;
+  last_occupation: FinishedTerrainOccupationDTO | null;
 }
 
-// O formato de state_details para 'available' ainda não foi documentado.
+export interface AvailableStateDetailsDTO {
+  days_free: number;
+  last_group: TerrainGroupRefDTO | null;
+  last_occupation: FinishedTerrainOccupationDTO | null;
+}
+
 export type TerrainStateDTO =
-  | { status: 'occupied'; state_details: OccupiedStateDetailsDTO }
-  | { status: 'resting'; state_details: RestingStateDetailsDTO }
-  | { status: 'available'; state_details: Record<string, unknown> | null };
+  | {
+      status: 'occupied';
+      state_details: OccupiedStateDetailsDTO;
+    }
+  | {
+      status: 'resting';
+      state_details: RestingStateDetailsDTO;
+    }
+  | {
+      status: 'available';
+      state_details: AvailableStateDetailsDTO;
+    };
 
 export type TerrainDetailsResponseDTO = Omit<TerrainResponseDTO, 'status'> &
   TerrainStateDTO;
@@ -80,7 +96,10 @@ export interface TerrainOccupationDTO {
 }
 
 export interface TerrainOccupationListResponseDTO {
-  terrain: TerrainGroupRefDTO;
+  terrain: {
+    id: string;
+    name: string;
+  };
   data: TerrainOccupationDTO[];
   meta: {
     page: number;

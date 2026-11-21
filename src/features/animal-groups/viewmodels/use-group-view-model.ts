@@ -1,6 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { useFeedRequirementItems } from '@/features/feeding/hooks/use-feed-requirement-items';
+
 import {
   useAnimalGroup,
   useAnimalGroupHistory,
@@ -12,35 +14,30 @@ import type { AnimalGroupHistoryKind } from '../models';
 export function useGroupViewModel() {
   const router = useRouter();
 
-  const { localId: routeLocalId } = useLocalSearchParams<{
+  const { localId: routeLocalId, history: routeHistory } = useLocalSearchParams<{
     localId?: string | string[];
+    history?: string;
   }>();
 
-  const localId =
-    typeof routeLocalId === 'string' ? routeLocalId : '';
+  const localId = typeof routeLocalId === 'string' ? routeLocalId : '';
 
   const query = useAnimalGroup(localId);
   const deleteMutation = useDeleteAnimalGroup();
   const occupationsQuery = useAnimalGroupOccupations(localId);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [historyKind, setHistoryKind] =
-    useState<AnimalGroupHistoryKind>('movements');
+  const historyKind: AnimalGroupHistoryKind = routeHistory === 'feeding' ? 'feeding' : 'movements';
+  const setHistoryKind = (kind: AnimalGroupHistoryKind) => router.setParams({ history: kind });
 
   const historyQuery = useAnimalGroupHistory(localId, historyKind);
 
   const currentOccupation =
     occupationsQuery.data?.find((occupation) => !occupation.endedAt) ?? null;
 
-  const group =
-    query.data?.syncStatus === 'pending_delete'
-      ? null
-      : query.data;
+  const group = query.data?.syncStatus === 'pending_delete' ? null : query.data;
+  const feedingNeeds = useFeedRequirementItems(localId, group?.animalCount ?? 0);
 
-  const canAct =
-    Boolean(group) &&
-    !query.isError &&
-    !deleteMutation.isPending;
+  const canAct = Boolean(group) && !query.isError && !deleteMutation.isPending;
 
   function handleBack() {
     if (router.canGoBack()) {
@@ -51,7 +48,9 @@ export function useGroupViewModel() {
   }
 
   function handleUpdate() {
-    if (!canAct) { return; }
+    if (!canAct) {
+      return;
+    }
 
     router.push({
       pathname: '/group/[localId]/edit',
@@ -60,21 +59,27 @@ export function useGroupViewModel() {
   }
 
   function handleDelete() {
-    if (!canAct) { return; }
+    if (!canAct) {
+      return;
+    }
 
     deleteMutation.reset();
     setIsDeleteModalOpen(true);
   }
 
   function handleCancelDelete() {
-    if (deleteMutation.isPending) { return; }
+    if (deleteMutation.isPending) {
+      return;
+    }
 
     setIsDeleteModalOpen(false);
     deleteMutation.reset();
   }
 
   function handleConfirmDelete() {
-    if (!canAct || !localId) { return; }
+    if (!canAct || !localId) {
+      return;
+    }
 
     deleteMutation.mutate(localId, {
       onSuccess: () => {
@@ -86,13 +91,25 @@ export function useGroupViewModel() {
 
   return {
     group,
+    feedingNeeds: feedingNeeds.items,
+    isFeedingNeedsLoading: feedingNeeds.isLoading,
+    hasFeedingNeedsError: feedingNeeds.hasError,
+    retryFeedingNeeds: feedingNeeds.retry,
+    handleFeedingNeeds: () => {
+      if (canAct) { router.push({ pathname: '/group/[localId]/feeding-need', params: { localId } }); }
+    },
 
     currentTerrain: currentOccupation
       ? {
           name: currentOccupation.terrain.name,
           enteredAt: currentOccupation.startedAt,
         }
-      : null,
+      : group?.currentTerrainName
+        ? {
+            name: group.currentTerrainName,
+            enteredAt: null,
+          }
+        : null,
     isCurrentTerrainLoading: occupationsQuery.isPending && Boolean(localId),
     hasCurrentTerrainError: occupationsQuery.isError,
 

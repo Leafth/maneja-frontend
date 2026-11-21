@@ -22,12 +22,17 @@ async function findByLocalId(localId: string): Promise<Terrain | null> {
   return terrainLocalDataSource.findByLocalId(localId);
 }
 
+async function findByRemoteId(remoteId: string): Promise<Terrain | null> {
+  return terrainLocalDataSource.findByRemoteId(remoteId);
+}
+
 async function create(data: CreateTerrainData): Promise<Terrain> {
   const now = new Date().toISOString();
 
   const terrain: Terrain = {
     localId: Crypto.randomUUID(),
     remoteId: null,
+    locallyDeletedAt: null,
 
     name: data.name,
     restDays: data.restDays,
@@ -92,9 +97,8 @@ async function remove(localId: string): Promise<void> {
     return;
   }
 
-  if (terrain.remoteId === null) {
-    await terrainLocalDataSource.deleteByLocalId(localId);
-    return;
+  if (terrain.status === 'occupied') {
+    throw new Error('Não é possível excluir um terreno que possui animais.');
   }
 
   await terrainLocalDataSource.markPendingDelete(
@@ -143,6 +147,7 @@ async function upsertFromRemote(
     const terrain: Terrain = {
       localId: Crypto.randomUUID(),
       remoteId: remoteTerrain.remoteId,
+      locallyDeletedAt: null,
 
       name: remoteTerrain.name,
       restDays: remoteTerrain.restDays,
@@ -165,6 +170,8 @@ async function upsertFromRemote(
 
     return terrain;
   }
+
+  if (existing.locallyDeletedAt !== null) {return existing;}
 
   if (
     existing.syncStatus === 'pending_update' ||
@@ -216,13 +223,23 @@ async function deleteLocal(localId: string): Promise<void> {
   await terrainLocalDataSource.deleteByLocalId(localId);
 }
 
+async function cancelPendingDelete(
+  localId: string,
+  error: string,
+): Promise<void> {
+  await terrainLocalDataSource.cancelPendingDelete(localId, error);
+}
+
 export const terrainRepository = {
   findAll,
   findByLocalId,
+  findByRemoteId,
 
   create,
   update,
   remove,
+
+  cancelPendingDelete,
 
   findPending,
 

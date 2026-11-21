@@ -27,7 +27,9 @@ function getDescription(state: TerrainStateDetails): string {
     }
 
     case 'occupied':
-      return `Ocupado por: ${state.currentGroup.name}`;
+      return state.currentGroup
+        ? `Ocupado por: ${state.currentGroup.name}`
+        : 'Terreno ocupado';
   }
 }
 

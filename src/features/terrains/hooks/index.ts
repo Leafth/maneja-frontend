@@ -10,4 +10,3 @@ export { useUpdateTerrain } from './use-update-terrain';
 export { useTerrainOccupations } from './use-terrain-occupations';
 export { useTerrainStateDetails } from './use-terrain-state-details';
 export { useTerrainsStateDetails } from './use-terrains-state-details';
-export { useForceTerrainRestRemoval } from './use-force-terrain-rest-removal';

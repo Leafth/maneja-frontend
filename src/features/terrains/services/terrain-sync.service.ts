@@ -52,10 +52,23 @@ async function syncDelete(terrain: Terrain): Promise<void> {
   try {
     await terrainService.remove(terrain.remoteId);
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      await terrainRepository.deleteLocal(terrain.localId);
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
 
-      return;
+      if (status === 404) {
+        await terrainRepository.deleteLocal(terrain.localId);
+
+        return;
+      }
+
+      if (status === 422) {
+        await terrainRepository.cancelPendingDelete(
+          terrain.localId,
+          getErrorMessage(error),
+        );
+
+        return;
+      }
     }
 
     throw error;

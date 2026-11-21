@@ -8,6 +8,7 @@ import {
 } from '../repositories/animal-group.repository';
 
 import { animalGroupQueryKeys } from './animal-group.query-keys';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
 
 export function useCreateAnimalGroup() {
   const queryClient = useQueryClient();
@@ -15,7 +16,7 @@ export function useCreateAnimalGroup() {
   return useMutation({
     networkMode: 'always',
     mutationFn: (data: CreateAnimalGroupData) =>
-      animalGroupRepository.create(data),
+      animalGroupRepository.create(data, useAuthStore.getState().user?.id),
 
     onSuccess: async () => {
       await queryClient.invalidateQueries({

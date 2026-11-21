@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { integrationPending } from '@/shared/utils/integration-pending';
-
 import type { TerrainOccupation } from '../models';
 import { terrainQueryKeys } from './terrain.query-keys';
+import { occupationRepository } from '@/features/movements/repositories/occupation.repository';
 
 export function useTerrainOccupations(localId: string | undefined) {
   return useQuery({
@@ -14,13 +13,12 @@ export function useTerrainOccupations(localId: string | undefined) {
         return [];
       }
 
-      // TODO(integração): ocupações do terreno
-      // (TerrainOccupationListResponseDTO) → terrainMapper.toOccupationModel.
-      return integrationPending(`ocupações do terreno ${localId}`);
+      const occupations =
+        await occupationRepository.findByTerrainLocalId(localId);
+
+      return occupations.map(occupationRepository.toTerrainOccupation);
     },
 
     enabled: Boolean(localId),
-
-    networkMode: 'always',
   });
 }

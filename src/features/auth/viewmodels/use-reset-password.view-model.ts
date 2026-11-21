@@ -48,7 +48,7 @@ export function useResetPasswordViewModel() {
     }
   }, [password, touchedFields.passwordConfirmation, trigger]);
 
-  const onSubmit = handleSubmit(async (data) => {
+  const submit = handleSubmit(async (data) => {
     if (!resetToken) {
       throw new Error('Token de redefinição de senha não encontrado.');
     }
@@ -72,7 +72,11 @@ export function useResetPasswordViewModel() {
 
   return {
     control,
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
     goBack,
     isValid,
     isSubmitting: isSubmitting || resetPasswordMutation.isPending,

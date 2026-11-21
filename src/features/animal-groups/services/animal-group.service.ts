@@ -3,11 +3,13 @@ import { api } from '@/infrastructure/api/api-client';
 import { animalGroupMapper } from '../mapper/animal-group.mapper';
 
 import type {
+  AnimalGroupDetailsResponseDTO,
   AnimalGroupListResponseDTO,
+  AnimalGroupOccupationListResponseDTO,
   AnimalGroupResponseDTO,
 } from '../models/dtos';
 
-import type { RemoteAnimalGroup } from '../models';
+import type { AnimalGroupOccupation, RemoteAnimalGroup } from '../models';
 
 interface ListAnimalGroupsParams {
   page?: number;
@@ -91,9 +93,52 @@ async function remove(remoteId: string): Promise<void> {
   await api.delete(`/groups/${remoteId}`);
 }
 
+async function findDetailsById(remoteId: string) {
+  const response = await api.get<AnimalGroupDetailsResponseDTO>(
+    `/groups/${remoteId}`,
+  );
+
+  return {
+    currentTerrain: response.data.current_terrain
+      ? animalGroupMapper.fromTerrainRefDTO(response.data.current_terrain)
+      : null,
+  };
+}
+
+async function listOccupations(
+  remoteId: string,
+): Promise<AnimalGroupOccupation[]> {
+  const occupations: AnimalGroupOccupation[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const response = await api.get<AnimalGroupOccupationListResponseDTO>(
+      `/groups/${remoteId}/occupations`,
+      {
+        params: {
+          page,
+          per_page: 100,
+        },
+      },
+    );
+
+    occupations.push(
+      ...response.data.data.map(animalGroupMapper.fromOccupationDTO),
+    );
+
+    totalPages = response.data.meta.total_pages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return occupations;
+}
+
 export const animalGroupService = {
   list,
+  listOccupations,
   findById,
+  findDetailsById,
   create,
   update,
   remove,

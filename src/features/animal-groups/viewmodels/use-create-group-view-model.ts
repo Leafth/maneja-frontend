@@ -60,7 +60,7 @@ export function useCreateGroupViewModel() {
     }
   };
 
-  const onSubmit = handleSubmit((data) => {
+  const submit = handleSubmit((data) => {
     if (mutation.isPending || (isEditing && (!canEdit || groupQuery.isError))) {
       return;
     }
@@ -79,7 +79,11 @@ export function useCreateGroupViewModel() {
 
   return {
     control,
-    onSubmit,
+    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
+    // onPress/onSubmitEditing enviam eventos do React Native.
+    onSubmit: () => {
+      void submit();
+    },
     goBack,
 
     isEditing,
