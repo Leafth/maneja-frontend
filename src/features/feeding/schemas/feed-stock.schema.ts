@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const quantity = z
+const positiveQuantity = z
   .string()
   .trim()
   .min(1, 'Informe a quantidade')
@@ -9,6 +9,17 @@ const quantity = z
       /^\d+(?:[,.]\d{1,2})?$/.test(value) &&
       Number(value.replace(',', '.')) > 0,
     'Informe uma quantidade válida',
+  );
+
+const nonNegativeQuantity = z
+  .string()
+  .trim()
+  .min(1, 'Informe o valor')
+  .refine(
+    (value) =>
+      /^\d+(?:[,.]\d{1,2})?$/.test(value) &&
+      Number(value.replace(',', '.')) >= 0,
+    'Informe um valor válido',
   );
 
 function parseLocalDate(value: string): Date | null {
@@ -24,15 +35,21 @@ function parseLocalDate(value: string): Date | null {
 
 export const feedTypeSchema = z.object({
   name: z.string().trim().min(1, 'Informe o nome da ração'),
-  initialKg: quantity,
+
+  initialKg: nonNegativeQuantity,
 });
 
-export const editFeedTypeSchema = feedTypeSchema.pick({ name: true });
+export const editFeedTypeSchema = feedTypeSchema.pick({
+  name: true,
+});
 
 export const stockEntrySchema = z.object({
   typeId: z.string().min(1, 'Selecione uma ração'),
-  quantityKg: quantity,
-  value: quantity,
+
+  quantityKg: positiveQuantity,
+
+  value: nonNegativeQuantity,
+
   date: z
     .string()
     .regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Informe a data no formato DD/MM/AAAA')
@@ -42,12 +59,14 @@ export const stockEntrySchema = z.object({
     )
     .refine((value) => {
       const date = parseLocalDate(value);
+
       if (!date) {
         return true;
       }
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
       return date <= today;
     }, 'A data não pode ser futura'),
 });
@@ -55,15 +74,17 @@ export const stockEntrySchema = z.object({
 export const stockExitSchema = z.object({
   typeId: z.string().min(1, 'Selecione uma ração'),
 
-  quantity: quantity,
+  quantity: positiveQuantity,
 
   reason: z.string().trim().min(1, 'Informe o motivo'),
 
   date: stockEntrySchema.shape.date,
-
 });
 
 export type FeedTypeFormData = z.infer<typeof feedTypeSchema>;
+
 export type EditFeedTypeFormData = z.infer<typeof editFeedTypeSchema>;
+
 export type StockEntryFormData = z.infer<typeof stockEntrySchema>;
+
 export type StockExitFormData = z.infer<typeof stockExitSchema>;
