@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import type { Terrain } from '../models/terrain.model';
+
 import { terrainRepository } from '../repositories/terrain.repository';
 import { terrainService } from './terrain.service';
 
@@ -20,16 +21,20 @@ function getErrorMessage(error: unknown): string {
   return 'Erro ao sincronizar terreno.';
 }
 
-async function syncCreate(terrain: Terrain): Promise<void> {
+async function syncCreate(accountId: string, terrain: Terrain): Promise<void> {
   const remoteTerrain = await terrainService.create({
     name: terrain.name,
     restDays: terrain.restDays,
   });
 
-  await terrainRepository.markAsSynced(terrain.localId, remoteTerrain);
+  await terrainRepository.markAsSynced(
+    accountId,
+    terrain.localId,
+    remoteTerrain,
+  );
 }
 
-async function syncUpdate(terrain: Terrain): Promise<void> {
+async function syncUpdate(accountId: string, terrain: Terrain): Promise<void> {
   if (!terrain.remoteId) {
     throw new Error('Terreno pendente de atualização não possui remoteId.');
   }
@@ -39,12 +44,16 @@ async function syncUpdate(terrain: Terrain): Promise<void> {
     restDays: terrain.restDays,
   });
 
-  await terrainRepository.markAsSynced(terrain.localId, remoteTerrain);
+  await terrainRepository.markAsSynced(
+    accountId,
+    terrain.localId,
+    remoteTerrain,
+  );
 }
 
-async function syncDelete(terrain: Terrain): Promise<void> {
+async function syncDelete(accountId: string, terrain: Terrain): Promise<void> {
   if (!terrain.remoteId) {
-    await terrainRepository.deleteLocal(terrain.localId);
+    await terrainRepository.deleteLocal(accountId, terrain.localId);
 
     return;
   }
@@ -56,13 +65,14 @@ async function syncDelete(terrain: Terrain): Promise<void> {
       const status = error.response?.status;
 
       if (status === 404) {
-        await terrainRepository.deleteLocal(terrain.localId);
+        await terrainRepository.deleteLocal(accountId, terrain.localId);
 
         return;
       }
 
       if (status === 422) {
         await terrainRepository.cancelPendingDelete(
+          accountId,
           terrain.localId,
           getErrorMessage(error),
         );
@@ -74,29 +84,30 @@ async function syncDelete(terrain: Terrain): Promise<void> {
     throw error;
   }
 
-  await terrainRepository.deleteLocal(terrain.localId);
+  await terrainRepository.deleteLocal(accountId, terrain.localId);
 }
 
-async function push(): Promise<void> {
-  const pendingTerrains = await terrainRepository.findPending();
+async function push(accountId: string): Promise<void> {
+  const pendingTerrains = await terrainRepository.findPending(accountId);
 
   for (const terrain of pendingTerrains) {
     try {
       switch (terrain.syncStatus) {
         case 'pending_create':
-          await syncCreate(terrain);
+          await syncCreate(accountId, terrain);
           break;
 
         case 'pending_update':
-          await syncUpdate(terrain);
+          await syncUpdate(accountId, terrain);
           break;
 
         case 'pending_delete':
-          await syncDelete(terrain);
+          await syncDelete(accountId, terrain);
           break;
       }
     } catch (error) {
       await terrainRepository.setSyncError(
+        accountId,
         terrain.localId,
         getErrorMessage(error),
       );
@@ -104,7 +115,7 @@ async function push(): Promise<void> {
   }
 }
 
-async function pull(): Promise<void> {
+async function pull(accountId: string): Promise<void> {
   let page = 1;
   let totalPages = 1;
 
@@ -115,7 +126,7 @@ async function pull(): Promise<void> {
     });
 
     for (const remoteTerrain of result.data) {
-      await terrainRepository.upsertFromRemote(remoteTerrain);
+      await terrainRepository.upsertFromRemote(accountId, remoteTerrain);
     }
 
     totalPages = result.meta.totalPages;
@@ -123,9 +134,9 @@ async function pull(): Promise<void> {
   } while (page <= totalPages);
 }
 
-async function sync(): Promise<void> {
-  await push();
-  await pull();
+async function sync(accountId: string): Promise<void> {
+  await push(accountId);
+  await pull(accountId);
 }
 
 export const terrainSyncService = {

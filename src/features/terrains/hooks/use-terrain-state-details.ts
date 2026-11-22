@@ -1,22 +1,29 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+
+import { occupationRepository } from '@/features/movements/repositories/occupation.repository';
+
 import type { TerrainStateDetails } from '../models';
+
 import { terrainRepository } from '../repositories/terrain.repository';
+
 import { buildLocalTerrainStateDetails } from '../utils/build-local-terrain-state-details';
 
 import { terrainQueryKeys } from './terrain.query-keys';
-import { occupationRepository } from '@/features/movements/repositories/occupation.repository';
 
 export function useTerrainStateDetails(localId: string | undefined) {
+  const accountId = useAuthStore((state) => state.user?.id);
+
   return useQuery({
-    queryKey: terrainQueryKeys.state(localId ?? ''),
+    queryKey: terrainQueryKeys.state(accountId ?? '', localId ?? ''),
 
     queryFn: async (): Promise<TerrainStateDetails | null> => {
-      if (!localId) {
+      if (!accountId || !localId) {
         return null;
       }
 
-      const terrain = await terrainRepository.findByLocalId(localId);
+      const terrain = await terrainRepository.findByLocalId(accountId, localId);
 
       if (!terrain) {
         return null;
@@ -25,9 +32,13 @@ export function useTerrainStateDetails(localId: string | undefined) {
       const occupations =
         await occupationRepository.findByTerrainLocalId(localId);
 
-      return buildLocalTerrainStateDetails(terrain, occupations);
+      const accountOccupations = occupations.filter(
+        (occupation) => occupation.accountId === accountId,
+      );
+
+      return buildLocalTerrainStateDetails(terrain, accountOccupations);
     },
 
-    enabled: Boolean(localId),
+    enabled: Boolean(accountId && localId),
   });
 }

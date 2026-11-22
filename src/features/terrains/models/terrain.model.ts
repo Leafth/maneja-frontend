@@ -4,6 +4,7 @@ import type { TerrainStatus } from './terrain-status.model';
 
 export interface Terrain {
   localId: string;
+  accountId: string;
   remoteId: string | null;
   locallyDeletedAt: string | null;
 

@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { animalGroupQueryKeys } from '@/features/animal-groups/hooks';
+
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+
 import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
 import { terrainRepository } from '../repositories/terrain.repository';
@@ -18,18 +21,35 @@ interface UpdateTerrainData {
 export function useUpdateTerrain() {
   const queryClient = useQueryClient();
 
+  const accountId = useAuthStore((state) => state.user?.id);
+
   return useMutation({
     mutationFn: ({ localId, data }: UpdateTerrainData) => {
-      return terrainRepository.update(localId, data);
+      if (!accountId) {
+        throw new Error('Conta não identificada.');
+      }
+
+      return terrainRepository.update(accountId, localId, data);
     },
 
     networkMode: 'always',
 
-    onSuccess: async () => {
+    onSuccess: async (terrain) => {
+      if (!accountId) {
+        return;
+      }
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: terrainQueryKeys.all,
+          queryKey: terrainQueryKeys.lists(accountId),
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: terrainQueryKeys.detail(accountId, terrain.localId),
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: terrainQueryKeys.state(accountId, terrain.localId),
         }),
 
         queryClient.invalidateQueries({
@@ -37,7 +57,7 @@ export function useUpdateTerrain() {
         }),
       ]);
 
-      void syncOrchestrator.sync();
+      void syncOrchestrator.sync(accountId);
     },
   });
 }

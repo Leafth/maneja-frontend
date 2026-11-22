@@ -1,6 +1,7 @@
 import * as Crypto from 'expo-crypto';
 
 import { terrainLocalDataSource } from '../data-sources/terrain.local-data-source';
+
 import type { RemoteTerrain } from '../models/remote-terrain.model';
 import type { Terrain } from '../models/terrain.model';
 
@@ -14,23 +15,34 @@ interface UpdateTerrainData {
   restDays?: number;
 }
 
-async function findAll(): Promise<Terrain[]> {
-  return terrainLocalDataSource.findAll();
+async function findAll(accountId: string): Promise<Terrain[]> {
+  return terrainLocalDataSource.findAll(accountId);
 }
 
-async function findByLocalId(localId: string): Promise<Terrain | null> {
-  return terrainLocalDataSource.findByLocalId(localId);
+async function findByLocalId(
+  accountId: string,
+  localId: string,
+): Promise<Terrain | null> {
+  return terrainLocalDataSource.findByLocalId(accountId, localId);
 }
 
-async function findByRemoteId(remoteId: string): Promise<Terrain | null> {
-  return terrainLocalDataSource.findByRemoteId(remoteId);
+async function findByRemoteId(
+  accountId: string,
+  remoteId: string,
+): Promise<Terrain | null> {
+  return terrainLocalDataSource.findByRemoteId(accountId, remoteId);
 }
 
-async function create(data: CreateTerrainData): Promise<Terrain> {
+async function create(
+  accountId: string,
+  data: CreateTerrainData,
+): Promise<Terrain> {
   const now = new Date().toISOString();
 
   const terrain: Terrain = {
     localId: Crypto.randomUUID(),
+    accountId,
+
     remoteId: null,
     locallyDeletedAt: null,
 
@@ -57,10 +69,14 @@ async function create(data: CreateTerrainData): Promise<Terrain> {
 }
 
 async function update(
+  accountId: string,
   localId: string,
   data: UpdateTerrainData,
 ): Promise<Terrain> {
-  const terrain = await terrainLocalDataSource.findByLocalId(localId);
+  const terrain = await terrainLocalDataSource.findByLocalId(
+    accountId,
+    localId,
+  );
 
   if (!terrain) {
     throw new Error('Terreno não encontrado.');
@@ -74,6 +90,7 @@ async function update(
     ...terrain,
 
     name: data.name ?? terrain.name,
+
     restDays: data.restDays ?? terrain.restDays,
 
     syncStatus:
@@ -82,6 +99,7 @@ async function update(
         : 'pending_update',
 
     localUpdatedAt: new Date().toISOString(),
+
     lastSyncError: null,
   };
 
@@ -90,8 +108,11 @@ async function update(
   return updatedTerrain;
 }
 
-async function remove(localId: string): Promise<void> {
-  const terrain = await terrainLocalDataSource.findByLocalId(localId);
+async function remove(accountId: string, localId: string): Promise<void> {
+  const terrain = await terrainLocalDataSource.findByLocalId(
+    accountId,
+    localId,
+  );
 
   if (!terrain) {
     return;
@@ -102,28 +123,36 @@ async function remove(localId: string): Promise<void> {
   }
 
   await terrainLocalDataSource.markPendingDelete(
+    accountId,
     localId,
     new Date().toISOString(),
   );
 }
 
-async function findPending(): Promise<Terrain[]> {
-  return terrainLocalDataSource.findPending();
+async function findPending(accountId: string): Promise<Terrain[]> {
+  return terrainLocalDataSource.findPending(accountId);
 }
 
-async function setSyncError(localId: string, error: string): Promise<void> {
-  await terrainLocalDataSource.setSyncError(localId, error);
+async function setSyncError(
+  accountId: string,
+  localId: string,
+  error: string,
+): Promise<void> {
+  await terrainLocalDataSource.setSyncError(accountId, localId, error);
 }
 
 async function markAsSynced(
+  accountId: string,
   localId: string,
   remoteTerrain: RemoteTerrain,
 ): Promise<void> {
-  await terrainLocalDataSource.markAsSynced(localId, {
+  await terrainLocalDataSource.markAsSynced(accountId, localId, {
     remoteId: remoteTerrain.remoteId,
 
     name: remoteTerrain.name,
+
     restDays: remoteTerrain.restDays,
+
     status: remoteTerrain.status,
 
     remoteCreatedAt: remoteTerrain.remoteCreatedAt,
@@ -135,9 +164,11 @@ async function markAsSynced(
 }
 
 async function upsertFromRemote(
+  accountId: string,
   remoteTerrain: RemoteTerrain,
 ): Promise<Terrain> {
   const existing = await terrainLocalDataSource.findByRemoteId(
+    accountId,
     remoteTerrain.remoteId,
   );
 
@@ -146,11 +177,17 @@ async function upsertFromRemote(
   if (!existing) {
     const terrain: Terrain = {
       localId: Crypto.randomUUID(),
+
+      accountId,
+
       remoteId: remoteTerrain.remoteId,
+
       locallyDeletedAt: null,
 
       name: remoteTerrain.name,
+
       restDays: remoteTerrain.restDays,
+
       status: remoteTerrain.status,
 
       syncStatus: 'synced',
@@ -171,7 +208,9 @@ async function upsertFromRemote(
     return terrain;
   }
 
-  if (existing.locallyDeletedAt !== null) {return existing;}
+  if (existing.locallyDeletedAt !== null) {
+    return existing;
+  }
 
   if (
     existing.syncStatus === 'pending_update' ||
@@ -200,7 +239,9 @@ async function upsertFromRemote(
     remoteId: remoteTerrain.remoteId,
 
     name: remoteTerrain.name,
+
     restDays: remoteTerrain.restDays,
+
     status: remoteTerrain.status,
 
     syncStatus: 'synced',
@@ -210,6 +251,7 @@ async function upsertFromRemote(
     remoteUpdatedAt: remoteTerrain.remoteUpdatedAt,
 
     localUpdatedAt: now,
+
     lastSyncedAt: now,
     lastSyncError: null,
   };
@@ -219,15 +261,16 @@ async function upsertFromRemote(
   return terrain;
 }
 
-async function deleteLocal(localId: string): Promise<void> {
-  await terrainLocalDataSource.deleteByLocalId(localId);
+async function deleteLocal(accountId: string, localId: string): Promise<void> {
+  await terrainLocalDataSource.deleteByLocalId(accountId, localId);
 }
 
 async function cancelPendingDelete(
+  accountId: string,
   localId: string,
   error: string,
 ): Promise<void> {
-  await terrainLocalDataSource.cancelPendingDelete(localId, error);
+  await terrainLocalDataSource.cancelPendingDelete(accountId, localId, error);
 }
 
 export const terrainRepository = {
