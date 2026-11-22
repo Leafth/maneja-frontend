@@ -19,13 +19,16 @@ function isNotFoundError(error: unknown): boolean {
   return isAxiosError(error) && error.response?.status === 404;
 }
 
-async function syncCreate(group: AnimalGroup): Promise<void> {
+async function syncCreate(
+  accountId: string,
+  group: AnimalGroup,
+): Promise<void> {
   const remoteGroup = await animalGroupService.create({
     name: group.name,
     animalCount: group.animalCount,
   });
 
-  await animalGroupRepository.markAsSynced(group.localId, {
+  await animalGroupRepository.markAsSynced(accountId, group.localId, {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
@@ -36,7 +39,10 @@ async function syncCreate(group: AnimalGroup): Promise<void> {
   });
 }
 
-async function syncUpdate(group: AnimalGroup): Promise<void> {
+async function syncUpdate(
+  accountId: string,
+  group: AnimalGroup,
+): Promise<void> {
   if (!group.remoteId) {
     throw new Error('Grupo pendente de atualização não possui remoteId.');
   }
@@ -46,7 +52,7 @@ async function syncUpdate(group: AnimalGroup): Promise<void> {
     animalCount: group.animalCount,
   });
 
-  await animalGroupRepository.markAsSynced(group.localId, {
+  await animalGroupRepository.markAsSynced(accountId, group.localId, {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
@@ -57,9 +63,12 @@ async function syncUpdate(group: AnimalGroup): Promise<void> {
   });
 }
 
-async function syncDelete(group: AnimalGroup): Promise<void> {
+async function syncDelete(
+  accountId: string,
+  group: AnimalGroup,
+): Promise<void> {
   if (!group.remoteId) {
-    await animalGroupRepository.deleteLocal(group.localId);
+    await animalGroupRepository.deleteLocal(accountId, group.localId);
 
     return;
   }
@@ -72,21 +81,21 @@ async function syncDelete(group: AnimalGroup): Promise<void> {
     }
   }
 
-  await animalGroupRepository.deleteLocal(group.localId);
+  await animalGroupRepository.deleteLocal(accountId, group.localId);
 }
 
-async function pushGroup(group: AnimalGroup): Promise<void> {
+async function pushGroup(accountId: string, group: AnimalGroup): Promise<void> {
   switch (group.syncStatus) {
     case 'pending_create':
-      await syncCreate(group);
+      await syncCreate(accountId, group);
       return;
 
     case 'pending_update':
-      await syncUpdate(group);
+      await syncUpdate(accountId, group);
       return;
 
     case 'pending_delete':
-      await syncDelete(group);
+      await syncDelete(accountId, group);
       return;
 
     case 'synced':
@@ -94,14 +103,15 @@ async function pushGroup(group: AnimalGroup): Promise<void> {
   }
 }
 
-async function pushPending(): Promise<void> {
-  const pendingGroups = await animalGroupRepository.findPending();
+async function pushPending(accountId: string): Promise<void> {
+  const pendingGroups = await animalGroupRepository.findPending(accountId);
 
   for (const group of pendingGroups) {
     try {
-      await pushGroup(group);
+      await pushGroup(accountId, group);
     } catch (error) {
       await animalGroupRepository.setSyncError(
+        accountId,
         group.localId,
         getErrorMessage(error),
       );
@@ -109,7 +119,7 @@ async function pushPending(): Promise<void> {
   }
 }
 
-async function pullRemote(): Promise<void> {
+async function pullRemote(accountId: string): Promise<void> {
   let page = 1;
   let totalPages = 1;
 
@@ -120,7 +130,7 @@ async function pullRemote(): Promise<void> {
     });
 
     for (const remoteGroup of response.data) {
-      await animalGroupRepository.upsertFromRemote(remoteGroup);
+      await animalGroupRepository.upsertFromRemote(accountId, remoteGroup);
     }
 
     totalPages = response.meta.totalPages;
@@ -128,9 +138,9 @@ async function pullRemote(): Promise<void> {
   } while (page <= totalPages);
 }
 
-async function sync(): Promise<void> {
-  await pushPending();
-  await pullRemote();
+async function sync(accountId: string): Promise<void> {
+  await pushPending(accountId);
+  await pullRemote(accountId);
 }
 
 export const animalGroupSyncService = {
