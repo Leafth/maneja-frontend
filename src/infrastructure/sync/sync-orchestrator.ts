@@ -1,17 +1,20 @@
 import { animalGroupSyncService } from '@/features/animal-groups/services/animal-group-sync.service';
-import { feedStockSyncService } from '@/features/feeding/services/feed-stock-sync.service';
+
 import { feedRequirementSyncService } from '@/features/feeding/services/feed-requirement-sync.service';
-import { feedingSyncService } from '@/features/feeding/services/feeding-sync.service';
-import { verifyFeedingGroups } from '@/features/feeding/services/feeding-sync-context';
-import { feedingStockHistoryService } from '@/features/feeding/services/feeding-stock-history.service';
+import { feedStockSyncService } from '@/features/feeding/services/feed-stock-sync.service';
 import { feedSyncService } from '@/features/feeding/services/feed-sync.service';
+import { feedingStockHistoryService } from '@/features/feeding/services/feeding-stock-history.service';
+import { verifyFeedingGroups } from '@/features/feeding/services/feeding-sync-context';
+import { feedingSyncService } from '@/features/feeding/services/feeding-sync.service';
+
 import { movementCommandRepository } from '@/features/movements/repositories/movement-command.repository';
+import { occupationSyncService } from '@/features/movements/services';
 import { movementSyncService } from '@/features/movements/services/movement-sync.service';
+
 import { terrainSyncService } from '@/features/terrains/services/terrain-sync.service';
 
 import { networkService } from '../network/network.service';
 import { syncEvents } from './sync-events';
-import { occupationSyncService } from '@/features/movements/services';
 
 interface SyncState {
   inFlight: Promise<void> | null;
@@ -68,7 +71,8 @@ class SyncOrchestrator {
            * Movimentações dependem do remoteId
            * dos grupos.
            */
-          await animalGroupSyncService.sync();
+          await animalGroupSyncService.sync(accountId);
+
           await verifyFeedingGroups(accountId);
 
           syncEvents.emit('animal-groups');
@@ -79,7 +83,7 @@ class SyncOrchestrator {
            * Movimentações também dependem do
            * remoteId do terreno de destino.
            */
-          await terrainSyncService.sync();
+          await terrainSyncService.sync(accountId);
 
           syncEvents.emit('terrains');
 
@@ -113,9 +117,9 @@ class SyncOrchestrator {
            * grupo:
            * current_terrain
            */
-          await terrainSyncService.pull();
+          await terrainSyncService.pull(accountId);
 
-          await animalGroupSyncService.pullRemote();
+          await animalGroupSyncService.pullRemote(accountId);
 
           /*
            * 6. Atualiza o cache local das ocupações.
@@ -124,6 +128,7 @@ class SyncOrchestrator {
           await occupationSyncService.pull(accountId);
 
           syncEvents.emit('terrains');
+
           syncEvents.emit('animal-groups');
 
           /*
@@ -133,6 +138,7 @@ class SyncOrchestrator {
           await feedSyncService.syncUpserts(accountId);
 
           await feedRequirementSyncService.sync(accountId);
+
           syncEvents.emit('feed-requirements');
 
           /*
@@ -156,9 +162,13 @@ class SyncOrchestrator {
           await feedSyncService.pull(accountId);
 
           await feedRequirementSyncService.pull(accountId);
+
           await feedingSyncService.pull(accountId);
+
           await feedingStockHistoryService.pull(accountId);
+
           syncEvents.emit('feed-requirements');
+
           syncEvents.emit('feedings');
 
           syncEvents.emit('feeds');
