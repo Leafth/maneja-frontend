@@ -8,6 +8,9 @@ import type {
   UpdateFeedRequestDto,
 } from '../dtos/feed.dto';
 
+import type { FeedAlertDto } from '../dtos/feed-alert.dto';
+import { feedAlertMapper } from '../mappers/feed-alert.mapper';
+
 class FeedService {
   async list(query?: FeedListQueryDto): Promise<FeedListResponseDto> {
     const response = await api.get<FeedListResponseDto>('/feeds', {
@@ -37,6 +40,12 @@ class FeedService {
 
   async remove(remoteId: string): Promise<void> {
     await api.delete(`/feeds/${remoteId}`);
+  }
+
+  async listAlerts() {
+    const response = await api.get<FeedAlertDto[]>('/feeds/alerts');
+
+    return response.data.map(feedAlertMapper.fromDto);
   }
 }
 
