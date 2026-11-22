@@ -5,6 +5,7 @@ import type { TerrainStatus } from './terrain-status.model';
 export interface Terrain {
   localId: string;
   remoteId: string | null;
+  locallyDeletedAt: string | null;
 
   name: string;
   restDays: number;

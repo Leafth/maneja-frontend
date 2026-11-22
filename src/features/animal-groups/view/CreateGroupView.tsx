@@ -5,10 +5,10 @@ import {
   Platform,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
+import { DismissKeyboardArea } from '@/shared/components/DismissKeyboardArea';
 import { FormGroup } from '@/shared/components/FormGroup';
 import { HeaderPrimary, HeaderSecondary } from '@/shared/components/Header';
 import { Input } from '@/shared/components/Input';
@@ -43,8 +43,10 @@ export default function CreateGroupView() {
           <HeaderPrimary isOnline={isOnline} />
         )}
 
-        <SafeAreaView edges={isEditing ? ['bottom'] : []} className='flex-1'>
-          <View className='px-4 pt-4'>
+        {/* Sem recuo inferior: o conteúdo fica no topo, e num SafeAreaView o recuo
+            virava uma faixa branca fixa acima do teclado. */}
+        <View className='flex-1'>
+          <DismissKeyboardArea className='px-4 pt-4'>
             <AppText size='sm' weight='medium' className='uppercase'>
               {isEditing ? 'ATUALIZAR GRUPO' : 'NOVO GRUPO'}
             </AppText>
@@ -118,18 +120,20 @@ export default function CreateGroupView() {
                   </AppText>
                 )}
 
-                <Button
-                  onPress={onSubmit}
-                  isLoading={isSubmitting}
-                  disabled={!isValid || isSubmitting}
-                  className='mt-1'
-                >
-                  {isEditing ? 'Salvar' : 'Cadastrar'}
-                </Button>
+                {/* A margem fica fora do Button: no className ela cortaria o topo arredondado. */}
+                <View className='mt-1'>
+                  <Button
+                    onPress={onSubmit}
+                    isLoading={isSubmitting}
+                    disabled={!isValid || isSubmitting}
+                  >
+                    {isEditing ? 'Salvar' : 'Cadastrar'}
+                  </Button>
+                </View>
               </View>
             )}
-          </View>
-        </SafeAreaView>
+          </DismissKeyboardArea>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );

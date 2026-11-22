@@ -6,7 +6,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/shared/components/AppText';
 import { Button } from '@/shared/components/Button';
@@ -34,6 +34,7 @@ export default function CreateTerrainView() {
     error,
     retry,
   } = useCreateTerrainViewModel();
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-white">
@@ -50,16 +51,15 @@ export default function CreateTerrainView() {
           <HeaderPrimary isOnline={isOnline} />
         )}
 
-        <SafeAreaView
-          edges={isEditing ? ['bottom'] : []}
-          className="flex-1"
-        >
+        {/* O recuo inferior fica no fim da rolagem: num SafeAreaView ele virava
+            uma faixa branca fixa acima do teclado. Na criação, a barra de abas já protege. */}
+        <View className="flex-1">
           <ScrollView
             className="flex-1"
             contentContainerStyle={{
               paddingHorizontal: 16,
               paddingTop: 16,
-              paddingBottom: 32,
+              paddingBottom: 32 + (isEditing ? bottom : 0),
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -156,18 +156,20 @@ export default function CreateTerrainView() {
                   </AppText>
                 )}
 
-                <Button
-                  onPress={onSubmit}
-                  isLoading={isSubmitting}
-                  disabled={!isValid || isSubmitting}
-                  className="mt-1"
-                >
-                  {isEditing ? 'Editar' : 'Cadastrar'}
-                </Button>
+                {/* A margem fica fora do Button: no className ela cortaria o topo arredondado. */}
+                <View className="mt-1">
+                  <Button
+                    onPress={onSubmit}
+                    isLoading={isSubmitting}
+                    disabled={!isValid || isSubmitting}
+                  >
+                    {isEditing ? 'Editar' : 'Cadastrar'}
+                  </Button>
+                </View>
               </View>
             )}
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );

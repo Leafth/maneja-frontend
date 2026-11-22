@@ -42,7 +42,7 @@ export function ConfirmDeleteModal({
       <View className="flex-1">
         {/* Overlay sobre toda a tela */}
         <Pressable
-          className="absolute inset-0 bg-black/40"
+          className="absolute inset-0 bg-black-900/40"
           onPress={handleCancel}
           accessibilityRole="button"
           accessibilityLabel="Cancelar exclusão"
@@ -72,6 +72,27 @@ export function ConfirmDeleteModal({
             </AppText>
 
             <View className="mt-5 flex-row items-center justify-between gap-4">
+              {/* Cancelar */}
+              <Pressable
+                onPress={handleCancel}
+                disabled={isDeleting}
+                accessibilityRole="button"
+                accessibilityLabel="Cancelar exclusão"
+                accessibilityState={{ disabled: isDeleting }}
+                style={({ pressed }) => ({
+                  opacity: pressed || isDeleting ? 0.75 : 1,
+                })}
+                className="h-11 flex-1 items-center justify-center rounded-[12px] bg-gray-300"
+              >
+                <AppText
+                  size="sm"
+                  weight="medium"
+                  className="text-[#374151]"
+                >
+                  Cancelar
+                </AppText>
+              </Pressable>
+
               {/* Excluir */}
               <Pressable
                 onPress={onConfirm}
@@ -82,7 +103,7 @@ export function ConfirmDeleteModal({
                 style={({ pressed }) => ({
                   opacity: pressed || isDeleting ? 0.75 : 1,
                 })}
-                className="h-11 flex-1 items-center justify-center rounded-[12px] bg-[#539F79]"
+                className="h-11 flex-1 items-center justify-center rounded-[12px] bg-support-danger-solid"
               >
                 {isDeleting ? (
                   <ActivityIndicator color={colors.white} />
@@ -95,27 +116,6 @@ export function ConfirmDeleteModal({
                     Excluir
                   </AppText>
                 )}
-              </Pressable>
-
-              {/* Cancelar */}
-              <Pressable
-                onPress={handleCancel}
-                disabled={isDeleting}
-                accessibilityRole="button"
-                accessibilityLabel="Cancelar exclusão"
-                accessibilityState={{ disabled: isDeleting }}
-                style={({ pressed }) => ({
-                  opacity: pressed || isDeleting ? 0.75 : 1,
-                })}
-                className="h-11 flex-1 items-center justify-center rounded-[12px] bg-[#FFD6D6]"
-              >
-                <AppText
-                  size="sm"
-                  weight="medium"
-                  style={{ color: colors.black[700] }}
-                >
-                  Cancelar
-                </AppText>
               </Pressable>
             </View>
           </View>

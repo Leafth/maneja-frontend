@@ -29,6 +29,8 @@ async function syncCreate(group: AnimalGroup): Promise<void> {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
+    currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+    currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
     remoteCreatedAt: remoteGroup.remoteCreatedAt,
     remoteUpdatedAt: remoteGroup.remoteUpdatedAt,
   });
@@ -48,6 +50,8 @@ async function syncUpdate(group: AnimalGroup): Promise<void> {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
+    currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+    currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
     remoteCreatedAt: remoteGroup.remoteCreatedAt,
     remoteUpdatedAt: remoteGroup.remoteUpdatedAt,
   });

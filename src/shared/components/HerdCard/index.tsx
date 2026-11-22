@@ -6,7 +6,8 @@ import colors from '@/styles/colors';
 
 interface IHerdCardProps {
   name: string;
-  location: string;
+  /** null: sem alocação; undefined: ainda carregando. */
+  location?: string | null;
   onPress: () => void;
   onRegisterFeeding: () => void;
   onMove: () => void;
@@ -42,7 +43,9 @@ export function HerdCard({
       </View>
 
       <AppText color='muted' className='mt-1'>
-        Em: {location}
+        {location === null
+          ? 'Sem alocação'
+          : `Em: ${location ?? '—'}`}
       </AppText>
 
       <View className='mt-6 flex-row items-center justify-between'>

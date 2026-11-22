@@ -22,12 +22,13 @@ async function findById(localId: string): Promise<AnimalGroup | null> {
   return animalGroupLocalDataSource.findByLocalId(localId);
 }
 
-async function create(data: CreateAnimalGroupData): Promise<AnimalGroup> {
+async function create(data: CreateAnimalGroupData, accountId?: string): Promise<AnimalGroup> {
   const now = new Date().toISOString();
 
   const group: AnimalGroup = {
     localId: Crypto.randomUUID(),
     remoteId: null,
+    locallyDeletedAt: null,
 
     name: data.name,
     animalCount: data.animalCount,
@@ -42,9 +43,13 @@ async function create(data: CreateAnimalGroupData): Promise<AnimalGroup> {
 
     lastSyncedAt: null,
     lastSyncError: null,
+
+    currentTerrainLocalId: null,
+    currentTerrainRemoteId: null,
+    currentTerrainName: null,
   };
 
-  await animalGroupLocalDataSource.insert(group);
+  await animalGroupLocalDataSource.insert(group, accountId);
 
   return group;
 }
@@ -94,12 +99,6 @@ async function remove(localId: string): Promise<void> {
     return;
   }
 
-  if (group.remoteId === null) {
-    await animalGroupLocalDataSource.deleteByLocalId(localId);
-
-    return;
-  }
-
   await animalGroupLocalDataSource.markPendingDelete(localId);
 }
 
@@ -117,6 +116,8 @@ async function markAsSynced(
     remoteId: string;
     name: string;
     animalCount: number;
+    currentTerrainRemoteId: string | null;
+    currentTerrainName: string | null;
     remoteCreatedAt: string;
     remoteUpdatedAt: string;
   },
@@ -143,6 +144,7 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
     const newLocalGroup: AnimalGroup = {
       localId: Crypto.randomUUID(),
       remoteId: remoteGroup.remoteId,
+      locallyDeletedAt: null,
 
       name: remoteGroup.name,
       animalCount: remoteGroup.animalCount,
@@ -157,6 +159,12 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
 
       lastSyncedAt: now,
       lastSyncError: null,
+
+      currentTerrainLocalId: null,
+
+      currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+
+      currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
     };
 
     await animalGroupLocalDataSource.insert(newLocalGroup);
@@ -165,6 +173,7 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
   }
 
   if (
+    localGroup.locallyDeletedAt !== null ||
     localGroup.syncStatus === 'pending_update' ||
     localGroup.syncStatus === 'pending_delete'
   ) {
@@ -175,7 +184,13 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
     remoteId: remoteGroup.remoteId,
     name: remoteGroup.name,
     animalCount: remoteGroup.animalCount,
+
+    currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,
+
+    currentTerrainName: remoteGroup.currentTerrain?.name ?? null,
+
     remoteCreatedAt: remoteGroup.remoteCreatedAt,
+
     remoteUpdatedAt: remoteGroup.remoteUpdatedAt,
   });
 }

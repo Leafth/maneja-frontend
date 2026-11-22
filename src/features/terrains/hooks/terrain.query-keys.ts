@@ -5,4 +5,12 @@ export const terrainQueryKeys = {
 
   detail: (localId: string) =>
     [...terrainQueryKeys.all, 'detail', localId] as const,
+
+  stateList: () => [...terrainQueryKeys.all, 'state-list'] as const,
+
+  state: (localId: string) =>
+    [...terrainQueryKeys.all, 'state', localId] as const,
+
+  occupations: (localId: string) =>
+    [...terrainQueryKeys.all, 'occupations', localId] as const,
 };

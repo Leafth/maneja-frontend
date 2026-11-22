@@ -4,4 +4,12 @@ export {
   TerrainStatusDTO,
   UpdateTerrainRequestDTO,
   TerrainResponseDTO,
+  TerrainGroupRefDTO,
+  OccupiedStateDetailsDTO,
+  RestingStateDetailsDTO,
+  TerrainStateDTO,
+  TerrainDetailsResponseDTO,
+  TerrainDetailsListResponseDTO,
+  TerrainOccupationDTO,
+  TerrainOccupationListResponseDTO,
 } from './terrain.dto';

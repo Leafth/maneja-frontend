@@ -1,3 +1,5 @@
+import type { AnimalGroupHistoryKind } from '../models';
+
 export const animalGroupQueryKeys = {
   all: ['animal-groups'] as const,
 
@@ -9,4 +11,13 @@ export const animalGroupQueryKeys = {
 
   detail: (localId: string) =>
     [...animalGroupQueryKeys.details(), localId] as const,
+
+  currentTerrains: (localIds: string[]) =>
+    [...animalGroupQueryKeys.all, 'current-terrains', localIds] as const,
+
+  occupations: (localId: string) =>
+    [...animalGroupQueryKeys.all, 'occupations', localId] as const,
+
+  history: (localId: string, kind: AnimalGroupHistoryKind) =>
+    [...animalGroupQueryKeys.all, 'history', localId, kind] as const,
 };

@@ -2,8 +2,20 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { createAnimalGroupsTable } from './001-create-animal-groups';
 import { createTerrainsTable } from './002-create-terrains';
+import { createFeedTable } from './003-create-feed';
+import { createFeedMovimentsTable } from './004-create-feed-moviments';
+import { createMovementCommandsTable } from './005-create-movement-commands';
+import { addCurrentTerrainToAnimalGroups } from './006-add-current-terrain-to-animal-groups';
+import { createOccupationsTable } from './007-create-occupations';
+import { addLocallyDeletedAtToFeeds } from './008-add-locally-deleted-at-to-feeds';
 
-const DATABASE_VERSION = 2;
+import { createFeedRequirements } from './009-create-feed-requirements';
+import { createFeedingRecords } from './010-create-feeding-records';
+
+import { preserveDeletedParents } from './011-preserve-deleted-parents';
+import { addFeedCoverage } from './012-add-feed-coverage';
+
+const DATABASE_VERSION = 12;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -23,6 +35,45 @@ export async function migrateDatabase(database: SQLiteDatabase) {
 
     if (currentVersion < 2) {
       await createTerrainsTable(database);
+    }
+
+    if (currentVersion < 3) {
+      await createFeedTable(database);
+    }
+
+    if (currentVersion < 4) {
+      await createFeedMovimentsTable(database);
+    }
+
+    if (currentVersion < 5) {
+      await createMovementCommandsTable(database);
+    }
+
+    if (currentVersion < 6) {
+      await addCurrentTerrainToAnimalGroups(database);
+    }
+
+    if (currentVersion < 7) {
+      await createOccupationsTable(database);
+    }
+
+    if (currentVersion < 8) {
+      await addLocallyDeletedAtToFeeds(database);
+    }
+
+    if (currentVersion < 9) {
+      await createFeedRequirements(database);
+    }
+    if (currentVersion < 10) {
+      await createFeedingRecords(database);
+    }
+
+    if (currentVersion < 11) {
+      await preserveDeletedParents(database);
+    }
+
+    if (currentVersion < 12) {
+      await addFeedCoverage(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

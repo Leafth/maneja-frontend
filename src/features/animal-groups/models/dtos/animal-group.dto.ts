@@ -1,9 +1,15 @@
+export interface AnimalGroupTerrainRefDTO {
+  id: string;
+  name: string;
+}
+
 export interface AnimalGroupResponseDTO {
   id: string;
   name: string;
   animal_count: number;
   created_at: string;
   updated_at: string;
+  current_terrain: AnimalGroupTerrainRefDTO | null;
 }
 
 export interface CreateAnimalGroupRequestDTO {
@@ -22,6 +28,41 @@ export interface UpdateAnimalGroupRequestDTO {
 
 export interface AnimalGroupListResponseDTO {
   data: AnimalGroupResponseDTO[];
+
+  meta: {
+    page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
+export type AnimalGroupDetailsResponseDTO = AnimalGroupResponseDTO;
+
+export interface AnimalGroupDetailsListResponseDTO {
+  data: AnimalGroupDetailsResponseDTO[];
+
+  meta: {
+    page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
+export interface AnimalGroupOccupationDTO {
+  id: string;
+  started_at: string;
+  ended_at: string | null;
+  terrain: AnimalGroupTerrainRefDTO;
+}
+
+export interface AnimalGroupOccupationListResponseDTO {
+  group: {
+    id: string;
+    name: string;
+  };
+  data: AnimalGroupOccupationDTO[];
 
   meta: {
     page: number;

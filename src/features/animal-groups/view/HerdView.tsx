@@ -19,6 +19,7 @@ import { useHerdViewModel } from '../viewmodels/use-herd-view-model';
 export default function HerdView() {
   const {
     herds,
+    getCurrentTerrainName,
     isLoading,
     error,
     retry,
@@ -56,16 +57,16 @@ export default function HerdView() {
           ) : !hasHerds ? (
             <View className='mt-2'>
               <AppText size='sm' color='muted'>
-                Nada por aqui!
+                Você ainda não tem grupos de animais.
               </AppText>
 
               <AppText size='sm' color='muted'>
-                Cadastre seu primeiro rebanho.
+                Toque no + para cadastrar o primeiro.
               </AppText>
             </View>
           ) : (
             <AppText size='sm' color='muted' className='mt-2'>
-              Cadastre seus grupos de animais.
+              Veja seus grupos de animais e onde cada um está.
             </AppText>
           )}
         </View>
@@ -80,7 +81,7 @@ export default function HerdView() {
                 <HerdCard
                   key={herd.localId}
                   name={herd.name}
-                  location='—'
+                  location={getCurrentTerrainName(herd.localId)}
                   onPress={() => handleOpenGroup(herd.localId)}
                   onRegisterFeeding={() =>
                     handleRegisterFeeding(herd.localId)

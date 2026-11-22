@@ -1,10 +1,14 @@
-import { getDatabase } from '@/infrastructure/database/database';
+import {
+  getDatabase,
+  withDatabaseTransaction,
+} from '@/infrastructure/database/database';
 import type { TerrainStatus } from '../models/terrain-status.model';
 import type { Terrain } from '../models/terrain.model';
 
 interface TerrainRow {
   local_id: string;
   remote_id: string | null;
+  locally_deleted_at: string | null;
 
   name: string;
   rest_days: number;
@@ -26,6 +30,7 @@ function toTerrain(row: TerrainRow): Terrain {
   return {
     localId: row.local_id,
     remoteId: row.remote_id,
+    locallyDeletedAt: row.locally_deleted_at,
 
     name: row.name,
     restDays: row.rest_days,
@@ -51,8 +56,9 @@ async function findAll(): Promise<Terrain[]> {
     `
       SELECT *
       FROM terrains
-      WHERE sync_status != 'pending_delete'
-      ORDER BY local_updated_at DESC
+      WHERE locally_deleted_at IS NULL AND sync_status != 'pending_delete'
+      -- Mais recentes primeiro, pela data de cadastro (estável na sincronização).
+      ORDER BY COALESCE(remote_created_at, local_created_at) DESC
     `,
   );
 
@@ -66,7 +72,7 @@ async function findByLocalId(localId: string): Promise<Terrain | null> {
     `
       SELECT *
       FROM terrains
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
       LIMIT 1
     `,
     localId,
@@ -128,38 +134,76 @@ async function insert(terrain: Terrain): Promise<void> {
 }
 
 async function update(terrain: Terrain): Promise<void> {
-  const database = await getDatabase();
+  await withDatabaseTransaction(async (database) => {
+    /*
+     * Atualiza o próprio terreno.
+     */
+    await database.runAsync(
+      `
+        UPDATE terrains
+        SET
+          remote_id = ?,
+          name = ?,
+          rest_days = ?,
+          status = ?,
+          sync_status = ?,
+          remote_created_at = ?,
+          remote_updated_at = ?,
+          local_created_at = ?,
+          local_updated_at = ?,
+          last_synced_at = ?,
+          last_sync_error = ?
+        WHERE local_id = ? AND locally_deleted_at IS NULL
+      `,
+      [
+        terrain.remoteId,
+        terrain.name,
+        terrain.restDays,
+        terrain.status,
+        terrain.syncStatus,
+        terrain.remoteCreatedAt,
+        terrain.remoteUpdatedAt,
+        terrain.localCreatedAt,
+        terrain.localUpdatedAt,
+        terrain.lastSyncedAt,
+        terrain.lastSyncError,
+        terrain.localId,
+      ],
+    );
 
-  await database.runAsync(
-    `
-      UPDATE terrains
-      SET
-        remote_id = ?,
-        name = ?,
-        rest_days = ?,
-        status = ?,
-        sync_status = ?,
-        remote_created_at = ?,
-        remote_updated_at = ?,
-        local_created_at = ?,
-        local_updated_at = ?,
-        last_synced_at = ?,
-        last_sync_error = ?
-      WHERE local_id = ?
-    `,
-    terrain.remoteId,
-    terrain.name,
-    terrain.restDays,
-    terrain.status,
-    terrain.syncStatus,
-    terrain.remoteCreatedAt,
-    terrain.remoteUpdatedAt,
-    terrain.localCreatedAt,
-    terrain.localUpdatedAt,
-    terrain.lastSyncedAt,
-    terrain.lastSyncError,
-    terrain.localId,
-  );
+    /*
+     * O nome do terreno é duplicado no grupo como cache.
+     *
+     * Como current_terrain_name não representa uma edição
+     * do grupo, NÃO alteramos o sync_status do grupo.
+     */
+    await database.runAsync(
+      `
+        UPDATE animal_groups
+        SET current_terrain_name = ?
+        WHERE
+          current_terrain_local_id = ?
+          OR (
+            ? IS NOT NULL
+            AND current_terrain_remote_id = ?
+          )
+      `,
+      [terrain.name, terrain.localId, terrain.remoteId, terrain.remoteId],
+    );
+    await database.runAsync(
+      `
+        UPDATE occupations
+        SET terrain_name = ?
+        WHERE
+          terrain_local_id = ?
+          OR (
+            ? IS NOT NULL
+            AND terrain_remote_id = ?
+          )
+      `,
+      [terrain.name, terrain.localId, terrain.remoteId, terrain.remoteId],
+    );
+  });
 }
 
 async function markPendingDelete(
@@ -175,7 +219,7 @@ async function markPendingDelete(
         sync_status = 'pending_delete',
         local_updated_at = ?,
         last_sync_error = NULL
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     localUpdatedAt,
     localId,
@@ -187,8 +231,10 @@ async function deleteByLocalId(localId: string): Promise<void> {
 
   await database.runAsync(
     `
-      DELETE FROM terrains
-      WHERE local_id = ?
+      UPDATE terrains
+        SET sync_status = 'synced', locally_deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+            last_synced_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), last_sync_error = NULL
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     localId,
   );
@@ -201,7 +247,7 @@ async function findPending(): Promise<Terrain[]> {
     `
       SELECT *
       FROM terrains
-      WHERE sync_status IN (
+      WHERE locally_deleted_at IS NULL AND sync_status IN (
         'pending_create',
         'pending_update',
         'pending_delete'
@@ -220,7 +266,7 @@ async function setSyncError(localId: string, error: string): Promise<void> {
     `
       UPDATE terrains
       SET last_sync_error = ?
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     error,
     localId,
@@ -249,12 +295,12 @@ async function markAsSynced(
         name = ?,
         rest_days = ?,
         status = ?,
-        sync_status = 'synced',
+        sync_status = CASE WHEN sync_status = 'pending_delete' THEN 'pending_delete' ELSE 'synced' END,
         remote_created_at = ?,
         remote_updated_at = ?,
         last_synced_at = ?,
         last_sync_error = NULL
-      WHERE local_id = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
     `,
     data.remoteId,
     data.name,
@@ -263,6 +309,27 @@ async function markAsSynced(
     data.remoteCreatedAt,
     data.remoteUpdatedAt,
     data.syncedAt,
+    localId,
+  );
+}
+
+async function cancelPendingDelete(
+  localId: string,
+  error: string,
+): Promise<void> {
+  const database = await getDatabase();
+
+  await database.runAsync(
+    `
+      UPDATE terrains
+      SET
+        sync_status = 'synced',
+        local_updated_at = ?,
+        last_sync_error = ?
+      WHERE local_id = ? AND locally_deleted_at IS NULL
+    `,
+    new Date().toISOString(),
+    error,
     localId,
   );
 }
@@ -282,4 +349,6 @@ export const terrainLocalDataSource = {
 
   setSyncError,
   markAsSynced,
+
+  cancelPendingDelete,
 };

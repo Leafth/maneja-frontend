@@ -1,7 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { useDeleteTerrain, useTerrain } from '../hooks';
+import {
+  useDeleteTerrain,
+  useTerrain,
+  useTerrainOccupations,
+  useTerrainStateDetails,
+} from '../hooks';
+import { buildTerrainHistory } from '../utils/build-terrain-history';
 
 export function useTerrainDetailsViewModel() {
   const router = useRouter();
@@ -10,15 +16,24 @@ export function useTerrainDetailsViewModel() {
     terrainId?: string | string[];
   }>();
 
-  const terrainId =
-    typeof routeTerrainId === 'string' ? routeTerrainId : '';
+  const terrainId = typeof routeTerrainId === 'string' ? routeTerrainId : '';
 
   const terrainQuery = useTerrain(terrainId || undefined);
+  const stateQuery = useTerrainStateDetails(terrainId || undefined);
+  const occupationsQuery = useTerrainOccupations(terrainId || undefined);
   const deleteMutation = useDeleteTerrain();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const terrain = terrainQuery.data ?? null;
+  const stateDetails = stateQuery.data ?? null;
+  const status = stateDetails?.status ?? terrain?.status;
+
+  const history = useMemo(
+    () =>
+      status ? buildTerrainHistory(occupationsQuery.data ?? [], status) : [],
+    [occupationsQuery.data, status],
+  );
 
   const isUnavailable =
     !terrainId ||
@@ -34,8 +49,21 @@ export function useTerrainDetailsViewModel() {
     }
   }
 
+  function handleAllocateGroup() {
+    if (isUnavailable) {
+      return;
+    }
+
+    router.push({
+      pathname: '/movement/select-group',
+      params: { terrainId },
+    });
+  }
+
   function handleEdit() {
-    if (isUnavailable || deleteMutation.isPending) { return; }
+    if (isUnavailable || deleteMutation.isPending) {
+      return;
+    }
 
     router.push({
       pathname: '/terrain/[terrainId]/edit',
@@ -44,23 +72,23 @@ export function useTerrainDetailsViewModel() {
   }
 
   function handleDelete() {
-    if (isUnavailable || deleteMutation.isPending) { return; }
+    if (isUnavailable || deleteMutation.isPending || status === 'occupied') {
+      return;
+    }
 
     setIsDeleteModalOpen(true);
   }
 
   function handleCancelDelete() {
-    if (deleteMutation.isPending) { return; }
+    if (deleteMutation.isPending) {
+      return;
+    }
 
     setIsDeleteModalOpen(false);
   }
 
   function handleConfirmDelete() {
-    if (
-      !terrainId ||
-      isUnavailable ||
-      deleteMutation.isPending
-    ) {
+    if (!terrainId || isUnavailable || deleteMutation.isPending) {
       return;
     }
 
@@ -74,12 +102,26 @@ export function useTerrainDetailsViewModel() {
 
   function retry() {
     void terrainQuery.refetch();
+    void stateQuery.refetch();
+  }
+
+  function retryHistory() {
+    void occupationsQuery.refetch();
   }
 
   return {
     terrain,
-    isLoading: terrainQuery.isPending && Boolean(terrainId),
-    loadError: terrainQuery.error,
+    stateDetails,
+    showAllocateGroup: status === 'available',
+
+    history,
+    isHistoryLoading: occupationsQuery.isPending && Boolean(terrainId),
+    hasHistoryError: occupationsQuery.isError,
+    retryHistory,
+
+    isLoading:
+      (terrainQuery.isPending || stateQuery.isPending) && Boolean(terrainId),
+    loadError: terrainQuery.error ?? stateQuery.error,
     isUnavailable,
 
     isDeleteModalOpen,
@@ -88,6 +130,7 @@ export function useTerrainDetailsViewModel() {
 
     goBack,
     retry,
+    handleAllocateGroup,
     handleEdit,
     handleDelete,
     handleCancelDelete,

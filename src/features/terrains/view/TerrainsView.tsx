@@ -60,11 +60,11 @@ export default function TerrainsView() {
           ) : showEmptyState ? (
             <View className="mt-2">
               <AppText size="sm" color="muted">
-                Nada por aqui!
+                Você ainda não tem terrenos.
               </AppText>
 
               <AppText size="sm" color="muted">
-                Cadastre seu primeiro terreno.
+                Toque no + para cadastrar o primeiro.
               </AppText>
             </View>
           ) : (
@@ -73,8 +73,8 @@ export default function TerrainsView() {
               color="muted"
               className="mt-2"
             >
-              Gerencie suas áreas de manejo e acompanhe
-              a disponibilidade dos terrenos.
+              Veja seus terrenos e quais estão livres, em uso
+              ou em descanso.
             </AppText>
           )}
         </View>

@@ -4,7 +4,10 @@ import { terrainMapper } from '../mapper/terrain.mapper';
 import type {
   CreateTerrainRequestDTO,
   RemoteTerrain,
+  TerrainDetailsResponseDTO,
   TerrainListResponseDTO,
+  TerrainOccupation,
+  TerrainOccupationListResponseDTO,
   TerrainResponseDTO,
   UpdateTerrainRequestDTO,
 } from '../models';
@@ -84,9 +87,35 @@ async function remove(remoteId: string): Promise<void> {
   await api.delete(`/terrains/${remoteId}`);
 }
 
+async function findDetails(
+  remoteId: string,
+): Promise<TerrainDetailsResponseDTO> {
+  const response = await api.get<TerrainDetailsResponseDTO>(
+    `/terrains/${remoteId}`,
+  );
+
+  return response.data;
+}
+
+async function listOccupations(remoteId: string): Promise<TerrainOccupation[]> {
+  const response = await api.get<TerrainOccupationListResponseDTO>(
+    `/terrains/${remoteId}/occupations`,
+    {
+      params: {
+        page: 1,
+        per_page: 100,
+      },
+    },
+  );
+
+  return response.data.data.map(terrainMapper.toOccupationModel);
+}
+
 export const terrainService = {
   list,
+  listOccupations,
   find,
+  findDetails,
   create,
   update,
   remove,

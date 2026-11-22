@@ -1,11 +1,14 @@
-import { Tabs } from 'expo-router';
+import { Tabs } from 'expo-router/js-tabs';
 
 import { BottomNavigation } from '@/shared/components/BottomNavigation';
+
+export const unstable_settings = {
+  initialRouteName: 'home',
+};
 
 export default function TabsLayout() {
   return (
     <Tabs
-      initialRouteName='home'
       tabBar={(props) => <BottomNavigation {...props} />}
       screenOptions={{ headerShown: false }}
     >

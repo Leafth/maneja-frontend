@@ -1,4 +1,11 @@
-import { BlurEvent, FocusEvent, TextInput, TextInputProps, View } from 'react-native';
+import {
+  BlurEvent,
+  FocusEvent,
+  TextInput,
+  type TextInputInstance,
+  TextInputProps,
+  View,
+} from 'react-native';
 
 import colors from '@/styles/colors';
 import { useState } from 'react';
@@ -11,7 +18,7 @@ export interface IInputProps extends BaseTextInputProps {
   error?: boolean;
   disabled?: boolean;
   InputComponent?: React.ComponentType<TextInputProps>;
-  ref?: React.Ref<TextInput>;
+  ref?: React.Ref<TextInputInstance>;
   formatter?: (value: string) => string;
   suffix?: string;
 }
