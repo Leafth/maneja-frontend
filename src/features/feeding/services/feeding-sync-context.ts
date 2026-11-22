@@ -14,7 +14,7 @@ export async function ensureFeedingGroup(accountId: string, groupLocalId: string
   const groups = await feedingGroupRepository.list(accountId);
   if (groups.some((group) => group.localId === groupLocalId)) { return; }
 
-  const group = await animalGroupRepository.findById(groupLocalId);
+  const group = await animalGroupRepository.findById(accountId, groupLocalId);
   if (!group || group.syncStatus === 'pending_delete') {
     throw new Error('Grupo não encontrado. Selecione um grupo no rebanho.');
   }

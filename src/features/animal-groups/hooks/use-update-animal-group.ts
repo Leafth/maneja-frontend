@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { useAuthStore } from '@/features/auth/stores/auth.store';
 import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
 import {
@@ -17,23 +18,35 @@ interface UpdateAnimalGroupVariables {
 export function useUpdateAnimalGroup() {
   const queryClient = useQueryClient();
 
+  const accountId = useAuthStore((state) => state.user?.id);
+
   return useMutation({
     networkMode: 'always',
-    mutationFn: ({ localId, data }: UpdateAnimalGroupVariables) =>
-      animalGroupRepository.update(localId, data),
+
+    mutationFn: ({ localId, data }: UpdateAnimalGroupVariables) => {
+      if (!accountId) {
+        throw new Error('Conta não identificada.');
+      }
+
+      return animalGroupRepository.update(accountId, localId, data);
+    },
 
     onSuccess: async (group) => {
+      if (!accountId) {
+        return;
+      }
+
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: animalGroupQueryKeys.lists(),
+          queryKey: animalGroupQueryKeys.lists(accountId),
         }),
 
         queryClient.invalidateQueries({
-          queryKey: animalGroupQueryKeys.detail(group.localId),
+          queryKey: animalGroupQueryKeys.detail(accountId, group.localId),
         }),
       ]);
 
-      void syncOrchestrator.sync();
+      void syncOrchestrator.sync(accountId);
     },
   });
 }

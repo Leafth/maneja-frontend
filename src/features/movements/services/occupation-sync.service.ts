@@ -7,7 +7,7 @@ import { terrainRepository } from '@/features/terrains/repositories/terrain.repo
 import { occupationRepository } from '../repositories/occupation.repository';
 
 async function pull(accountId: string): Promise<void> {
-  const groups = await animalGroupRepository.findAll();
+  const groups = await animalGroupRepository.findAll(accountId);
 
   for (const group of groups) {
     if (!group.remoteId || group.syncStatus === 'pending_delete') {
@@ -25,7 +25,7 @@ async function pull(accountId: string): Promise<void> {
         }
 
         const terrain = occupation.terrain.remoteId
-          ? await terrainRepository.findByRemoteId(occupation.terrain.remoteId)
+          ? await terrainRepository.findByRemoteId(accountId, occupation.terrain.remoteId)
           : null;
 
         await occupationRepository.upsertRemote({

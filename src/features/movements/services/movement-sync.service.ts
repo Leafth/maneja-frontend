@@ -29,9 +29,10 @@ async function sync(accountId: string): Promise<void> {
   const queued = await movementCommandRepository.findQueued(accountId);
 
   for (const command of queued) {
-    const group = await animalGroupRepository.findById(command.groupLocalId);
+    const group = await animalGroupRepository.findById(accountId, command.groupLocalId);
 
     const destination = await terrainRepository.findByLocalId(
+      accountId,
       command.destinationTerrainLocalId,
     );
 

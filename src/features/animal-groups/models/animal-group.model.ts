@@ -2,6 +2,7 @@ import type { SyncStatus } from '@/shared/models';
 
 export interface AnimalGroup {
   localId: string;
+  accountId: string;
   remoteId: string | null;
   locallyDeletedAt: string | null;
 

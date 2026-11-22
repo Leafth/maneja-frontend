@@ -1,9 +1,15 @@
-import { withDatabase, withDatabaseTransaction } from '@/infrastructure/database/database';
+import {
+  withDatabase,
+  withDatabaseTransaction,
+} from '@/infrastructure/database/database';
 
 import { SyncStatus } from '@/shared/models';
+
 import type { AnimalGroup } from '../models';
+
 interface AnimalGroupRow {
   local_id: string;
+  account_id: string;
   remote_id: string | null;
   locally_deleted_at: string | null;
 
@@ -48,6 +54,8 @@ interface MarkAnimalGroupSyncedData {
 function toModel(row: AnimalGroupRow): AnimalGroup {
   return {
     localId: row.local_id,
+    accountId: row.account_id,
+
     remoteId: row.remote_id,
     locallyDeletedAt: row.locally_deleted_at,
 
@@ -66,66 +74,82 @@ function toModel(row: AnimalGroupRow): AnimalGroup {
     lastSyncError: row.last_sync_error,
 
     currentTerrainLocalId: row.current_terrain_local_id,
-
     currentTerrainRemoteId: row.current_terrain_remote_id,
-
     currentTerrainName: row.current_terrain_name,
   };
 }
 
-async function findAll(): Promise<AnimalGroup[]> {
+async function findAll(accountId: string): Promise<AnimalGroup[]> {
   const rows = await withDatabase((database) =>
-    database.getAllAsync<AnimalGroupRow>(`
-      SELECT *
-      FROM animal_groups
-      WHERE locally_deleted_at IS NULL AND sync_status != 'pending_delete'
-      -- Mais recentes primeiro, pela data de cadastro (estável na sincronização).
-      ORDER BY COALESCE(remote_created_at, local_created_at) DESC
-    `),
+    database.getAllAsync<AnimalGroupRow>(
+      `
+        SELECT *
+        FROM animal_groups
+        WHERE account_id = ?
+          AND locally_deleted_at IS NULL
+          AND sync_status != 'pending_delete'
+        ORDER BY COALESCE(
+          remote_created_at,
+          local_created_at
+        ) DESC
+      `,
+      [accountId],
+    ),
   );
 
   return rows.map(toModel);
 }
 
-async function findByLocalId(localId: string): Promise<AnimalGroup | null> {
+async function findByLocalId(
+  accountId: string,
+  localId: string,
+): Promise<AnimalGroup | null> {
   const row = await withDatabase((database) =>
     database.getFirstAsync<AnimalGroupRow>(
       `
         SELECT *
         FROM animal_groups
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
         LIMIT 1
       `,
-      [localId],
+      [accountId, localId],
     ),
   );
 
   return row ? toModel(row) : null;
 }
 
-async function findByRemoteId(remoteId: string): Promise<AnimalGroup | null> {
+async function findByRemoteId(
+  accountId: string,
+  remoteId: string,
+): Promise<AnimalGroup | null> {
   const row = await withDatabase((database) =>
     database.getFirstAsync<AnimalGroupRow>(
       `
         SELECT *
         FROM animal_groups
-        WHERE remote_id = ?
+        WHERE account_id = ?
+          AND remote_id = ?
         LIMIT 1
       `,
-      [remoteId],
+      [accountId, remoteId],
     ),
   );
 
   return row ? toModel(row) : null;
 }
 
-async function insert(group: AnimalGroup, accountId?: string): Promise<void> {
+async function insert(group: AnimalGroup): Promise<void> {
   await withDatabaseTransaction(async (database) => {
     await database.runAsync(
       `
         INSERT INTO animal_groups (
           local_id,
+          account_id,
           remote_id,
+          locally_deleted_at,
           name,
           animal_count,
           sync_status,
@@ -139,32 +163,52 @@ async function insert(group: AnimalGroup, accountId?: string): Promise<void> {
           current_terrain_remote_id,
           current_terrain_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (
+          ?, ?, ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, ?, ?
+        )
       `,
       [
         group.localId,
+        group.accountId,
         group.remoteId,
+        group.locallyDeletedAt,
+
         group.name,
         group.animalCount,
+
         group.syncStatus,
+
         group.remoteCreatedAt,
         group.remoteUpdatedAt,
+
         group.localCreatedAt,
         group.localUpdatedAt,
+
         group.lastSyncedAt,
         group.lastSyncError,
+
         group.currentTerrainLocalId,
         group.currentTerrainRemoteId,
         group.currentTerrainName,
       ],
     );
-    if (accountId) {
-      await database.runAsync('INSERT INTO feeding_group_accounts(group_local_id, account_id) VALUES (?, ?)', [group.localId, accountId]);
-    }
+
+    await database.runAsync(
+      `
+        INSERT OR IGNORE INTO feeding_group_accounts (
+          group_local_id,
+          account_id
+        )
+        VALUES (?, ?)
+      `,
+      [group.localId, group.accountId],
+    );
   });
 }
 
 async function update(
+  accountId: string,
   localId: string,
   data: UpdateAnimalGroupLocalData,
 ): Promise<void> {
@@ -178,20 +222,27 @@ async function update(
           sync_status = ?,
           local_updated_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
       `,
       [
         data.name,
         data.animalCount,
         data.syncStatus,
         data.localUpdatedAt,
+
+        accountId,
         localId,
       ],
     ),
   );
 }
 
-async function markPendingDelete(localId: string): Promise<void> {
+async function markPendingDelete(
+  accountId: string,
+  localId: string,
+): Promise<void> {
   await withDatabase((database) =>
     database.runAsync(
       `
@@ -200,54 +251,78 @@ async function markPendingDelete(localId: string): Promise<void> {
           sync_status = 'pending_delete',
           local_updated_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
       `,
-      [new Date().toISOString(), localId],
+      [new Date().toISOString(), accountId, localId],
     ),
   );
 }
 
-async function deleteByLocalId(localId: string): Promise<void> {
+async function deleteByLocalId(
+  accountId: string,
+  localId: string,
+): Promise<void> {
   await withDatabase((database) =>
     database.runAsync(
       `
         UPDATE animal_groups
-        SET sync_status = 'synced', locally_deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
-            last_synced_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), last_sync_error = NULL
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+        SET
+          sync_status = 'synced',
+          locally_deleted_at =
+            strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+          last_synced_at =
+            strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+          last_sync_error = NULL
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
       `,
-      [localId],
+      [accountId, localId],
     ),
   );
 }
 
-async function findPending(): Promise<AnimalGroup[]> {
+async function findPending(accountId: string): Promise<AnimalGroup[]> {
   const rows = await withDatabase((database) =>
-    database.getAllAsync<AnimalGroupRow>(`
-      SELECT *
-      FROM animal_groups
-      WHERE locally_deleted_at IS NULL AND sync_status != 'synced'
-      ORDER BY local_updated_at ASC
-    `),
+    database.getAllAsync<AnimalGroupRow>(
+      `
+        SELECT *
+        FROM animal_groups
+        WHERE account_id = ?
+          AND locally_deleted_at IS NULL
+          AND sync_status != 'synced'
+        ORDER BY local_updated_at ASC
+      `,
+      [accountId],
+    ),
   );
 
   return rows.map(toModel);
 }
 
-async function setSyncError(localId: string, message: string): Promise<void> {
+async function setSyncError(
+  accountId: string,
+  localId: string,
+  message: string,
+): Promise<void> {
   await withDatabase((database) =>
     database.runAsync(
       `
         UPDATE animal_groups
         SET last_sync_error = ?
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
       `,
-      [message, localId],
+      [message, accountId, localId],
     ),
   );
 }
 
 async function markAsSynced(
+  accountId: string,
   localId: string,
   data: MarkAnimalGroupSyncedData,
 ): Promise<void> {
@@ -265,31 +340,46 @@ async function markAsSynced(
           current_terrain_local_id = (
             SELECT local_id
             FROM terrains
-            WHERE remote_id = ?
+            WHERE account_id = ?
+              AND remote_id = ?
             LIMIT 1
           ),
+
           current_terrain_remote_id = ?,
           current_terrain_name = ?,
 
-          sync_status = CASE WHEN sync_status = 'pending_delete' THEN 'pending_delete' ELSE 'synced' END,
+          sync_status = CASE
+            WHEN sync_status = 'pending_delete'
+              THEN 'pending_delete'
+            ELSE 'synced'
+          END,
+
           remote_created_at = ?,
           remote_updated_at = ?,
           last_synced_at = ?,
           last_sync_error = NULL
-        WHERE local_id = ? AND locally_deleted_at IS NULL
+
+        WHERE account_id = ?
+          AND local_id = ?
+          AND locally_deleted_at IS NULL
       `,
       [
         data.remoteId,
         data.name,
         data.animalCount,
 
+        accountId,
         data.currentTerrainRemoteId,
+
         data.currentTerrainRemoteId,
         data.currentTerrainName,
 
         data.remoteCreatedAt,
         data.remoteUpdatedAt,
+
         now,
+
+        accountId,
         localId,
       ],
     ),

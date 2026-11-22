@@ -14,19 +14,27 @@ export interface UpdateAnimalGroupData {
   animalCount: number;
 }
 
-async function findAll(): Promise<AnimalGroup[]> {
-  return animalGroupLocalDataSource.findAll();
+async function findAll(accountId: string): Promise<AnimalGroup[]> {
+  return animalGroupLocalDataSource.findAll(accountId);
 }
 
-async function findById(localId: string): Promise<AnimalGroup | null> {
-  return animalGroupLocalDataSource.findByLocalId(localId);
+async function findById(
+  accountId: string,
+  localId: string,
+): Promise<AnimalGroup | null> {
+  return animalGroupLocalDataSource.findByLocalId(accountId, localId);
 }
 
-async function create(data: CreateAnimalGroupData, accountId?: string): Promise<AnimalGroup> {
+async function create(
+  accountId: string,
+  data: CreateAnimalGroupData,
+): Promise<AnimalGroup> {
   const now = new Date().toISOString();
 
   const group: AnimalGroup = {
     localId: Crypto.randomUUID(),
+    accountId,
+
     remoteId: null,
     locallyDeletedAt: null,
 
@@ -49,16 +57,20 @@ async function create(data: CreateAnimalGroupData, accountId?: string): Promise<
     currentTerrainName: null,
   };
 
-  await animalGroupLocalDataSource.insert(group, accountId);
+  await animalGroupLocalDataSource.insert(group);
 
   return group;
 }
 
 async function update(
+  accountId: string,
   localId: string,
   data: UpdateAnimalGroupData,
 ): Promise<AnimalGroup> {
-  const currentGroup = await animalGroupLocalDataSource.findByLocalId(localId);
+  const currentGroup = await animalGroupLocalDataSource.findByLocalId(
+    accountId,
+    localId,
+  );
 
   if (!currentGroup) {
     throw new Error('Grupo de animais não encontrado.');
@@ -75,7 +87,7 @@ async function update(
 
   const localUpdatedAt = new Date().toISOString();
 
-  await animalGroupLocalDataSource.update(localId, {
+  await animalGroupLocalDataSource.update(accountId, localId, {
     name: data.name,
     animalCount: data.animalCount,
     syncStatus,
@@ -84,57 +96,77 @@ async function update(
 
   return {
     ...currentGroup,
+
     name: data.name,
     animalCount: data.animalCount,
+
     syncStatus,
     localUpdatedAt,
+
     lastSyncError: null,
   };
 }
 
-async function remove(localId: string): Promise<void> {
-  const group = await animalGroupLocalDataSource.findByLocalId(localId);
+async function remove(accountId: string, localId: string): Promise<void> {
+  const group = await animalGroupLocalDataSource.findByLocalId(
+    accountId,
+    localId,
+  );
 
   if (!group) {
     return;
   }
 
-  await animalGroupLocalDataSource.markPendingDelete(localId);
+  await animalGroupLocalDataSource.markPendingDelete(accountId, localId);
 }
 
-async function findPending(): Promise<AnimalGroup[]> {
-  return animalGroupLocalDataSource.findPending();
+async function findPending(accountId: string): Promise<AnimalGroup[]> {
+  return animalGroupLocalDataSource.findPending(accountId);
 }
 
-async function findByRemoteId(remoteId: string): Promise<AnimalGroup | null> {
-  return animalGroupLocalDataSource.findByRemoteId(remoteId);
+async function findByRemoteId(
+  accountId: string,
+  remoteId: string,
+): Promise<AnimalGroup | null> {
+  return animalGroupLocalDataSource.findByRemoteId(accountId, remoteId);
 }
 
 async function markAsSynced(
+  accountId: string,
   localId: string,
   data: {
     remoteId: string;
     name: string;
     animalCount: number;
+
     currentTerrainRemoteId: string | null;
     currentTerrainName: string | null;
+
     remoteCreatedAt: string;
     remoteUpdatedAt: string;
   },
 ): Promise<void> {
-  await animalGroupLocalDataSource.markAsSynced(localId, data);
+  await animalGroupLocalDataSource.markAsSynced(accountId, localId, data);
 }
 
-async function setSyncError(localId: string, message: string): Promise<void> {
-  await animalGroupLocalDataSource.setSyncError(localId, message);
+async function setSyncError(
+  accountId: string,
+  localId: string,
+  message: string,
+): Promise<void> {
+  await animalGroupLocalDataSource.setSyncError(accountId, localId, message);
 }
 
-async function deleteLocal(localId: string): Promise<void> {
-  await animalGroupLocalDataSource.deleteByLocalId(localId);
+async function deleteLocal(accountId: string, localId: string): Promise<void> {
+  await animalGroupLocalDataSource.deleteByLocalId(accountId, localId);
 }
 
-async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
+async function upsertFromRemote(
+  accountId: string,
+  remoteGroup: RemoteAnimalGroup,
+): Promise<void> {
   const localGroup = await animalGroupLocalDataSource.findByRemoteId(
+    accountId,
     remoteGroup.remoteId,
   );
 
@@ -143,6 +175,8 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
 
     const newLocalGroup: AnimalGroup = {
       localId: Crypto.randomUUID(),
+      accountId,
+
       remoteId: remoteGroup.remoteId,
       locallyDeletedAt: null,
 
@@ -152,6 +186,7 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
       syncStatus: 'synced',
 
       remoteCreatedAt: remoteGroup.remoteCreatedAt,
+
       remoteUpdatedAt: remoteGroup.remoteUpdatedAt,
 
       localCreatedAt: now,
@@ -180,9 +215,11 @@ async function upsertFromRemote(remoteGroup: RemoteAnimalGroup): Promise<void> {
     return;
   }
 
-  await animalGroupLocalDataSource.markAsSynced(localGroup.localId, {
+  await animalGroupLocalDataSource.markAsSynced(accountId, localGroup.localId, {
     remoteId: remoteGroup.remoteId,
+
     name: remoteGroup.name,
+
     animalCount: remoteGroup.animalCount,
 
     currentTerrainRemoteId: remoteGroup.currentTerrain?.remoteId ?? null,

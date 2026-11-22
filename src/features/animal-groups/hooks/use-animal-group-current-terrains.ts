@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { useAuthStore } from '@/features/auth/stores/auth.store';
+
 import type { AnimalGroupTerrainRef } from '../models';
 import { animalGroupRepository } from '../repositories/animal-group.repository';
 
 import { animalGroupQueryKeys } from './animal-group.query-keys';
 
 export function useAnimalGroupCurrentTerrains(localIds: string[]) {
+  const accountId = useAuthStore((state) => state.user?.id);
+
   return useQuery({
-    queryKey: animalGroupQueryKeys.currentTerrains(localIds),
+    queryKey: animalGroupQueryKeys.currentTerrains(accountId ?? '', localIds),
 
     queryFn: async (): Promise<
       Record<string, AnimalGroupTerrainRef | null>
@@ -15,7 +19,7 @@ export function useAnimalGroupCurrentTerrains(localIds: string[]) {
       const result: Record<string, AnimalGroupTerrainRef | null> = {};
 
       for (const localId of localIds) {
-        const group = await animalGroupRepository.findById(localId);
+        const group = await animalGroupRepository.findById(accountId!, localId);
 
         if (!group || !group.currentTerrainName) {
           result[localId] = null;
@@ -24,7 +28,9 @@ export function useAnimalGroupCurrentTerrains(localIds: string[]) {
 
         result[localId] = {
           localId: group.currentTerrainLocalId,
+
           remoteId: group.currentTerrainRemoteId,
+
           name: group.currentTerrainName,
         };
       }
@@ -32,6 +38,6 @@ export function useAnimalGroupCurrentTerrains(localIds: string[]) {
       return result;
     },
 
-    enabled: localIds.length > 0,
+    enabled: Boolean(accountId) && localIds.length > 0,
   });
 }

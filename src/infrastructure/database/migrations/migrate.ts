@@ -8,14 +8,13 @@ import { createMovementCommandsTable } from './005-create-movement-commands';
 import { addCurrentTerrainToAnimalGroups } from './006-add-current-terrain-to-animal-groups';
 import { createOccupationsTable } from './007-create-occupations';
 import { addLocallyDeletedAtToFeeds } from './008-add-locally-deleted-at-to-feeds';
-
 import { createFeedRequirements } from './009-create-feed-requirements';
 import { createFeedingRecords } from './010-create-feeding-records';
-
 import { preserveDeletedParents } from './011-preserve-deleted-parents';
 import { addFeedCoverage } from './012-add-feed-coverage';
+import { addAccountToGroupsAndTerrains } from './013-add-account-to-groups-and-terrains';
 
-const DATABASE_VERSION = 12;
+const DATABASE_VERSION = 13;
 
 export async function migrateDatabase(database: SQLiteDatabase) {
   const result = await database.getFirstAsync<{
@@ -74,6 +73,10 @@ export async function migrateDatabase(database: SQLiteDatabase) {
 
     if (currentVersion < 12) {
       await addFeedCoverage(database);
+    }
+
+    if (currentVersion < 13) {
+      await addAccountToGroupsAndTerrains(database);
     }
 
     await database.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
