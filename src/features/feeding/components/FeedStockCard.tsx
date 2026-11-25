@@ -5,16 +5,32 @@ import { Pressable, View } from 'react-native';
 import { AppText } from '@/shared/components/AppText';
 import colors from '@/styles/colors';
 
+import { FeedCoverageBadge } from './FeedCoverageBadge';
+
 interface IFeedStockCardProps {
   name: string;
+
   /** Quantidade já formatada, ex.: "1.414 kg". */
   availableLabel: string;
+
+  dailyRequiredLabel: string | null;
+
+  projectedStockScaled: number;
+
+  daysRemaining: number | null;
+
+  alertLevel: 'critical' | 'urgency' | 'attention' | 'info' | null;
+
   onPress: () => void;
 }
 
 function FeedStockCardComponent({
   name,
   availableLabel,
+  dailyRequiredLabel,
+  projectedStockScaled,
+  daysRemaining,
+  alertLevel,
   onPress,
 }: IFeedStockCardProps) {
   return (
@@ -36,7 +52,16 @@ function FeedStockCardComponent({
 
         <AppText size='sm' className='mt-1 text-neutral-textMuted'>
           {availableLabel} disponíveis
+          {dailyRequiredLabel ? ` · ${dailyRequiredLabel}/dia` : ''}
         </AppText>
+      </View>
+
+      <View className='mr-2'>
+        <FeedCoverageBadge
+          daysRemaining={daysRemaining}
+          alertLevel={alertLevel}
+          stockScaled={projectedStockScaled}
+        />
       </View>
 
       <ChevronRight size={20} color={colors.neutral.textMuted} />
