@@ -15,22 +15,26 @@ interface FeedPlanningMutationData {
 
 export function useFeedPlanningResultViewModel() {
   const router = useRouter();
-  const { groupId } = useLocalSearchParams<{ groupId?: string | string[] }>();
+
+  const { groupId } = useLocalSearchParams<{
+    groupId?: string | string[];
+  }>();
+
   const groupLocalId = typeof groupId === 'string' ? groupId : '';
 
   const account = useFeedingAccount();
+
   const groupsQuery = useFeedingGroups(account.accountId);
 
   const group =
     groupsQuery.data?.find((item) => item.localId === groupLocalId) ?? null;
 
-  // O cálculo é feito pelo formulário (useFeedPlanning); aqui só é lido o
-  // resultado mais recente desse grupo no cache de mutations.
   const calculated = useMutationState({
     filters: {
       mutationKey: feedingQueryKeys.planning(account.accountId ?? ''),
       status: 'success',
     },
+
     select: (mutation) =>
       mutation.state.data as FeedPlanningMutationData | undefined,
   });
@@ -48,18 +52,36 @@ export function useFeedPlanningResultViewModel() {
 
   const items = useMemo(
     () =>
-      (result?.items ?? []).map((item) => ({
-        id: item.feedRemoteId,
-        feedName: item.feedName,
-        requiredLabel: scaledToKgLabel(item.requiredScaled),
-        stockLabel: scaledToKgLabel(item.stockScaled),
-        missingLabel: scaledToKgLabel(item.missingScaled),
-        coverage:
-          item.requiredScaled > 0
-            ? Math.min(item.stockScaled / item.requiredScaled, 1)
-            : 1,
-        sufficient: item.sufficient,
-      })),
+      (result?.items ?? []).map((item) => {
+        const isSufficient = item.status.state === 'sufficient';
+
+        const missingScaled =
+          item.status.state === 'shortage' ? item.status.missingScaled : 0;
+
+        const remainingScaled =
+          item.status.state === 'sufficient' ? item.status.remainingScaled : 0;
+
+        return {
+          id: item.feedRemoteId,
+
+          feedName: item.feedName,
+
+          requiredLabel: scaledToKgLabel(item.requiredScaled),
+
+          stockLabel: scaledToKgLabel(item.stockScaled),
+
+          missingLabel: scaledToKgLabel(missingScaled),
+
+          remainingLabel: scaledToKgLabel(remainingScaled),
+
+          coverage:
+            item.requiredScaled > 0
+              ? Math.min(item.stockScaled / item.requiredScaled, 1)
+              : 1,
+
+          sufficient: isSufficient,
+        };
+      }),
     [result],
   );
 
@@ -67,11 +89,19 @@ export function useFeedPlanningResultViewModel() {
 
   return {
     groupName: group?.name ?? '',
+
     days: result?.period.days ?? 0,
+
+    status: result?.status.state ?? null,
+
+    shortageCount: result?.status.shortageCount ?? 0,
+
     items,
 
     isLoading: !hasGroupsError && (account.isLoading || groupsQuery.isLoading),
+
     hasError: hasGroupsError,
+
     hasResult: result !== null,
 
     retry: () => {
