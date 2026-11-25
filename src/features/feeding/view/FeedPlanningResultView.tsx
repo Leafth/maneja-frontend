@@ -13,6 +13,8 @@ export default function FeedPlanningResultView() {
   const {
     groupName,
     days,
+    status,
+    shortageCount,
     items,
     isLoading,
     hasError,
@@ -20,6 +22,8 @@ export default function FeedPlanningResultView() {
     retry,
     goBack,
   } = useFeedPlanningResultViewModel();
+
+  const isSufficient = status === 'sufficient';
 
   return (
     <View className='flex-1 bg-white'>
@@ -62,7 +66,8 @@ export default function FeedPlanningResultView() {
             <View className='gap-1'>
               <AppText
                 size='lg'
-                className='uppercase tracking-wide text-neutral-textHead'
+                weight='semiBold'
+                className='text-neutral-textHead'
               >
                 Planejamento de {days} {days === 1 ? 'dia' : 'dias'}
               </AppText>
@@ -72,28 +77,83 @@ export default function FeedPlanningResultView() {
               </AppText>
             </View>
 
-            {items.length === 0 ? (
-              <AppText color='muted'>
-                Este grupo não possui necessidade alimentar cadastrada.
-              </AppText>
-            ) : (
-              items.map((item) => (
-                <PlanningItemCard
-                  key={item.id}
-                  feedName={item.feedName}
-                  requiredLabel={item.requiredLabel}
-                  stockLabel={item.stockLabel}
-                  missingLabel={item.missingLabel}
-                  coverage={item.coverage}
-                  sufficient={item.sufficient}
-                />
-              ))
+            {items.length > 0 && (
+              <View
+                className={`gap-1 rounded-[14px] border px-4 py-4 ${
+                  isSufficient
+                    ? 'border-support-success-border bg-support-success-bg'
+                    : 'border-support-danger-border bg-support-danger-bg'
+                }`}
+              >
+                <AppText
+                  weight='semiBold'
+                  className={
+                    isSufficient
+                      ? 'text-support-success-text'
+                      : 'text-support-danger-text'
+                  }
+                >
+                  {isSufficient ? 'Estoque suficiente' : 'Estoque insuficiente'}
+                </AppText>
+
+                <AppText
+                  size='sm'
+                  className={
+                    isSufficient
+                      ? 'text-support-success-text'
+                      : 'text-support-danger-text'
+                  }
+                >
+                  {isSufficient
+                    ? `Seu estoque atende às necessidades deste grupo pelos próximos ${days} ${
+                        days === 1 ? 'dia' : 'dias'
+                      }.`
+                    : `${shortageCount} ${
+                        shortageCount === 1
+                          ? 'ração precisa'
+                          : 'rações precisam'
+                      } de reposição para atender todo o período.`}
+                </AppText>
+              </View>
             )}
 
-            <WarningAlert>
-              Esta conta é só uma previsão. O app não faz nenhuma compra por
-              você.
-            </WarningAlert>
+            {items.length === 0 ? (
+              <View className='rounded-[14px] border border-neutral-border bg-neutral-card p-4'>
+                <AppText weight='medium' className='text-neutral-textHead'>
+                  Nenhuma necessidade cadastrada
+                </AppText>
+
+                <AppText size='sm' className='mt-1 text-neutral-textMuted'>
+                  Este grupo ainda não possui necessidade alimentar cadastrada.
+                </AppText>
+              </View>
+            ) : (
+              <View className='gap-3'>
+                <AppText weight='semiBold' className='text-neutral-textHead'>
+                  Rações
+                </AppText>
+
+                {items.map((item) => (
+                  <PlanningItemCard
+                    key={item.id}
+                    feedName={item.feedName}
+                    requiredLabel={item.requiredLabel}
+                    stockLabel={item.stockLabel}
+                    missingLabel={item.missingLabel}
+                    remainingLabel={item.remainingLabel}
+                    coverage={item.coverage}
+                    sufficient={item.sufficient}
+                  />
+                ))}
+              </View>
+            )}
+
+            {items.length > 0 && (
+              <WarningAlert>
+                Esta conta é apenas uma previsão baseada nas necessidades
+                cadastradas e no estoque atual.
+              </WarningAlert>
+            )}
           </ScrollView>
         )}
       </SafeAreaView>
