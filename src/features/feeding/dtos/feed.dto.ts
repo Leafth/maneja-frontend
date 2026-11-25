@@ -1,16 +1,18 @@
 export type FeedAlertLevelDto = 'critical' | 'urgency' | 'attention' | 'info';
 
-export interface FeedDto {
+export interface FeedWriteResponseDto {
   id: string;
   name: string;
   stock_quantity: string;
 
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedDto extends FeedWriteResponseDto {
   daily_required_quantity: string;
   days_remaining: number | null;
   alert_level: FeedAlertLevelDto | null;
-
-  created_at: string;
-  updated_at: string;
 }
 
 export interface FeedListMetaDto {
