@@ -456,6 +456,10 @@ class FeedRepository {
           ? existing.projectedStockScaled
           : snapshot.remoteStockScaled + localDelta,
 
+        dailyRequiredScaled: snapshot.dailyRequiredScaled,
+        daysRemaining: snapshot.daysRemaining,
+        alertLevel: snapshot.alertLevel,
+
         remoteCreatedAt: snapshot.remoteCreatedAt,
 
         remoteUpdatedAt: snapshot.remoteUpdatedAt,
