@@ -14,10 +14,11 @@ import type { AnimalGroupHistoryKind } from '../models';
 export function useGroupViewModel() {
   const router = useRouter();
 
-  const { localId: routeLocalId, history: routeHistory } = useLocalSearchParams<{
-    localId?: string | string[];
-    history?: string;
-  }>();
+  const { localId: routeLocalId, history: routeHistory } =
+    useLocalSearchParams<{
+      localId?: string | string[];
+      history?: string;
+    }>();
 
   const localId = typeof routeLocalId === 'string' ? routeLocalId : '';
 
@@ -26,8 +27,10 @@ export function useGroupViewModel() {
   const occupationsQuery = useAnimalGroupOccupations(localId);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const historyKind: AnimalGroupHistoryKind = routeHistory === 'feeding' ? 'feeding' : 'movements';
-  const setHistoryKind = (kind: AnimalGroupHistoryKind) => router.setParams({ history: kind });
+  const historyKind: AnimalGroupHistoryKind =
+    routeHistory === 'feeding' ? 'feeding' : 'movements';
+  const setHistoryKind = (kind: AnimalGroupHistoryKind) =>
+    router.setParams({ history: kind });
 
   const historyQuery = useAnimalGroupHistory(localId, historyKind);
 
@@ -35,7 +38,10 @@ export function useGroupViewModel() {
     occupationsQuery.data?.find((occupation) => !occupation.endedAt) ?? null;
 
   const group = query.data?.syncStatus === 'pending_delete' ? null : query.data;
-  const feedingNeeds = useFeedRequirementItems(localId, group?.animalCount ?? 0);
+  const feedingNeeds = useFeedRequirementItems(
+    localId,
+    group?.animalCount ?? 0,
+  );
 
   const canAct = Boolean(group) && !query.isError && !deleteMutation.isPending;
 
@@ -89,6 +95,19 @@ export function useGroupViewModel() {
     });
   }
 
+  const handleFeedPlanning = () => {
+    if (!group) {
+      return;
+    }
+
+    router.push({
+      pathname: '/feeding/planning',
+      params: {
+        groupId: group.localId,
+      },
+    });
+  };
+
   return {
     group,
     feedingNeeds: feedingNeeds.items,
@@ -96,7 +115,12 @@ export function useGroupViewModel() {
     hasFeedingNeedsError: feedingNeeds.hasError,
     retryFeedingNeeds: feedingNeeds.retry,
     handleFeedingNeeds: () => {
-      if (canAct) { router.push({ pathname: '/group/[localId]/feeding-need', params: { localId } }); }
+      if (canAct) {
+        router.push({
+          pathname: '/group/[localId]/feeding-need',
+          params: { localId },
+        });
+      }
     },
 
     currentTerrain: currentOccupation
@@ -140,5 +164,6 @@ export function useGroupViewModel() {
     handleDelete,
     handleCancelDelete,
     handleConfirmDelete,
+    handleFeedPlanning,
   };
 }

@@ -1,228 +1,230 @@
-import { Pencil, Trash2 } from 'lucide-react-native';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  import { Pencil, Trash2 } from 'lucide-react-native';
+  import { ActivityIndicator, ScrollView, View } from 'react-native';
+  import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppText } from '@/shared/components/AppText';
-import { Button } from '@/shared/components/Button';
-import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
-import { HeaderSecondary } from '@/shared/components/Header';
-import { HistoryList } from '@/shared/components/HistoryList';
-import {
-  SegmentedControl,
-  type SegmentedControlOption,
-} from '@/shared/components/SegmentedControl';
-import { formatDaysAgo } from '@/shared/utils/format-date';
+  import { AppText } from '@/shared/components/AppText';
+  import { Button } from '@/shared/components/Button';
+  import { ConfirmDeleteModal } from '@/shared/components/ConfirmDeleteModal';
+  import { HeaderSecondary } from '@/shared/components/Header';
+  import { HistoryList } from '@/shared/components/HistoryList';
+  import {
+    SegmentedControl,
+    type SegmentedControlOption,
+  } from '@/shared/components/SegmentedControl';
+  import { formatDaysAgo } from '@/shared/utils/format-date';
 
-import { FeedRequirementSummaryCard } from '../components/FeedRequirementSummaryCard';
-import type { AnimalGroupHistoryKind } from '../models';
-import { useGroupViewModel } from '../viewmodels/use-group-view-model';
+  import { FeedRequirementSummaryCard } from '../components/FeedRequirementSummaryCard';
+  import type { AnimalGroupHistoryKind } from '../models';
+  import { useGroupViewModel } from '../viewmodels/use-group-view-model';
 
-const historyOptions: SegmentedControlOption<AnimalGroupHistoryKind>[] = [
-  { value: 'movements', label: 'Movimentações' },
-  { value: 'feeding', label: 'Alimentação' },
-];
+  const historyOptions: SegmentedControlOption<AnimalGroupHistoryKind>[] = [
+    { value: 'movements', label: 'Movimentações' },
+    { value: 'feeding', label: 'Alimentação' },
+  ];
 
-const emptyHistoryMessages: Record<AnimalGroupHistoryKind, string> = {
-  movements: 'Nenhuma movimentação registrada para este grupo.',
-  feeding: 'Nenhuma alimentação registrada para este grupo.',
-};
+  const emptyHistoryMessages: Record<AnimalGroupHistoryKind, string> = {
+    movements: 'Nenhuma movimentação registrada para este grupo.',
+    feeding: 'Nenhuma alimentação registrada para este grupo.',
+  };
 
-interface IInfoColumnProps {
-  label: string;
-  children: React.ReactNode;
-}
+  interface IInfoColumnProps {
+    label: string;
+    children: React.ReactNode;
+  }
 
-function InfoColumn({ label, children }: IInfoColumnProps) {
-  return (
-    <View className='flex-1 items-center gap-2'>
-      <AppText className='text-neutral-textMuted'>{label}</AppText>
+  function InfoColumn({ label, children }: IInfoColumnProps) {
+    return (
+      <View className='flex-1 items-center gap-2'>
+        <AppText className='text-neutral-textMuted'>{label}</AppText>
 
-      {children}
-    </View>
-  );
-}
+        {children}
+      </View>
+    );
+  }
 
-export default function GroupView() {
-  const {
-    group,
+  export default function GroupView() {
+    const {
+      group,
 
-    feedingNeeds,
-    isFeedingNeedsLoading,
-    hasFeedingNeedsError,
-    retryFeedingNeeds,
-    handleFeedingNeeds,
+      feedingNeeds,
+      isFeedingNeedsLoading,
+      hasFeedingNeedsError,
+      retryFeedingNeeds,
+      handleFeedingNeeds,
 
-    currentTerrain,
-    isCurrentTerrainLoading,
-    hasCurrentTerrainError,
+      currentTerrain,
+      isCurrentTerrainLoading,
+      hasCurrentTerrainError,
 
-    historyKind,
-    setHistoryKind,
+      historyKind,
+      setHistoryKind,
 
-    history,
-    isHistoryLoading,
-    hasHistoryError,
-    retryHistory,
+      history,
+      isHistoryLoading,
+      hasHistoryError,
+      retryHistory,
 
-    isLoading,
-    error,
+      isLoading,
+      error,
 
-    deleteError,
-    isDeleting,
-    actionsDisabled,
-    isDeleteModalOpen,
+      deleteError,
+      isDeleting,
+      actionsDisabled,
+      isDeleteModalOpen,
 
-    retry,
-    handleBack,
-    handleUpdate,
-    handleDelete,
-    handleCancelDelete,
-    handleConfirmDelete,
-  } = useGroupViewModel();
+      retry,
+      handleBack,
+      handleUpdate,
+      handleDelete,
+      handleCancelDelete,
+      handleConfirmDelete,
+      handleFeedPlanning,
+    } = useGroupViewModel();
 
-  return (
-    <View className='flex-1 bg-white'>
-      <HeaderSecondary
-        title={group?.name ?? 'Grupo'}
-        onBackPress={handleBack}
-        menuDisabled={actionsDisabled}
-        menuItems={
-          group
-            ? [
-                {
-                  label: 'Editar',
-                  icon: Pencil,
-                  onPress: handleUpdate,
-                },
-                {
-                  label: 'Deletar',
-                  icon: Trash2,
-                  onPress: handleDelete,
-                  destructive: true,
-                },
-              ]
-            : undefined
-        }
-      />
+    return (
+      <View className='flex-1 bg-white'>
+        <HeaderSecondary
+          title={group?.name ?? 'Grupo'}
+          onBackPress={handleBack}
+          menuDisabled={actionsDisabled}
+          menuItems={
+            group
+              ? [
+                  {
+                    label: 'Editar',
+                    icon: Pencil,
+                    onPress: handleUpdate,
+                  },
+                  {
+                    label: 'Deletar',
+                    icon: Trash2,
+                    onPress: handleDelete,
+                    destructive: true,
+                  },
+                ]
+              : undefined
+          }
+        />
 
-      <SafeAreaView edges={['bottom']} className='flex-1'>
-        {isLoading ? (
-          <View className='flex-1 items-center justify-center'>
-            <ActivityIndicator />
-          </View>
-        ) : error ? (
-          <View className='flex-1 items-center justify-center gap-4 px-5'>
-            <AppText color='error' align='center'>
-              Não foi possível carregar o grupo.
-            </AppText>
-
-            <Button onPress={retry}>Tentar novamente</Button>
-          </View>
-        ) : group ? (
-          <ScrollView
-            className='flex-1'
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingTop: 24,
-              paddingBottom: 32,
-              gap: 20,
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            <View className='flex-row'>
-              <InfoColumn label='Quantidade'>
-                <AppText weight='medium' className='text-neutral-textHead'>
-                  {group.animalCount}{' '}
-                  {group.animalCount === 1 ? 'cabeça' : 'cabeças'}
-                </AppText>
-              </InfoColumn>
-
-              <InfoColumn label='Terreno atual'>
-                {isCurrentTerrainLoading ? (
-                  <ActivityIndicator size='small' />
-                ) : (
-                  <AppText
-                    weight='medium'
-                    align='center'
-                    className='text-neutral-textHead'
-                  >
-                    {hasCurrentTerrainError
-                      ? '—'
-                      : currentTerrain
-                        ? currentTerrain.enteredAt
-                          ? `${currentTerrain.name} · ${formatDaysAgo(
-                              currentTerrain.enteredAt,
-                            )}`
-                          : currentTerrain.name
-                        : 'Sem alocação'}
-                  </AppText>
-                )}
-              </InfoColumn>
+        <SafeAreaView edges={['bottom']} className='flex-1'>
+          {isLoading ? (
+            <View className='flex-1 items-center justify-center'>
+              <ActivityIndicator />
             </View>
+          ) : error ? (
+            <View className='flex-1 items-center justify-center gap-4 px-5'>
+              <AppText color='error' align='center'>
+                Não foi possível carregar o grupo.
+              </AppText>
 
-            <View className='h-px bg-neutral-border' />
+              <Button onPress={retry}>Tentar novamente</Button>
+            </View>
+          ) : group ? (
+            <ScrollView
+              className='flex-1'
+              contentContainerStyle={{
+                paddingHorizontal: 20,
+                paddingTop: 24,
+                paddingBottom: 32,
+                gap: 20,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View className='flex-row'>
+                <InfoColumn label='Quantidade'>
+                  <AppText weight='medium' className='text-neutral-textHead'>
+                    {group.animalCount}{' '}
+                    {group.animalCount === 1 ? 'cabeça' : 'cabeças'}
+                  </AppText>
+                </InfoColumn>
 
-            {isFeedingNeedsLoading ? (
-              <View className='items-center py-4'>
-                <ActivityIndicator />
+                <InfoColumn label='Terreno atual'>
+                  {isCurrentTerrainLoading ? (
+                    <ActivityIndicator size='small' />
+                  ) : (
+                    <AppText
+                      weight='medium'
+                      align='center'
+                      className='text-neutral-textHead'
+                    >
+                      {hasCurrentTerrainError
+                        ? '—'
+                        : currentTerrain
+                          ? currentTerrain.enteredAt
+                            ? `${currentTerrain.name} · ${formatDaysAgo(
+                                currentTerrain.enteredAt,
+                              )}`
+                            : currentTerrain.name
+                          : 'Sem alocação'}
+                    </AppText>
+                  )}
+                </InfoColumn>
               </View>
-            ) : hasFeedingNeedsError ? (
-              <View className='gap-3'>
-                <AppText size='sm' color='error' align='center'>
-                  Não foi possível carregar a necessidade alimentar.
-                </AppText>
 
-                <Button
-                  size='md'
-                  variant='secondary'
-                  onPress={retryFeedingNeeds}
-                >
-                  Tentar novamente
-                </Button>
-              </View>
-            ) : (
-              <FeedRequirementSummaryCard
-                hasRequirements={feedingNeeds.length > 0}
-                disabled={actionsDisabled}
-                onRequirementPress={handleFeedingNeeds}
+              <View className='h-px bg-neutral-border' />
+
+              {isFeedingNeedsLoading ? (
+                <View className='items-center py-4'>
+                  <ActivityIndicator />
+                </View>
+              ) : hasFeedingNeedsError ? (
+                <View className='gap-3'>
+                  <AppText size='sm' color='error' align='center'>
+                    Não foi possível carregar a necessidade alimentar.
+                  </AppText>
+
+                  <Button
+                    size='md'
+                    variant='secondary'
+                    onPress={retryFeedingNeeds}
+                  >
+                    Tentar novamente
+                  </Button>
+                </View>
+              ) : (
+                <FeedRequirementSummaryCard
+                  hasRequirements={feedingNeeds.length > 0}
+                  disabled={actionsDisabled}
+                  onRequirementPress={handleFeedingNeeds}
+                  onPlanningPress={handleFeedPlanning}
+                />
+              )}
+
+              <SegmentedControl
+                options={historyOptions}
+                value={historyKind}
+                onChange={setHistoryKind}
               />
-            )}
 
-            <SegmentedControl
-              options={historyOptions}
-              value={historyKind}
-              onChange={setHistoryKind}
-            />
+              <HistoryList
+                title='Histórico'
+                items={history}
+                emptyMessage={emptyHistoryMessages[historyKind]}
+                isLoading={isHistoryLoading}
+                hasError={hasHistoryError}
+                onRetry={retryHistory}
+              />
+            </ScrollView>
+          ) : (
+            <View className='flex-1 items-center justify-center'>
+              <AppText color='muted'>Grupo de animais não encontrado.</AppText>
+            </View>
+          )}
+        </SafeAreaView>
 
-            <HistoryList
-              title='Histórico'
-              items={history}
-              emptyMessage={emptyHistoryMessages[historyKind]}
-              isLoading={isHistoryLoading}
-              hasError={hasHistoryError}
-              onRetry={retryHistory}
-            />
-          </ScrollView>
-        ) : (
-          <View className='flex-1 items-center justify-center'>
-            <AppText color='muted'>Grupo de animais não encontrado.</AppText>
-          </View>
-        )}
-      </SafeAreaView>
-
-      <ConfirmDeleteModal
-        visible={isDeleteModalOpen}
-        title='Excluir Grupo?'
-        description={
-          deleteError
-            ? deleteError.message ||
-              'Não foi possível excluir o grupo. Tente novamente.'
-            : `Deseja realmente excluir o grupo "${group?.name ?? ''}"? Essa ação não pode ser revertida.`
-        }
-        isDeleting={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
-    </View>
-  );
-}
+        <ConfirmDeleteModal
+          visible={isDeleteModalOpen}
+          title='Excluir Grupo?'
+          description={
+            deleteError
+              ? deleteError.message ||
+                'Não foi possível excluir o grupo. Tente novamente.'
+              : `Deseja realmente excluir o grupo "${group?.name ?? ''}"? Essa ação não pode ser revertida.`
+          }
+          isDeleting={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      </View>
+    );
+  }
