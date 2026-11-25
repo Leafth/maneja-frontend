@@ -11,3 +11,4 @@ export { useFeeds } from './use-feeds';
 export { useUpdateFeed } from './use-update-feed';
 export { useFeedingGroups } from './use-feeding-groups';
 export { useFeedPlanning } from './use-feed-planning';
+export { useFeedRequirementItems } from './use-feed-requirement-items';
