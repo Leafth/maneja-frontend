@@ -23,7 +23,7 @@ async function hasPendingFeedingBalance(
   db: SQLiteDatabase,
 ) {
   return !!(await db.getFirstAsync(
-    'SELECT 1 FROM feeding_records WHERE account_id = ? AND feed_local_id = ? AND balance_state = \'pending\' LIMIT 1',
+    "SELECT 1 FROM feeding_records WHERE account_id = ? AND feed_local_id = ? AND balance_state = 'pending' LIMIT 1",
     [accountId, feedLocalId],
   ));
 }
@@ -286,9 +286,18 @@ class FeedRepository {
 
         remoteUpdatedAt: snapshot.remoteUpdatedAt,
 
-        dailyRequiredScaled: snapshot.dailyRequiredScaled,
-        daysRemaining: snapshot.daysRemaining,
-        alertLevel: snapshot.alertLevel,
+        dailyRequiredScaled:
+          snapshot.dailyRequiredScaled ?? current.dailyRequiredScaled,
+
+        daysRemaining:
+          snapshot.dailyRequiredScaled !== null
+            ? snapshot.daysRemaining
+            : current.daysRemaining,
+
+        alertLevel:
+          snapshot.dailyRequiredScaled !== null
+            ? snapshot.alertLevel
+            : current.alertLevel,
 
         lastSyncedAt: now,
         lastSyncError: null,
@@ -345,10 +354,6 @@ class FeedRepository {
 
       const now = new Date().toISOString();
 
-      /*
-       * O Feed existe no servidor, mas ainda não existe
-       * neste dispositivo.
-       */
       if (!existing) {
         const imported: Feed = {
           localId: Crypto.randomUUID(),
@@ -358,10 +363,6 @@ class FeedRepository {
 
           name: snapshot.name,
 
-          /*
-           * A API não devolve o saldo inicial depois
-           * que o Feed foi criado.
-           */
           initialStockScaled: null,
 
           remoteStockScaled: snapshot.remoteStockScaled,
@@ -369,7 +370,9 @@ class FeedRepository {
           projectedStockScaled: snapshot.remoteStockScaled,
 
           dailyRequiredScaled: snapshot.dailyRequiredScaled,
+
           daysRemaining: snapshot.daysRemaining,
+
           alertLevel: snapshot.alertLevel,
 
           syncStatus: 'synced',
@@ -452,6 +455,10 @@ class FeedRepository {
         projectedStockScaled: preserveBalance
           ? existing.projectedStockScaled
           : snapshot.remoteStockScaled + localDelta,
+
+        dailyRequiredScaled: snapshot.dailyRequiredScaled,
+        daysRemaining: snapshot.daysRemaining,
+        alertLevel: snapshot.alertLevel,
 
         remoteCreatedAt: snapshot.remoteCreatedAt,
 

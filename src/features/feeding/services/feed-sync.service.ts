@@ -113,7 +113,7 @@ class FeedSyncService {
         },
       });
 
-      const snapshot = feedMapper.fromDto(response);
+      const snapshot = feedMapper.fromWriteDto(response);
 
       await feedRepository.assignRemoteIdentity(
         feed.accountId,
@@ -160,7 +160,7 @@ class FeedSyncService {
         },
       });
 
-      const snapshot = feedMapper.fromDto(response);
+      const snapshot = feedMapper.fromWriteDto(response);
 
       await feedRepository.confirmRemoteUpdate(
         feed.accountId,

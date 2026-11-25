@@ -5,6 +5,7 @@ import type {
   FeedDto,
   FeedListQueryDto,
   FeedListResponseDto,
+  FeedWriteResponseDto,
   UpdateFeedRequestDto,
 } from '../dtos/feed.dto';
 
@@ -26,14 +27,20 @@ class FeedService {
     return response.data;
   }
 
-  async create(body: CreateFeedRequestDto): Promise<FeedDto> {
-    const response = await api.post<FeedDto>('/feeds', body);
+  async create(body: CreateFeedRequestDto): Promise<FeedWriteResponseDto> {
+    const response = await api.post<FeedWriteResponseDto>('/feeds', body);
 
     return response.data;
   }
 
-  async update(remoteId: string, body: UpdateFeedRequestDto): Promise<FeedDto> {
-    const response = await api.patch<FeedDto>(`/feeds/${remoteId}`, body);
+  async update(
+    remoteId: string,
+    body: UpdateFeedRequestDto,
+  ): Promise<FeedWriteResponseDto> {
+    const response = await api.patch<FeedWriteResponseDto>(
+      `/feeds/${remoteId}`,
+      body,
+    );
 
     return response.data;
   }
