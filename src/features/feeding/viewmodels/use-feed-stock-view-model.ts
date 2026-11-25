@@ -9,7 +9,7 @@ export function useFeedStockViewModel() {
   const router = useRouter();
   const network = useNetInfo();
 
-  const [section, setSection] = useState<'stock' | 'planning'>('stock');
+  const [section, setSection] = useState<'stock' | 'overview'>('stock');
 
   const { accountId, isLoading: isAccountLoading } = useFeedingAccount();
 

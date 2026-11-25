@@ -14,7 +14,7 @@ import colors from '@/styles/colors';
 
 import { FeedStockCard } from '../components/FeedStockCard';
 import { useFeedStockViewModel } from '../viewmodels/use-feed-stock-view-model';
-import FeedPlanningSection from './FeedPlanningSection';
+import FeedOverviewSection from './FeedOverviewSection';
 
 export default function FeedStockView() {
   const {
@@ -59,21 +59,21 @@ export default function FeedStockView() {
           </Pressable>
 
           <Pressable
-            onPress={() => setSection('planning')}
+            onPress={() => setSection('overview')}
             className={`h-14 flex-1 items-center justify-center rounded-lg ${
-              section === 'planning' ? 'bg-forestGreen-400' : ''
+              section === 'overview' ? 'bg-forestGreen-400' : ''
             }`}
             accessibilityRole='tab'
             accessibilityState={{
-              selected: section === 'planning',
+              selected: section === 'overview',
             }}
           >
             <AppText
               size='sm'
-              weight={section === 'planning' ? 'medium' : 'regular'}
-              color={section === 'planning' ? 'white' : 'muted'}
+              weight={section === 'overview' ? 'medium' : 'regular'}
+              color={section === 'overview' ? 'white' : 'muted'}
             >
-              Planejamento
+              Visão geral
             </AppText>
           </Pressable>
         </View>
@@ -127,7 +127,7 @@ export default function FeedStockView() {
             </TouchableOpacity>
           </>
         ) : (
-          <FeedPlanningSection />
+          <FeedOverviewSection/>
         )}
       </View>
     </View>
