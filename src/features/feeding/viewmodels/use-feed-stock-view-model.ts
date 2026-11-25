@@ -18,14 +18,28 @@ export function useFeedStockViewModel() {
   const types = (feedsQuery.data ?? []).map((feed) => ({
     id: feed.localId,
     name: feed.name,
+
     availableKg: scaledToNumber(feed.projectedStockScaled),
     availableLabel: scaledToKgLabel(feed.projectedStockScaled),
+
+    projectedStockScaled: feed.projectedStockScaled,
+
+    dailyRequiredScaled: feed.dailyRequiredScaled,
+    dailyRequiredLabel:
+      feed.dailyRequiredScaled !== null
+        ? scaledToKgLabel(feed.dailyRequiredScaled)
+        : null,
+
+    daysRemaining: feed.daysRemaining,
+    alertLevel: feed.alertLevel,
+
     syncStatus: feed.syncStatus,
     lastSyncError: feed.lastSyncError,
   }));
 
   return {
     types,
+
     section,
     setSection,
 
