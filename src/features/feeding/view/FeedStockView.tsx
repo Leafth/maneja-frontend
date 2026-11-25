@@ -104,6 +104,10 @@ export default function FeedStockView() {
                     key={type.id}
                     name={type.name}
                     availableLabel={type.availableLabel}
+                    dailyRequiredLabel={type.dailyRequiredLabel}
+                    projectedStockScaled={type.projectedStockScaled}
+                    daysRemaining={type.daysRemaining}
+                    alertLevel={type.alertLevel}
                     onPress={() => openType(type.id)}
                   />
                 ))}
@@ -127,7 +131,7 @@ export default function FeedStockView() {
             </TouchableOpacity>
           </>
         ) : (
-          <FeedOverviewSection/>
+          <FeedOverviewSection />
         )}
       </View>
     </View>
