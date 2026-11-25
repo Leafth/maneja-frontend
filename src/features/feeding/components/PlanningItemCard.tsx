@@ -9,7 +9,7 @@ interface IPlanningItemCardProps {
   requiredLabel: string;
   stockLabel: string;
   missingLabel: string;
-  /** Estoque ÷ necessário, entre 0 e 1. */
+  remainingLabel: string;
   coverage: number;
   sufficient: boolean;
 }
@@ -36,9 +36,12 @@ export function PlanningItemCard({
   requiredLabel,
   stockLabel,
   missingLabel,
+  remainingLabel,
   coverage,
   sufficient,
 }: IPlanningItemCardProps) {
+  const progress = Math.max(0, Math.min(coverage, 1));
+
   return (
     <View className='gap-3 rounded-[14px] border border-neutral-border bg-neutral-card p-2'>
       <AppText weight='medium' className='px-2 pt-2 text-neutral-textHead'>
@@ -48,17 +51,28 @@ export function PlanningItemCard({
       <View className='gap-4 rounded-[10px] bg-neutral-surface p-3'>
         <View className='flex-row gap-3'>
           <Quantity label='Necessário' value={requiredLabel} />
+
           <Quantity label='Estoque' value={stockLabel} />
         </View>
 
         <View
           accessibilityRole='progressbar'
-          accessibilityValue={{ min: 0, max: 100, now: Math.round(coverage * 100) }}
+          accessibilityValue={{
+            min: 0,
+            max: 100,
+            now: Math.round(progress * 100),
+          }}
           className='h-1.5 overflow-hidden rounded-full bg-gray-400'
         >
           <View
-            className='h-full rounded-full bg-lime-700'
-            style={{ width: `${coverage * 100}%` }}
+            className={`h-full rounded-full ${
+              sufficient
+                ? 'bg-support-success-solid'
+                : 'bg-support-danger-solid'
+            }`}
+            style={{
+              width: `${progress * 100}%`,
+            }}
           />
         </View>
       </View>
@@ -88,10 +102,14 @@ export function PlanningItemCard({
           size='sm'
           weight='medium'
           className={
-            sufficient ? 'text-support-success-text' : 'text-support-danger-text'
+            sufficient
+              ? 'text-support-success-text'
+              : 'text-support-danger-text'
           }
         >
-          {sufficient ? 'Estoque suficiente' : `Faltam ${missingLabel}`}
+          {sufficient
+            ? `Estoque suficiente · sobra ${remainingLabel}`
+            : `Faltam ${missingLabel}`}
         </AppText>
       </View>
     </View>
