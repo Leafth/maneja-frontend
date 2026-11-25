@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react-native';
+import { Pencil, Trash2 } from 'lucide-react-native';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,8 +12,8 @@ import {
   type SegmentedControlOption,
 } from '@/shared/components/SegmentedControl';
 import { formatDaysAgo } from '@/shared/utils/format-date';
-import colors from '@/styles/colors';
 
+import { FeedRequirementSummaryCard } from '../components/FeedRequirementSummaryCard';
 import type { AnimalGroupHistoryKind } from '../models';
 import { useGroupViewModel } from '../viewmodels/use-group-view-model';
 
@@ -36,6 +36,7 @@ function InfoColumn({ label, children }: IInfoColumnProps) {
   return (
     <View className='flex-1 items-center gap-2'>
       <AppText className='text-neutral-textMuted'>{label}</AppText>
+
       {children}
     </View>
   );
@@ -44,26 +45,33 @@ function InfoColumn({ label, children }: IInfoColumnProps) {
 export default function GroupView() {
   const {
     group,
+
     feedingNeeds,
     isFeedingNeedsLoading,
     hasFeedingNeedsError,
     retryFeedingNeeds,
     handleFeedingNeeds,
+
     currentTerrain,
     isCurrentTerrainLoading,
     hasCurrentTerrainError,
+
     historyKind,
     setHistoryKind,
+
     history,
     isHistoryLoading,
     hasHistoryError,
     retryHistory,
+
     isLoading,
     error,
+
     deleteError,
     isDeleting,
     actionsDisabled,
     isDeleteModalOpen,
+
     retry,
     handleBack,
     handleUpdate,
@@ -142,7 +150,9 @@ export default function GroupView() {
                       ? '—'
                       : currentTerrain
                         ? currentTerrain.enteredAt
-                          ? `${currentTerrain.name} · ${formatDaysAgo(currentTerrain.enteredAt)}`
+                          ? `${currentTerrain.name} · ${formatDaysAgo(
+                              currentTerrain.enteredAt,
+                            )}`
                           : currentTerrain.name
                         : 'Sem alocação'}
                   </AppText>
@@ -150,39 +160,33 @@ export default function GroupView() {
               </InfoColumn>
             </View>
 
+            <View className='h-px bg-neutral-border' />
+
             {isFeedingNeedsLoading ? (
-              <ActivityIndicator />
+              <View className='items-center py-4'>
+                <ActivityIndicator />
+              </View>
             ) : hasFeedingNeedsError ? (
               <View className='gap-3'>
-                <AppText size='sm' color='error' align='center'>Não foi possível carregar a necessidade alimentar.</AppText>
-                <Button size='md' variant='secondary' onPress={retryFeedingNeeds}>Tentar novamente</Button>
-              </View>
-            ) : (
-              <View className='items-center gap-5'>
-                {feedingNeeds.length > 0 && (
-                  <View className='items-center gap-2'>
-                    <AppText color='muted'>Necessidade alimentar estimada</AppText>
-                    {feedingNeeds.map((item) => (
-                      <AppText key={item.localId} weight='medium' align='center' className='text-neutral-textHead'>
-                        {item.dailyTotal} kg de {item.name}/dia
-                      </AppText>
-                    ))}
-                  </View>
-                )}
-                <Button size='md' className={feedingNeeds.length > 0 ? 'bg-black-600' : undefined} disabled={actionsDisabled} onPress={handleFeedingNeeds}>
-                  <View className='flex-row items-center gap-2'>
-                    <AppText size='sm' weight='medium' color='white' className='shrink' align='center'>
-                      {feedingNeeds.length > 0 ? 'Editar Necessidade Alimentar' : 'Cadastrar Necessidade Alimentar'}
-                    </AppText>
-                    {feedingNeeds.length > 0
-                      ? <Pencil size={18} strokeWidth={2} color={colors.white} />
-                      : <Plus size={18} strokeWidth={2} color={colors.white} />}
-                  </View>
+                <AppText size='sm' color='error' align='center'>
+                  Não foi possível carregar a necessidade alimentar.
+                </AppText>
+
+                <Button
+                  size='md'
+                  variant='secondary'
+                  onPress={retryFeedingNeeds}
+                >
+                  Tentar novamente
                 </Button>
               </View>
+            ) : (
+              <FeedRequirementSummaryCard
+                hasRequirements={feedingNeeds.length > 0}
+                disabled={actionsDisabled}
+                onRequirementPress={handleFeedingNeeds}
+              />
             )}
-
-            <View className='h-px bg-neutral-border' />
 
             <SegmentedControl
               options={historyOptions}
@@ -211,7 +215,8 @@ export default function GroupView() {
         title='Excluir Grupo?'
         description={
           deleteError
-            ? deleteError.message || 'Não foi possível excluir o grupo. Tente novamente.'
+            ? deleteError.message ||
+              'Não foi possível excluir o grupo. Tente novamente.'
             : `Deseja realmente excluir o grupo "${group?.name ?? ''}"? Essa ação não pode ser revertida.`
         }
         isDeleting={isDeleting}
