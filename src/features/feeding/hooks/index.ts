@@ -9,3 +9,5 @@ export { useFeedSyncState } from './use-feed-sync-state';
 export { useFeedingAccount } from './use-feeding-account';
 export { useFeeds } from './use-feeds';
 export { useUpdateFeed } from './use-update-feed';
+export { useFeedingGroups } from './use-feeding-groups';
+export { useFeedPlanning } from './use-feed-planning';
