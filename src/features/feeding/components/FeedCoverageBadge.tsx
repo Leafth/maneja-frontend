@@ -17,7 +17,7 @@ export function FeedCoverageBadge({
   alertLevel,
   stockScaled,
 }: FeedCoverageBadgeProps) {
-  if (stockScaled <= 0) {
+  if (stockScaled <= 0 || daysRemaining === 0) {
     return (
       <View className='flex-row items-center gap-1.5 rounded-full bg-support-danger-solid px-3 py-1.5'>
         <TriangleAlert size={14} strokeWidth={2} color={colors.white} />

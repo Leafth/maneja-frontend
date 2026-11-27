@@ -17,7 +17,7 @@ export function HomeFeedAlertBadge({
   daysRemaining,
   stockScaled,
 }: HomeFeedAlertBadgeProps) {
-  if (stockScaled <= 0) {
+  if (stockScaled <= 0 || daysRemaining <= 0) {
     return (
       <View
         className='flex-row items-center gap-1.5 rounded-full px-3 py-2'

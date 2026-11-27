@@ -22,11 +22,15 @@ interface HomeFeedAlertsSectionProps {
 export function HomeFeedAlertsSection({ alerts }: HomeFeedAlertsSectionProps) {
   const router = useRouter();
 
-  const hasAlerts = alerts.length > 0;
+  const activeAlerts = alerts
+    .filter((alert) => alert.alertLevel !== 'info')
+    .sort((a, b) => a.daysRemaining - b.daysRemaining);
 
-  const extraAlertsCount = alerts.length > 3 ? alerts.length - 3 : 0;
+  const hasAlerts = activeAlerts.length > 0;
 
-  const visibleAlerts = alerts.slice(0, 3);
+  const visibleAlerts = activeAlerts.slice(0, 3);
+
+  const extraAlertsCount = Math.max(0, activeAlerts.length - 3);
 
   function handleOpenFeeding() {
     router.push('/feeding');
@@ -74,7 +78,11 @@ export function HomeFeedAlertsSection({ alerts }: HomeFeedAlertsSectionProps) {
           >
             <AppText weight='semiBold' className='text-support-success-text'>
               {extraAlertsCount > 0
-                ? `+${extraAlertsCount} ração em alerta · Ver estoque`
+                ? `+${extraAlertsCount} ${
+                    extraAlertsCount === 1
+                      ? 'ração em alerta'
+                      : 'rações em alerta'
+                  } · Ver estoque`
                 : 'Ver estoque'}
             </AppText>
 
