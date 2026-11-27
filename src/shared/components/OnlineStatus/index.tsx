@@ -1,4 +1,4 @@
-import { Radio } from 'lucide-react-native';
+import { Wifi, WifiOff } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { AppText } from '@/shared/components/AppText';
@@ -10,24 +10,18 @@ interface IOnlineStatusProps {
   isOnline?: boolean;
 }
 
-export function OnlineStatus({
-  isOnline = true,
-}: IOnlineStatusProps) {
+export function OnlineStatus({ isOnline = true }: IOnlineStatusProps) {
   const styles = onlineStatusStyles();
 
   return (
     <View className={styles.container()}>
-      <Radio
-        size={14}
-        strokeWidth={2}
-        color={colors.black[700]}
-      />
+      {isOnline ? (
+        <Wifi size={20} strokeWidth={2} color={colors.black[700]} />
+      ) : (
+        <WifiOff size={20} strokeWidth={2} color={colors.black[700]} />
+      )}
 
-      <AppText
-        size='sm'
-        weight='medium'
-        className={styles.text()}
-      >
+      <AppText size='base' weight='medium' className={styles.text()}>
         {isOnline ? 'Online' : 'Offline'}
       </AppText>
     </View>
