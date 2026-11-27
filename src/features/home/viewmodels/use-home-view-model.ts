@@ -51,6 +51,22 @@ export function useHomeViewModel() {
       }));
   }, [overview]);
 
+  const feedAlerts = useMemo(() => {
+    if (!overview) {
+      return [];
+    }
+
+    return [...overview.feedAlerts]
+      .sort((a, b) => a.daysRemaining - b.daysRemaining)
+      .map((feed) => ({
+        id: feed.feedRemoteId,
+        name: feed.feedName,
+        alertLevel: feed.alertLevel,
+        daysRemaining: feed.daysRemaining,
+        stockScaled: feed.stockScaled,
+      }));
+  }, [overview]);
+
   return {
     userName: user?.name ?? '',
     userInitials: user?.name ? getInitials(user.name) : '',
@@ -67,6 +83,7 @@ export function useHomeViewModel() {
     },
 
     feedSummary,
+    feedAlerts,
 
     isLoading: account.isLoading || overviewQuery.isLoading,
 
