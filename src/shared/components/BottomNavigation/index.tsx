@@ -1,16 +1,17 @@
+import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Beef, House, Mountain, Wheat } from 'lucide-react-native';
+import { House, Mountain, Wheat } from 'lucide-react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CowIcon } from '@/assets/icons/CowIcon';
 import { AppText } from '@/shared/components/AppText';
 
-import { useRouter } from 'expo-router';
 import { bottomNavigationStyles } from './styles';
 
 const ITEMS = {
   home: { label: 'Início', icon: House },
-  herd: { label: 'Rebanho', icon: Beef },
+  herd: { label: 'Rebanho', icon: CowIcon },
   terrains: { label: 'Terrenos', icon: Mountain },
   feeding: { label: 'Alimentação', icon: Wheat },
 } as const;
@@ -27,7 +28,10 @@ export function BottomNavigation({ state }: BottomTabBarProps) {
       <View className={styles.items()}>
         {state.routes.map((route, index) => {
           const item = ITEMS[route.name as ItemKey];
-          if (!item) {return null;}
+
+          if (!item) {
+            return null;
+          }
 
           const Icon = item.icon;
           const isActive = state.index === index;
@@ -44,12 +48,24 @@ export function BottomNavigation({ state }: BottomTabBarProps) {
               activeOpacity={0.7}
               className={styles.item()}
               onPress={handlePress}
+              accessibilityRole='tab'
+              accessibilityState={{ selected: isActive }}
             >
-              <Icon
-                size={24}
-                strokeWidth={isActive ? 2.2 : 1.5}
-                color={isActive ? '#1B4332' : '#737373'}
-              />
+              {route.name === 'herd' ? (
+                <Icon
+                  size={24}
+                  strokeWidth={
+                    route.name === 'herd' ? 1.4 : isActive ? 2.2 : 1.5
+                  }
+                  color={isActive ? '#1B4332' : '#737373'}
+                />
+              ) : Icon ? (
+                <Icon
+                  size={24}
+                  strokeWidth={isActive ? 2.2 : 1.5}
+                  color={isActive ? '#1B4332' : '#737373'}
+                />
+              ) : null}
 
               <AppText
                 size='xs'
