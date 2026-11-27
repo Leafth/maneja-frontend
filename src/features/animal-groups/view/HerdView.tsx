@@ -23,7 +23,6 @@ export default function HerdView() {
     isLoading,
     error,
     retry,
-    isOnline,
     handleAddHerd,
     handleOpenGroup,
     handleRegisterFeeding,
@@ -32,18 +31,13 @@ export default function HerdView() {
   const hasHerds = herds.length > 0;
 
   return (
-    <View className='flex-1 bg-white'>
-
-      <HeaderPrimary isOnline={isOnline} />
+    <View className='flex-1 bg-forestGreen-300'>
+      <HeaderPrimary />
 
       {/* Conteúdo */}
-      <View className='flex-1'>
+      <View className='flex-1 overflow-hidden rounded-t-3xl bg-white'>
         <View className='px-5 pt-3'>
-          <AppText
-            size='lg'
-            weight='medium'
-            className='uppercase'
-          >
+          <AppText size='lg' weight='medium' className='uppercase'>
             REBANHO
           </AppText>
 
@@ -51,7 +45,9 @@ export default function HerdView() {
             <ActivityIndicator className='mt-2' />
           ) : error ? (
             <View className='mt-2'>
-              <AppText size='sm' color='error'>Não foi possível carregar os grupos.</AppText>
+              <AppText size='sm' color='error'>
+                Não foi possível carregar os grupos.
+              </AppText>
               <Button onPress={retry}>Tentar novamente</Button>
             </View>
           ) : !hasHerds ? (
@@ -83,9 +79,7 @@ export default function HerdView() {
                   name={herd.name}
                   location={getCurrentTerrainName(herd.localId)}
                   onPress={() => handleOpenGroup(herd.localId)}
-                  onRegisterFeeding={() =>
-                    handleRegisterFeeding(herd.localId)
-                  }
+                  onRegisterFeeding={() => handleRegisterFeeding(herd.localId)}
                   onMove={() => handleMove(herd.localId)}
                 />
               ))}
@@ -107,11 +101,7 @@ export default function HerdView() {
           onPress={handleAddHerd}
           className='absolute bottom-5 right-5 h-[52px] w-[52px] items-center justify-center rounded-[12px] bg-forestGreen-400'
         >
-          <Plus
-            size={28}
-            strokeWidth={2}
-            color={colors.white}
-          />
+          <Plus size={28} strokeWidth={2} color={colors.white} />
         </TouchableOpacity>
       </View>
     </View>
