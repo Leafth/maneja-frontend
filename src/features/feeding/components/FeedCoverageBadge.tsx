@@ -60,10 +60,25 @@ export function FeedCoverageBadge({
 
     case 'urgency':
       return (
-        <View className='flex-row items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1.5'>
-          <TriangleAlert size={14} strokeWidth={2} color='#C65D00' />
+        <View
+          className='flex-row items-center gap-1.5 rounded-full px-3 py-1.5'
+          style={{
+            backgroundColor: colors.support.warning.bg,
+          }}
+        >
+          <TriangleAlert
+            size={14}
+            strokeWidth={2}
+            color={colors.support.warning.text}
+          />
 
-          <AppText size='xs' weight='semiBold' className='text-orange-700'>
+          <AppText
+            size='xs'
+            weight='semiBold'
+            style={{
+              color: colors.support.warning.text,
+            }}
+          >
             {label}
           </AppText>
         </View>
@@ -71,10 +86,21 @@ export function FeedCoverageBadge({
 
     case 'attention':
       return (
-        <View className='flex-row items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1.5'>
+        <View
+          className='flex-row items-center gap-1.5 rounded-full px-3 py-1.5'
+          style={{
+            backgroundColor: '#FEF9C3',
+          }}
+        >
           <TriangleAlert size={14} strokeWidth={2} color='#A16207' />
 
-          <AppText size='xs' weight='semiBold' className='text-yellow-700'>
+          <AppText
+            size='xs'
+            weight='semiBold'
+            style={{
+              color: '#A16207',
+            }}
+          >
             {label}
           </AppText>
         </View>
