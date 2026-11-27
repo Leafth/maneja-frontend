@@ -17,6 +17,8 @@ export function SyncProvider({ children }: PropsWithChildren) {
       return;
     }
 
+    syncOrchestrator.resume();
+
     void syncOrchestrator.sync(user.id);
 
     const unsubscribe = startSyncListener(user.id);
