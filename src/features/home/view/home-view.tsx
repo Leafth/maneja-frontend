@@ -3,9 +3,11 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { AppText } from '@/shared/components/AppText';
 import { HeaderPrimary } from '@/shared/components/Header';
 
+import { HomeFeedAlertsSection } from '../components/HomeFeedAlertsSection';
 import { HomeFeedStockCard } from '../components/HomeFeedStockCard';
 import { HomeSummaryCard } from '../components/HomeSummaryCard';
 import { HomeTerrainCard } from '../components/HomeTerrainCard';
+
 import { useHomeViewModel } from '../viewmodels/use-home-view-model';
 
 export default function HomeView() {
@@ -14,6 +16,7 @@ export default function HomeView() {
     totalAnimals,
     terrainSummary,
     feedSummary,
+    feedAlerts,
     isLoading,
     isError,
     error,
@@ -69,6 +72,10 @@ export default function HomeView() {
                 </Pressable>
               </View>
             )}
+
+            {/* Alertas das rações */}
+
+            <HomeFeedAlertsSection alerts={feedAlerts} />
 
             {/* Resumo do rebanho */}
 
