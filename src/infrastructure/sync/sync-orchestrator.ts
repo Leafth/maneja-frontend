@@ -13,6 +13,7 @@ import { movementSyncService } from '@/features/movements/services/movement-sync
 
 import { terrainSyncService } from '@/features/terrains/services/terrain-sync.service';
 
+import { sessionLifecycle } from '../auth/session-lifecycle';
 import { networkService } from '../network/network.service';
 import { syncEvents } from './sync-events';
 
@@ -20,6 +21,7 @@ interface SyncState {
   inFlight: Promise<void> | null;
   rerunRequested: boolean;
   accountId: string | null;
+  suspended: boolean;
 }
 
 const runtime = globalThis as typeof globalThis & {
@@ -30,10 +32,38 @@ const state = (runtime.__manejaSyncState ??= {
   inFlight: null,
   rerunRequested: false,
   accountId: null,
+  suspended: false,
 });
 
+// Compatibilidade com estado mantido durante Fast Refresh.
+state.suspended ??= false;
+
 class SyncOrchestrator {
+  resume(): void {
+    if (sessionLifecycle.isLoggingOut()) {
+      return;
+    }
+
+    state.suspended = false;
+  }
+
+  async suspendAndWait(): Promise<void> {
+    state.suspended = true;
+    state.rerunRequested = false;
+
+    try {
+      await state.inFlight;
+    } finally {
+      state.accountId = null;
+      state.rerunRequested = false;
+    }
+  }
+
   sync(accountId?: string): Promise<void> {
+    if (state.suspended || sessionLifecycle.isLoggingOut()) {
+      return Promise.resolve();
+    }
+
     if (accountId) {
       state.accountId = accountId;
     }
@@ -50,16 +80,30 @@ class SyncOrchestrator {
   private async drain(): Promise<void> {
     try {
       do {
+        if (state.suspended || sessionLifecycle.isLoggingOut()) {
+          return;
+        }
+
         state.rerunRequested = false;
 
         const accountId = state.accountId;
+        const sessionGeneration = sessionLifecycle.getGeneration();
 
-        if (!accountId) {
+        const isSessionValid = () =>
+          !state.suspended &&
+          sessionLifecycle.isCurrent(sessionGeneration) &&
+          state.accountId === accountId;
+
+        if (!accountId || !isSessionValid()) {
           return;
         }
 
         try {
           const connected = await networkService.isConnected();
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           if (!connected) {
             continue;
@@ -73,7 +117,15 @@ class SyncOrchestrator {
            */
           await animalGroupSyncService.sync(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           await verifyFeedingGroups(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           syncEvents.emit('animal-groups');
 
@@ -84,6 +136,10 @@ class SyncOrchestrator {
            * remoteId do terreno de destino.
            */
           await terrainSyncService.sync(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           syncEvents.emit('terrains');
 
@@ -97,10 +153,18 @@ class SyncOrchestrator {
            */
           await movementCommandRepository.recoverInterrupted(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           /*
            * 4. Envia movimentações pendentes.
            */
           await movementSyncService.sync(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           /*
            * 5. Reconciliamos terrenos e grupos
@@ -119,7 +183,15 @@ class SyncOrchestrator {
            */
           await terrainSyncService.pull(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           await animalGroupSyncService.pullRemote(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           /*
            * 6. Atualiza o cache local das ocupações.
@@ -127,8 +199,11 @@ class SyncOrchestrator {
            */
           await occupationSyncService.pull(accountId);
 
-          syncEvents.emit('terrains');
+          if (!isSessionValid()) {
+            return;
+          }
 
+          syncEvents.emit('terrains');
           syncEvents.emit('animal-groups');
 
           /*
@@ -137,17 +212,35 @@ class SyncOrchestrator {
            */
           await feedSyncService.syncUpserts(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           await feedRequirementSyncService.sync(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           syncEvents.emit('feed-requirements');
 
           /*
            * 8. Envia entradas e saídas de estoque.
+           *
+           * O finally original é mantido para
+           * notificar alterações mesmo em caso
+           * de falha na operação.
            */
           try {
             await feedStockSyncService.sync(accountId);
           } finally {
-            syncEvents.emit('feedings');
+            if (isSessionValid()) {
+              syncEvents.emit('feedings');
+            }
+          }
+
+          if (!isSessionValid()) {
+            return;
           }
 
           /*
@@ -155,27 +248,53 @@ class SyncOrchestrator {
            */
           await feedSyncService.syncDeletes(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           /*
            * 10. Atualiza o snapshot remoto das
            * rações no SQLite.
            */
           await feedSyncService.pull(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           await feedRequirementSyncService.pull(accountId);
+
+          if (!isSessionValid()) {
+            return;
+          }
 
           await feedingSyncService.pull(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           await feedingStockHistoryService.pull(accountId);
 
+          if (!isSessionValid()) {
+            return;
+          }
+
           syncEvents.emit('feed-requirements');
-
           syncEvents.emit('feedings');
-
           syncEvents.emit('feeds');
         } catch (error) {
+          if (!isSessionValid()) {
+            return;
+          }
+
           console.error('Erro durante a sincronização:', error);
         }
-      } while (state.rerunRequested);
+      } while (
+        state.rerunRequested &&
+        !state.suspended &&
+        !sessionLifecycle.isLoggingOut()
+      );
     } finally {
       state.inFlight = null;
     }

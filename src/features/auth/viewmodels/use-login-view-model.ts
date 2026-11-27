@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { useLogin } from '@/features/auth/hooks';
 import { authService } from '@/features/auth/services';
 import { useAuthStore } from '@/features/auth/stores';
+import { sessionLifecycle } from '@/infrastructure/auth/session-lifecycle';
 import { authTokenStorage } from '@/infrastructure/storage';
+
 import { loginSchema, type LoginFormData } from '../schemas/login.schema';
-import { syncOrchestrator } from '@/infrastructure/sync/sync-orchestrator';
 
 export function useLoginViewModel() {
   const router = useRouter();
@@ -20,12 +21,10 @@ export function useLoginViewModel() {
     control,
     handleSubmit,
     setFocus,
-
     formState: { isValid, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: 'onTouched',
-
     defaultValues: {
       email: '',
       password: '',
@@ -38,13 +37,13 @@ export function useLoginViewModel() {
       password: data.password,
     });
 
+    sessionLifecycle.beginSession();
+
     await authTokenStorage.saveSession(session);
 
     const user = await authService.me();
 
     authenticate(user);
-
-    void syncOrchestrator.sync();
 
     router.replace('/home');
   });
@@ -52,8 +51,7 @@ export function useLoginViewModel() {
   return {
     control,
     setFocus,
-    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
-    // onPress/onSubmitEditing enviam eventos do React Native.
+
     onSubmit: () => {
       void submit();
     },

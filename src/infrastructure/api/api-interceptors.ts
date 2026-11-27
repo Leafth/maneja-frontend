@@ -7,12 +7,14 @@ import {
 
 import type { AuthSession } from '@/features/auth/models';
 import { authService } from '@/features/auth/services';
+import { sessionLifecycle } from '@/infrastructure/auth/session-lifecycle';
 import { authTokenStorage } from '@/infrastructure/storage';
 
 import { api } from './api-client';
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+  _sessionGeneration?: number;
 }
 
 const PUBLIC_ROUTES = [
@@ -31,27 +33,66 @@ function isPublicRoute(url?: string): boolean {
   return PUBLIC_ROUTES.some((route) => url.includes(route));
 }
 
+function isLogout(url?: string): boolean {
+  return url?.includes('/auth/logout') === true;
+}
+
+function obsoleteSession(): Error {
+  return new Error('Requisição cancelada: sessão encerrada ou alterada.');
+}
+
 let refreshPromise: Promise<AuthSession> | null = null;
+let refreshGeneration: number | null = null;
 
-async function refreshSession(): Promise<AuthSession> {
-  const refreshToken = await authTokenStorage.getRefreshToken();
+export async function waitForActiveRefresh(): Promise<void> {
+  if (refreshPromise) {
+    await refreshPromise.catch(() => undefined);
+  }
+}
 
-  if (!refreshToken) {
-    await authTokenStorage.clear();
-
-    throw new Error('Refresh token não encontrado.');
+async function refreshSession(origin: number): Promise<AuthSession> {
+  if (!sessionLifecycle.isCurrent(origin)) {
+    throw obsoleteSession();
   }
 
-  if (!refreshPromise) {
-    refreshPromise = (async () => {
+  if (!refreshPromise || refreshGeneration !== origin) {
+    refreshGeneration = origin;
+
+    const currentRefresh = (async () => {
+      const refreshToken = await authTokenStorage.getRefreshToken();
+
+      if (!sessionLifecycle.isCurrent(origin)) {
+        throw obsoleteSession();
+      }
+
+      if (!refreshToken) {
+        throw new Error('Refresh token não encontrado.');
+      }
+
       const session = await authService.refresh(refreshToken);
+
+      if (!sessionLifecycle.isCurrent(origin)) {
+        throw obsoleteSession();
+      }
 
       await authTokenStorage.saveSession(session);
 
+      if (!sessionLifecycle.isCurrent(origin)) {
+        throw obsoleteSession();
+      }
+
       return session;
-    })().finally(() => {
-      refreshPromise = null;
-    });
+    })();
+
+    refreshPromise = currentRefresh;
+
+    void currentRefresh
+      .finally(() => {
+        if (refreshPromise === currentRefresh) {
+          refreshPromise = null;
+        }
+      })
+      .catch(() => undefined);
   }
 
   return refreshPromise;
@@ -61,6 +102,22 @@ api.interceptors.request.use(
   (config) => {
     if (isPublicRoute(config.url)) {
       return config;
+    }
+
+    if (sessionLifecycle.isLoggingOut() && !isLogout(config.url)) {
+      return Promise.reject(obsoleteSession());
+    }
+
+    const request = config as RetryableRequestConfig;
+
+    // Preserva a geração original nos retries.
+    request._sessionGeneration ??= sessionLifecycle.getGeneration();
+
+    if (
+      !isLogout(config.url) &&
+      !sessionLifecycle.isCurrent(request._sessionGeneration)
+    ) {
+      return Promise.reject(obsoleteSession());
     }
 
     const accessToken = authTokenStorage.getAccessToken();
@@ -77,7 +134,19 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config as RetryableRequestConfig;
+
+    if (!isPublicRoute(config.url) && !isLogout(config.url)) {
+      const origin = config._sessionGeneration;
+
+      if (origin === undefined || !sessionLifecycle.isCurrent(origin)) {
+        return Promise.reject(obsoleteSession());
+      }
+    }
+
+    return response;
+  },
 
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryableRequestConfig | undefined;
@@ -86,24 +155,32 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const isUnauthorized = error.response?.status === 401;
-
-    if (!isUnauthorized) {
+    if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    if (isPublicRoute(originalRequest.url)) {
+    if (
+      isPublicRoute(originalRequest.url) ||
+      isLogout(originalRequest.url) ||
+      originalRequest._retry
+    ) {
       return Promise.reject(error);
     }
 
-    if (originalRequest._retry) {
-      return Promise.reject(error);
+    const origin = originalRequest._sessionGeneration;
+
+    if (origin === undefined || !sessionLifecycle.isCurrent(origin)) {
+      return Promise.reject(obsoleteSession());
     }
 
     originalRequest._retry = true;
 
     try {
-      const session = await refreshSession();
+      const session = await refreshSession(origin);
+
+      if (!sessionLifecycle.isCurrent(origin)) {
+        throw obsoleteSession();
+      }
 
       originalRequest.headers = AxiosHeaders.from(originalRequest.headers);
 
@@ -118,8 +195,10 @@ api.interceptors.response.use(
         ? refreshError.response?.status
         : undefined;
 
-      // Só descarta a sessão se o servidor rejeitou o refresh token.
-      if (status === 400 || status === 401 || status === 403) {
+      if (
+        sessionLifecycle.isCurrent(origin) &&
+        (status === 400 || status === 401 || status === 403)
+      ) {
         await authTokenStorage.clear();
       }
 

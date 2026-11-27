@@ -80,7 +80,7 @@ export function useFeedPlanningViewModel() {
       }
 
       router.push({
-        pathname: '/feeding/planning-result',
+        pathname: '/feeding/planning',
         params: {
           groupId: groupLocalId,
         },

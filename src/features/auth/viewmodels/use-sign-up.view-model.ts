@@ -9,6 +9,7 @@ import {
   type SignUpFormData,
 } from '@/features/auth/schemas/sign-up.schema';
 import { useAuthStore } from '@/features/auth/stores';
+import { sessionLifecycle } from '@/infrastructure/auth/session-lifecycle';
 import { authTokenStorage } from '@/infrastructure/storage';
 
 export function useSignUpViewModel() {
@@ -43,12 +44,14 @@ export function useSignUpViewModel() {
 
   useEffect(() => {
     if (touchedFields.passwordConfirmation) {
-      trigger('passwordConfirmation');
+      void trigger('passwordConfirmation');
     }
   }, [password, touchedFields.passwordConfirmation, trigger]);
 
   const submit = handleSubmit(async (data) => {
     const result = await registerMutation.mutateAsync(data);
+
+    sessionLifecycle.beginSession();
 
     await authTokenStorage.saveSession(result.session);
 
@@ -67,14 +70,14 @@ export function useSignUpViewModel() {
     control,
     setFocus,
 
-    // Sem parâmetros: o handleSubmit espera um evento de formulário web, e
-    // onPress/onSubmitEditing enviam eventos do React Native.
     onSubmit: () => {
       void submit();
     },
+
     goBack,
 
     isValid,
+
     isSubmitting: isSubmitting || registerMutation.isPending,
 
     isError: registerMutation.isError,
