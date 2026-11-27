@@ -23,7 +23,6 @@ export default function CreateGroupView() {
     isValid,
     isSubmitting,
     isEditing,
-    isOnline,
     isLoading,
     isUnavailable,
     loadError,
@@ -40,7 +39,7 @@ export default function CreateGroupView() {
         {isEditing ? (
           <HeaderSecondary title='Atualizar grupo' onBackPress={goBack} />
         ) : (
-          <HeaderPrimary isOnline={isOnline} />
+          <HeaderPrimary  />
         )}
 
         {/* Sem recuo inferior: o conteúdo fica no topo, e num SafeAreaView o recuo

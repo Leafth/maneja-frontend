@@ -24,16 +24,15 @@ export default function FeedStockView() {
     isLoading,
     isError,
     retry,
-    isOnline,
     openType,
     createType,
   } = useFeedStockViewModel();
 
   return (
-    <View className='flex-1 bg-white'>
-      <HeaderPrimary isOnline={isOnline} />
+    <View className='flex-1 bg-forestGreen-300'>
+      <HeaderPrimary />
 
-      <View className='flex-1 rounded-t-2xl bg-white px-5 pt-3'>
+      <View className='flex-1 overflow-hidden rounded-t-3xl bg-white px-5 pt-3'>
         <AppText size='lg' weight='medium' className='uppercase'>
           ALIMENTAÇÃO
         </AppText>

@@ -27,7 +27,6 @@ export default function CreateTerrainView() {
     isValid,
     isSubmitting,
     isEditing,
-    isOnline,
     isLoading,
     isUnavailable,
     loadError,
@@ -48,7 +47,7 @@ export default function CreateTerrainView() {
             onBackPress={goBack}
           />
         ) : (
-          <HeaderPrimary isOnline={isOnline} />
+          <HeaderPrimary />
         )}
 
         {/* O recuo inferior fica no fim da rolagem: num SafeAreaView ele virava
